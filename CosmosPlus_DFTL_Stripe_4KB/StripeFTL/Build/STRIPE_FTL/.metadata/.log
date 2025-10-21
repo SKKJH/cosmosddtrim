@@ -2657,3 +2657,43 @@ java.lang.NullPointerException
 
 !ENTRY com.xilinx.sdk.utils 0 0 2025-10-21 11:10:34.512
 !MESSAGE XSCT command with result: [disconnect tcfchan#5], Result: [null, ]. Thread: Thread-675
+!SESSION 2025-10-21 11:13:28.575 -----------------------------------------------
+eclipse.buildId=2019.1
+java.version=1.8.0_112
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=ko_KR
+Command-line arguments:  -os win32 -ws win32 -arch x86_64
+
+!ENTRY org.eclipse.ui 2 0 2025-10-21 11:14:19.066
+!MESSAGE Warnings while parsing the commands from the 'org.eclipse.ui.commands' and 'org.eclipse.ui.actionDefinitions' extension points.
+!SUBENTRY 1 org.eclipse.ui 2 0 2025-10-21 11:14:19.066
+!MESSAGE Commands should really have a category: plug-in='com.xilinx.sdk.appwiz', id='com.xilinx.sdk.app.commands.ChangeAtfBuiltReferences', categoryId='com.xilinx.sdk.app.commands.category'
+
+!ENTRY org.eclipse.ui 2 0 2025-10-21 11:14:19.624
+!MESSAGE Warnings while parsing the commands from the 'org.eclipse.ui.commands' and 'org.eclipse.ui.actionDefinitions' extension points.
+!SUBENTRY 1 org.eclipse.ui 2 0 2025-10-21 11:14:19.624
+!MESSAGE Commands should really have a category: plug-in='com.xilinx.sdk.appwiz', id='com.xilinx.sdk.app.commands.ChangeAtfBuiltReferences', categoryId='com.xilinx.sdk.app.commands.category'
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-21 11:14:26.546
+!MESSAGE XSCT Command: [set sdk::sdk_chan tcfchan#0], Thread: Thread-17
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-21 11:14:26.546
+!MESSAGE XSCT Command: [::hsi::utils::init_repo], Thread: Worker-0
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-21 11:14:26.559
+!MESSAGE XSCT command with result: [set sdk::sdk_chan tcfchan#0], Result: [null, tcfchan#0]. Thread: Thread-17
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-21 11:14:26.574
+!MESSAGE XSCT Command: [setws C:/COSMOS_KJH/CosmosPlus_DFTL_Stripe_4KB/StripeFTL/Build/STRIPE_FTL], Thread: Thread-17
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-21 11:14:26.848
+!MESSAGE XSCT command with result: [::hsi::utils::init_repo], Result: [null, ]. Thread: Worker-0
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-21 11:14:26.850
+!MESSAGE XSCT command with result: [setws C:/COSMOS_KJH/CosmosPlus_DFTL_Stripe_4KB/StripeFTL/Build/STRIPE_FTL], Result: [null, ]. Thread: Thread-17
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-21 11:14:26.869
+!MESSAGE XSCT Command: [::hsi::utils::openhw C:/COSMOS_KJH/CosmosPlus_DFTL_Stripe_4KB/StripeFTL/Build/STRIPE_FTL/system_hw_platform_0/system.hdf], Thread: Worker-3
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-21 11:14:33.066
+!MESSAGE XSCT command with result: [::hsi::utils::openhw C:/COSMOS_KJH/CosmosPlus_DFTL_Stripe_4KB/StripeFTL/Build/STRIPE_FTL/system_hw_platform_0/system.hdf], Result: [null, ]. Thread: Worker-3
