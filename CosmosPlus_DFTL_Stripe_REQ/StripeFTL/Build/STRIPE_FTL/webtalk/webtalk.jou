@@ -1,0 +1,12 @@
+#-----------------------------------------------------------
+# Webtalk v2019.1 (64-bit)
+# SW Build 2552052 on Fri May 24 14:49:42 MDT 2019
+# 
+# Start of session at: Fri Oct 10 21:59:20 2025
+# Process ID: 27524
+# Current directory: C:/CosmosPlus_DFTL_TRIM/CosmosPlus_Stripe/StripeFTL/Build/STRIPE_FTL/webtalk
+# Command line: wbtcv.exe -mode batch -source sdk_webtalk.tcl
+# Log file: C:/CosmosPlus_DFTL_TRIM/CosmosPlus_Stripe/StripeFTL/Build/STRIPE_FTL/webtalk/webtalk.log
+# Journal file: C:/CosmosPlus_DFTL_TRIM/CosmosPlus_Stripe/StripeFTL/Build/STRIPE_FTL/webtalk\webtalk.jou
+#-----------------------------------------------------------
+source sdk_webtalk.tcl
