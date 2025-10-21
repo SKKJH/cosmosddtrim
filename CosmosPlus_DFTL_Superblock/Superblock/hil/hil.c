@@ -60,7 +60,7 @@ void HIL_Format(void)
 		}
 	} while (bRet == FALSE);
 
-	FTL_DPrint();
+	FTL_SB_INIT();
 }
 
 static int bInitProfileCount = 0;

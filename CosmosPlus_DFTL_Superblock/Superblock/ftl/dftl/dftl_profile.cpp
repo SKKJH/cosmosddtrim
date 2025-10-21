@@ -81,5 +81,33 @@ VOID DFTL_PrintProfile(UINT32 FLAG)
 		xil_printf("[%-35s] %u\r\n", profile_names[i], DFTL_profile[i]);
 		DFTL_profile[i] = 0;
 	}
-	DFTL_GLOBAL::GetInstance()->DebugBlockPrint(1);
+	DFTL_GLOBAL::GetInstance()->DebugBlockPrint(0);
+
+	if (FLAG == 1)
+	{
+		SBINFO* sb = DFTL_GLOBAL::GetSBInfoMgr()->m_pastSBInfo;
+		int c = DFTL_GLOBAL::GetVNandMgr()->GetVBlockCount();
+		for (int i=0; i<c; i++)
+		{
+			if (!sb[i].IsBad())
+			{
+				if (sb[i].m_bFree)
+				{
+					if (sb[i].IsMeta())
+						xil_printf("[M] %u is FREE, %u blks\r\n",sb[i].m_nVBN, sb[i].m_nUSED);
+					else
+						xil_printf("[H] %u is FREE, %u blks\r\n",sb[i].m_nVBN, sb[i].m_nUSED);
+				}
+				else
+				{
+					if (sb[i].IsMeta())
+						xil_printf("[M] %u is USED, %u blks\r\n",sb[i].m_nVBN, sb[i].m_nUSED);
+					else
+						xil_printf("[H] %u is USED, %u blks\r\n",sb[i].m_nVBN, sb[i].m_nUSED);
+				}
+			}
+//			else
+//				xil_printf("[BAD] %u is BAD Block\r\n",sb[i].m_nVBN);
+		}
+	}
 }

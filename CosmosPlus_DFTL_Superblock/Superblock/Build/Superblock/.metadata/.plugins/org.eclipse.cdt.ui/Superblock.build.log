@@ -1,61 +1,8 @@
-16:15:20 **** Auto Build of configuration Debug for project Superblock ****
+22:13:32 **** Incremental Build of configuration Debug for project Superblock ****
 make pre-build main-build 
 a9-linaro-pre-build-step
 ' '
-'Building file: C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_activeblock.cpp'
-'Invoking: ARM v7 g++ compiler'
-arm-none-eabi-g++ -DDFTL=1 -DCOSMOS_PLUS=1 -Wall -O0 -g3 -I../../Superblock_bsp/ps7_cortexa9_0/include -I../../../../common -I../../../../fil -I../../../../ftl -I../../../../ftl/dftl -I../../../../hil -I../../../../hil/nvme -I../../../../target -I../../../../target/cosmos_plus -c -fmessage-length=0 -MT"src/ftl/dftl/dftl_activeblock.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -MMD -MP -MF"src/ftl/dftl/dftl_activeblock.d" -MT"src/ftl/dftl/dftl_activeblock.o" -o "src/ftl/dftl/dftl_activeblock.o" "C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_activeblock.cpp"
-In file included from C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_internal.h:25,
-                 from C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_activeblock.cpp:17:
-C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_activeblock.h: In constructor 'ACTIVE_BLOCK::ACTIVE_BLOCK()':
-../../../../common/cosmos_types.h:108:43: warning: 'ACTIVE_BLOCK::m_nCurProgramBuffering' will be initialized after [-Wreorder]
- #define ACTIVE_BLOCK_BUFFERING_INDEX_BITS 8
-                                           ^
-C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_activeblock.h:80:40: note: in expansion of macro 'ACTIVE_BLOCK_BUFFERING_INDEX_BITS'
-  unsigned int m_nCurProgramBuffering : ACTIVE_BLOCK_BUFFERING_INDEX_BITS;
-                                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-In file included from C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_internal.h:52,
-                 from C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_activeblock.cpp:17:
-C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_activeblock.h:73:11: warning:   'UINT32 ACTIVE_BLOCK::m_nCurVPPN' [-Wreorder]
-  UINT32   m_nCurVPPN;    // PPN recently written
-           ^~~~~~~~~~
-C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_activeblock.cpp:133:1: warning:   when initialized here [-Wreorder]
- ACTIVE_BLOCK::ACTIVE_BLOCK(VOID)
- ^~~~~~~~~~~~
-In file included from C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_internal.h:52,
-                 from C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_activeblock.cpp:17:
-C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_activeblock.h:73:11: warning: 'ACTIVE_BLOCK::m_nCurVPPN' will be initialized after [-Wreorder]
-  UINT32   m_nCurVPPN;    // PPN recently written
-           ^~~~~~~~~~
-C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_activeblock.h:72:11: warning:   'UINT32 ACTIVE_BLOCK::m_nVBN' [-Wreorder]
-  UINT32   m_nVBN;
-           ^~~~~~
-C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_activeblock.cpp:133:1: warning:   when initialized here [-Wreorder]
- ACTIVE_BLOCK::ACTIVE_BLOCK(VOID)
- ^~~~~~~~~~~~
-C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_activeblock.cpp: In member function 'UINT32 ACTIVE_BLOCK_MGR::ReadBufferingLPN(UINT32, BUFFER_ENTRY*, IOTYPE)':
-C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_activeblock.cpp:707:16: warning: unused variable 'pstActiveBlock' [-Wunused-variable]
-  ACTIVE_BLOCK* pstActiveBlock;
-                ^~~~~~~~~~~~~~
-In file included from C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_internal.h:61,
-                 from C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_activeblock.cpp:17:
-C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_profile.h: At global scope:
-C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_profile.h:60:15: warning: 'DFTL_profile' defined but not used [-Wunused-variable]
- static UINT32 DFTL_profile[Prof_Total_Num];
-               ^~~~~~~~~~~~
-'Finished building: C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/ftl/dftl/dftl_activeblock.cpp'
-' '
-'Building target: Superblock.elf'
-'Invoking: ARM v7 g++ linker'
-arm-none-eabi-g++ -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -Wl,-build-id=none -specs=Xilinx.spec -Wl,-T -Wl,../src/lscript.ld -L../../Superblock_bsp/ps7_cortexa9_0/lib -o "Superblock.elf"  ./src/target/cosmos_plus/cosmos_plus_system.o  ./src/target/main.o ./src/target/osal.o  ./src/hil/nvme/host_lld.o ./src/hil/nvme/nvme_admin_cmd.o ./src/hil/nvme/nvme_identify.o ./src/hil/nvme/nvme_io_cmd.o ./src/hil/nvme/nvme_main.o  ./src/hil/hil.o  ./src/ftl/dftl/dftl_activeblock.o ./src/ftl/dftl/dftl_block.o ./src/ftl/dftl/dftl_bufferpool.o ./src/ftl/dftl/dftl_external_interface.o ./src/ftl/dftl/dftl_garbagecollector.o ./src/ftl/dftl/dftl_global.o ./src/ftl/dftl/dftl_hdma.o ./src/ftl/dftl/dftl_meta.o ./src/ftl/dftl/dftl_profile.o ./src/ftl/dftl/dftl_request.o ./src/ftl/dftl/dftl_request_gc.o ./src/ftl/dftl/dftl_request_hil.o ./src/ftl/dftl/dftl_request_meta.o ./src/ftl/dftl/dftl_vnand.o  ./src/ftl/template.o ./src/ftl/template_cpp.o  ./src/fil/fil.o ./src/fil/fil_nand.o ./src/fil/fil_request.o ./src/fil/nsc_driver.o  ./src/common/list.o ./src/common/random.o ./src/common/statistics.o ./src/common/util.o   -Wl,--start-group,-lxil,-lgcc,-lc,-lstdc++,--end-group
-'Finished building target: Superblock.elf'
-' '
-'Invoking: ARM v7 Print Size'
-arm-none-eabi-size Superblock.elf  |tee "Superblock.elf.size"
-   text	   data	    bss	    dec	    hex	filename
- 226684	   5000	  27660	 259344	  3f510	Superblock.elf
-'Finished building: Superblock.elf.size'
-' '
+make: Nothing to be done for 'main-build'.
 
-16:15:22 Build Finished (took 1s.762ms)
+22:13:33 Build Finished (took 532ms)
 

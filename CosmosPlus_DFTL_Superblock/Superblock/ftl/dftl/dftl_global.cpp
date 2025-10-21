@@ -41,6 +41,59 @@ VOID DFTL_GLOBAL::DebugBlockPrint(UINT32 FLAG)
     GetUserBlockMgr()->DebugPrintAllByVBN(FLAG);
 }
 
+VOID DFTL_GLOBAL::SB_INIT()
+{
+    SBINFO_MGR* sbm = GetSBInfoMgr();
+    INT32 c = DFTL_GLOBAL::GetVNandMgr()->GetVBlockCount();
+
+    // 프리 리스트 헤드 초기화 및 카운터 리셋
+    INIT_LIST_HEAD(&sbm->m_dlFreeList);
+    sbm->m_nFreeCount = 0;
+
+    for (INT32 vbn = 0; vbn < c; vbn++)
+    {
+        SBINFO* sb = &sbm->m_pastSBInfo[vbn];
+
+        // 방어적으로 리스트 노드 초기화 (기존 연결 제거)
+        INIT_LIST_HEAD(&sb->m_dlList);
+
+        // 제외: BAD 이거나 VBN <= 20 (메타 예약 구간)
+        if (sb->m_bBad != 0)  	continue;
+        if (sb->m_bMeta)		continue;
+
+        // 프리 조건: 아직 사용 중이 아니어야 함
+        if (sb->m_nUSED != 0) continue;
+
+        // 프리 리스트에 push
+        list_add_tail(&sb->m_dlList, &sbm->m_dlFreeList);
+        sbm->m_nFreeCount++;
+    }
+
+    {
+        UINT32 freeWalk = 0, badInFree = 0, metaInFree = 0, usedInFree = 0;
+
+        PRINTF("[SB_INIT] ===== FREE SB LIST START =====\n\r");
+        SBINFO* pos;
+        list_for_each_entry(SBINFO, pos, &sbm->m_dlFreeList, m_dlList) {
+            PRINTF("[SB_INIT][FREE] VBN:%u, USED:%u, BAD:%u, META:%u\n\r",
+                   pos->m_nVBN, pos->m_nUSED, pos->m_bBad, pos->m_bMeta);
+            freeWalk++;
+
+            if (pos->m_bBad)  badInFree++;
+            if (pos->m_bMeta) metaInFree++;
+            if (pos->m_nUSED) usedInFree++;
+        }
+        PRINTF("[SB_INIT] FREE COUNT (walked): %u\n\r", freeWalk);
+        PRINTF("[SB_INIT] FREE COUNT (sbm->m_nFreeCount): %u\n\r", sbm->m_nFreeCount);
+        if (badInFree || metaInFree || usedInFree) {
+            PRINTF("[SB_INIT][WARN] bad:%u, meta:%u, used:%u entries wrongly in FREE list!\n\r",
+                   badInFree, metaInFree, usedInFree);
+        }
+        PRINTF("[SB_INIT] ===== FREE SB LIST END =====\n\r");
+    }
+}
+
+
 VIRTUAL VOID 
 DFTL_GLOBAL::Initialize(VOID)
 {
@@ -78,6 +131,7 @@ DFTL_GLOBAL::Initialize(VOID)
 	m_MetaGCing = FALSE;
 
 	GetReadCacheMgr()->Initialize();
+	GetSBInfoMgr()->Initialize();
 }
 
 VIRTUAL BOOL
@@ -392,6 +446,26 @@ DFTL_GLOBAL::_PrintInfo(VOID)
 
 	PRINTF("[%s] Physical Density: %d MB \n\r", psFTL, m_nPhysicalFlashSizeKB / KB);
 	PRINTF("[%s] Logical Density: %d MB \n\r", psFTL, m_nLogicalFlashSizeKB / KB);
+}
+
+VOID SBINFO_MGR::Initialize()
+{
+	INT32 nSize = sizeof(SBINFO) * DFTL_GLOBAL::GetVNandMgr()->GetVBlockCount();
+	m_pastSBInfo = (SBINFO *)OSAL_MemAlloc(MEM_TYPE_FW_DATA, nSize, OSAL_MEMALLOC_FW_ALIGNMENT);
+	m_nFreeCount = 0;
+
+	int c = DFTL_GLOBAL::GetVNandMgr()->GetVBlockCount();
+	for (int i=0; i<c; i++)
+	{
+		m_pastSBInfo[i].SetFree();
+		m_pastSBInfo[i].m_nVBN = i;
+		m_pastSBInfo[i].m_nUSED = 0;
+		m_pastSBInfo[i].m_bBad = 0;
+		if (i<20)
+			m_pastSBInfo[i].m_bMeta = 1;
+		else
+			m_pastSBInfo[i].m_bMeta = 0;
+	}
 }
 
 VOID Read_Cache::Initialize()

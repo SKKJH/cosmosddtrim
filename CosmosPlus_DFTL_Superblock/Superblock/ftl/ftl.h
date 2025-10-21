@@ -80,7 +80,7 @@ extern "C" {
 	VOID FTL_CallBack(FTL_REQUEST_ID stReqID);
 
 	VOID FTL_IOCtl(IOCTL_TYPE eType);
-	VOID FTL_DPrint(VOID);
+	VOID FTL_SB_INIT(VOID);
 
 	#define SyncAllLowLevelReqDone()				// do nothing, just for GREEDY_FTL_3_0_0
 

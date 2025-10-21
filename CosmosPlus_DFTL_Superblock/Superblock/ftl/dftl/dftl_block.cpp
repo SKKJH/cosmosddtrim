@@ -156,6 +156,7 @@ VOID BLOCK_MGR::_FormatUser(VOID)
 					pstVBInfo->SetBad();
 					pstVBInfo->ClearUser();
 					pstVBInfo->ClearGC();
+					DFTL_GLOBAL::GetSBInfoMgr()->m_pastSBInfo[i].m_bBad = 1;
 				}
 			}
 		}
@@ -183,7 +184,7 @@ VOID BLOCK_MGR::_FormatMeta(VOID)
 
 			for (UINT32 i = 0; i < nMetaVBlockCount; i++)
 			{
-				nVBN = pstUserBlockMgr->Allocate(channel, way, TRUE, FALSE, FALSE);
+				nVBN = pstUserBlockMgr->Allocate(channel, way, TRUE, FALSE, FALSE, 0);
 
 				DEBUG_ASSERT(DFTL_GLOBAL::GetVNandMgr()->IsBadBlock(channel, way, nVBN) == FALSE);
 
@@ -220,7 +221,7 @@ VOID BLOCK_MGR::Format(VOID)
 }
 
 UINT32
-BLOCK_MGR::Allocate(UINT32 channel, UINT32 way, BOOL bUser, BOOL bGC, BOOL bMeta)
+BLOCK_MGR::Allocate(UINT32 channel, UINT32 way, BOOL bUser, BOOL bGC, BOOL bMeta, UINT32 FLAG)
 {
 	DEBUG_ASSERT(m_nFreeBlocks[channel][way] > 0);
 	DEBUG_ASSERT(m_nUsedBlocks[channel][way] < DFTL_GLOBAL::GetVNandMgr()->GetVBlockCount());
@@ -261,6 +262,23 @@ BLOCK_MGR::Allocate(UINT32 channel, UINT32 way, BOOL bUser, BOOL bGC, BOOL bMeta
 	m_nFreeBlocks[channel][way]--;
 	m_nUsedBlocks[channel][way]++;
 
+	if ((FLAG == 1) && (!pstVBInfo->IsMeta())) {
+	    SBINFO_MGR* sbm = DFTL_GLOBAL::GetSBInfoMgr();
+	    SBINFO* sb = &sbm->m_pastSBInfo[pstVBInfo->m_nVBN];
+
+	    if (sb->m_nUSED == 0) {
+	        if (sb->m_dlList.next != &sb->m_dlList) {
+	            list_del_init(&sb->m_dlList);
+	            if (sbm->m_nFreeCount > 0) sbm->m_nFreeCount--;
+	        }
+	        sb->ClearFree();
+	    }
+	    sb->m_nUSED += 1;
+
+	    // xil_printf("\t[ALLOC] SUPER VBN:%u [free:%u], USED:%u\r\n",
+	    //            pstVBInfo->m_nVBN, (sb->m_nUSED==0), sb->m_nUSED);
+	}
+
 	return pstVBInfo->m_nVBN;
 }
 
@@ -292,7 +310,28 @@ VOID BLOCK_MGR::Release(UINT32 channel, UINT32 way, UINT32 nVBN, UINT32 FLAG)
 
 	if ((FLAG == 1) && !pstVBInfo->IsMeta())
 	{
-//		xil_printf("	[Release] VBN:%u, CH:%u, WY:%u\r\n", nVBN, channel, way);
+	    SBINFO_MGR* sbm = DFTL_GLOBAL::GetSBInfoMgr();
+	    SBINFO* sb = &sbm->m_pastSBInfo[nVBN];
+	    if (sb->m_nUSED == 0) {
+	        xil_printf("\t[WARN] Release underflow: VBN:%u USED already 0\r\n", nVBN);
+	    } else {
+	        sb->m_nUSED -= 1;
+	    }
+
+	    if (sb->m_nUSED == 0)
+	    {
+	        if ((sb->m_bBad == 0) && (sb->m_bMeta == 0) && (nVBN > 20))
+	        {
+	            if (sb->m_dlList.next != &sb->m_dlList) {
+	                list_del_init(&sb->m_dlList);
+	            }
+	            sb->SetFree();
+	            list_add_tail(&sb->m_dlList, &sbm->m_dlFreeList);
+	            sbm->m_nFreeCount++;
+//	            xil_printf("\t[FREE] SUPER VBN:%u [free:%u], USED:%u\r\n",
+//	                       nVBN, (sb->m_nUSED == 0), sb->m_nUSED);
+	        }
+	    }
 	}
 }
 

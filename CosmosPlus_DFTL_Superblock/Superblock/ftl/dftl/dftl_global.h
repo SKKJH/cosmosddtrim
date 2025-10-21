@@ -66,8 +66,32 @@ private:
 	BUFFER_ENTRY* Buf[MAX_READ_CACHE_ENTRY];
 };
 
+class SBINFO
+{
+public:
+	VOID SetFree(VOID)		{ m_bFree = TRUE;	}
+	VOID ClearFree(VOID)	{ m_bFree = FALSE;	}
+	BOOL IsFree(VOID)		const { return m_bFree;	}
+	BOOL IsMeta(VOID)		const { return m_bMeta;	}
+	BOOL IsBad(VOID)		const { return m_bBad;	}
 
+	struct list_head m_dlList;
 
+	UINT32				m_nVBN;
+	INT32				m_nUSED;
+	UINT32 				m_bFree;
+	UINT32 				m_bBad;
+	UINT32 				m_bMeta;
+};
+
+class SBINFO_MGR
+{
+public:
+	VOID 		Initialize();
+	SBINFO* 	m_pastSBInfo;
+	struct 		list_head m_dlFreeList;
+	UINT32      m_nFreeCount;
+};
 
 class FTL_INTERFACE;
 class VNAND;
@@ -144,6 +168,7 @@ public:
 	VIRTUAL VOID DatasetManagement(UINT32 nCmdSlotTag, UINT32 NR, UINT32 AD);
 	VIRTUAL VOID CallBack(FTL_REQUEST_ID stReqID);
 	VIRTUAL VOID IOCtl(IOCTL_TYPE eType);
+	VIRTUAL VOID SB_INIT(VOID);
 
 	static DFTL_GLOBAL*		GetInstance(VOID) { return m_pstInstance; }
 	static VNAND*			GetVNandMgr(VOID) { return &m_pstInstance->m_stVNand; }
@@ -168,6 +193,7 @@ public:
 	static HDMA*			GetHDMAMgr(VOID)	{return &m_pstInstance->m_stHostDMA;}
 
 	static Read_Cache*		GetReadCacheMgr() { return &m_pstInstance->m_stReadCache; }
+	static SBINFO_MGR*		GetSBInfoMgr() { return &m_pstInstance->m_stSBInfoMgr; }
 
 	UINT32 GetVPagePerVBlock(VOID) {return m_nVPagesPerVBlock;}
 
@@ -250,6 +276,7 @@ private:
 	BOOL		m_MetaGCing;
 
 	Read_Cache			m_stReadCache;
+	SBINFO_MGR			m_stSBInfoMgr;
 
 public:
 	int 		m_bEnable = 0;

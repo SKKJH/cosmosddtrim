@@ -30,7 +30,7 @@ extern "C" {
 	VOID FTL_DatasetManagement(UINT32 nCmdSlotTag, UINT32 nr, UINT32 ad);
 	VOID FTL_CallBack(FTL_REQUEST_ID stReqID);
 	VOID FTL_IOCtl(IOCTL_TYPE eType);
-	VOID FTL_DPrint(VOID);
+	VOID FTL_SB_INIT(VOID);
 
 #define SyncAllLowLevelReqDone()				// do nothing, just for GREEDY_FTL_3_0_0
 
@@ -87,7 +87,7 @@ VOID FTL_IOCtl(IOCTL_TYPE eType)
 	g_pstDFTL->IOCtl(eType);
 }
 
-VOID FTL_DPrint(VOID)
+VOID FTL_SB_INIT(VOID)
 {
-//	g_pstDFTL->DebugBlockPrint();
+	g_pstDFTL->SB_INIT();
 }
