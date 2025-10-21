@@ -47,6 +47,7 @@ DFTL_GLOBAL::Initialize(VOID)
 	m_wp_ch = 0;
 	m_wp_wy = 0;
 	m_page_cnt = 0;
+	m_ActiveBlockAllocCnt = USER_CHANNELS * USER_WAYS;
 
 	m_pstInstance = this;
 	_Initialize();

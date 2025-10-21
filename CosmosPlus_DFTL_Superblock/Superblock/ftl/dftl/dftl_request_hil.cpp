@@ -1151,6 +1151,11 @@ HIL_REQUEST_PER_WAY::_ProcessWrite_Wait(VOID)
 #endif
 
       pstActiveBlock = DFTL_GLOBAL::GetActiveBlockMgr(m_channel, m_way)->GetActiveBlock(IOTYPE_HOST);
+      if (pstActiveBlock == NULL)
+      {
+    	  bSuccess = FALSE;
+    	  break;
+      }
 
       DEBUG_ASSERT(m_channel == CHANNEL_FROM_VPPN(pstActiveBlock->m_nCurVPPN));
       DEBUG_ASSERT(m_channel == get_channel_from_lpn(GetCurLPN()));
@@ -1182,7 +1187,6 @@ HIL_REQUEST_PER_WAY::_ProcessWrite_Wait(VOID)
       //per way
       pstHILRequestInfo->RemoveFromWaitQ_per_way(this, m_channel, m_way);
       pstHILRequestInfo->ReleaseRequest_per_way(this);
-
    }
 
    return bSuccess;

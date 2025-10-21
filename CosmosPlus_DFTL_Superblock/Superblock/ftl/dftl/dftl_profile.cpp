@@ -81,5 +81,5 @@ VOID DFTL_PrintProfile(UINT32 FLAG)
 		xil_printf("[%-35s] %u\r\n", profile_names[i], DFTL_profile[i]);
 		DFTL_profile[i] = 0;
 	}
-	DFTL_GLOBAL::GetInstance()->DebugBlockPrint(FLAG);
+	DFTL_GLOBAL::GetInstance()->DebugBlockPrint(1);
 }
