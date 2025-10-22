@@ -110,4 +110,34 @@ VOID DFTL_PrintProfile(UINT32 FLAG)
 //				xil_printf("[BAD] %u is BAD Block\r\n",sb[i].m_nVBN);
 		}
 	}
+	 {
+	        SBINFO_MGR* sbm = DFTL_GLOBAL::GetSBInfoMgr();
+	        UINT32 freeWalk = 0, badInFree = 0, metaInFree = 0, notFreeFlag = 0, usedInFree = 0;
+
+	        xil_printf("[SB][FREE-LIST] ===== START =====\r\n");
+	        if (list_empty(&sbm->m_dlFreeList)) {
+	            xil_printf("[SB][FREE-LIST] (empty)\r\n");
+	        } else {
+	            SBINFO* pos;
+	            // 프로젝트 매크로 스타일 유지: (TYPE, var, head, member)
+	            list_for_each_entry(SBINFO, pos, &sbm->m_dlFreeList, m_dlList) {
+	                xil_printf("[%c] %u is FREE, %u blks\r\n",
+	                           pos->IsMeta() ? 'M' : 'H', pos->m_nVBN, pos->m_nUSED);
+	                freeWalk++;
+
+	                // 일관성 체크(경고용)
+	                if (pos->IsBad())      badInFree++;
+	                if (pos->IsMeta())     metaInFree++;   // SB_INIT에서 meta는 FREE에 안 올려서 비정상
+	                if (!pos->m_bFree)     notFreeFlag++;  // FREE 리스트인데 m_bFree=0이면 비정상
+	                if (pos->m_nUSED != 0) usedInFree++;   // FREE인데 USED>0이면 비정상(정책에 따라 경고)
+	            }
+	        }
+	        xil_printf("[SB][FREE-LIST] COUNT(walked): %u, COUNT(tracked): %u\r\n",
+	                   freeWalk, sbm->m_nFreeCount);
+	        if (badInFree || metaInFree || notFreeFlag || usedInFree) {
+	            xil_printf("[SB][FREE-LIST][WARN] bad:%u meta:%u notFree:%u used:%u\r\n",
+	                       badInFree, metaInFree, notFreeFlag, usedInFree);
+	        }
+	        xil_printf("[SB][FREE-LIST] ===== END =====\r\n");
+	    }
 }

@@ -184,7 +184,7 @@ VOID BLOCK_MGR::_FormatMeta(VOID)
 
 			for (UINT32 i = 0; i < nMetaVBlockCount; i++)
 			{
-				nVBN = pstUserBlockMgr->Allocate(channel, way, TRUE, FALSE, FALSE, 0);
+				nVBN = pstUserBlockMgr->Allocate(channel, way, TRUE, FALSE, FALSE, -1, 0);
 
 				DEBUG_ASSERT(DFTL_GLOBAL::GetVNandMgr()->IsBadBlock(channel, way, nVBN) == FALSE);
 
@@ -221,48 +221,88 @@ VOID BLOCK_MGR::Format(VOID)
 }
 
 UINT32
-BLOCK_MGR::Allocate(UINT32 channel, UINT32 way, BOOL bUser, BOOL bGC, BOOL bMeta, UINT32 FLAG)
+BLOCK_MGR::Allocate(UINT32 channel, UINT32 way, BOOL bUser, BOOL bGC, BOOL bMeta, UINT32 nextVBN, UINT32 FLAG)
 {
-	DEBUG_ASSERT(m_nFreeBlocks[channel][way] > 0);
-	DEBUG_ASSERT(m_nUsedBlocks[channel][way] < DFTL_GLOBAL::GetVNandMgr()->GetVBlockCount());
-	DEBUG_ASSERT((bMeta == TRUE) ? (m_eType == META_BLOCK_MGR) : TRUE);
-
-	VBINFO *pstVBInfo = list_first_entry(&m_dlFreeBlocks[channel][way], VBINFO, m_dlList);
-
-	list_del_init(&pstVBInfo->m_dlList);
-	list_add_tail(&pstVBInfo->m_dlList, &m_dlUsedBlocks[channel][way]);
-
-	pstVBInfo->ClearFree();
-	pstVBInfo->ClearUser();
-	pstVBInfo->ClearGC();
-	pstVBInfo->ClearMeta();
-
-	if (bUser == TRUE)
+	if ((FLAG != 1) || (bMeta == 1))
 	{
-		pstVBInfo->INIT = 0;
-		pstVBInfo->SetUser();
-	}
-	else if (bGC == TRUE)
-	{
-		pstVBInfo->SetGC();
-	}
-	else if (bMeta == TRUE)
-	{
-		pstVBInfo->SetMeta();
+		DEBUG_ASSERT(m_nFreeBlocks[channel][way] > 0);
+		DEBUG_ASSERT(m_nUsedBlocks[channel][way] < DFTL_GLOBAL::GetVNandMgr()->GetVBlockCount());
+		DEBUG_ASSERT((bMeta == TRUE) ? (m_eType == META_BLOCK_MGR) : TRUE);
+
+		VBINFO *pstVBInfo = list_first_entry(&m_dlFreeBlocks[channel][way], VBINFO, m_dlList);
+
+		list_del_init(&pstVBInfo->m_dlList);
+		list_add_tail(&pstVBInfo->m_dlList, &m_dlUsedBlocks[channel][way]);
+
+		pstVBInfo->ClearFree();
+		pstVBInfo->ClearUser();
+		pstVBInfo->ClearGC();
+		pstVBInfo->ClearMeta();
+
+		if (bUser == TRUE)
+		{
+			pstVBInfo->INIT = 0;
+			pstVBInfo->SetUser();
+		}
+		else if (bGC == TRUE)
+		{
+			pstVBInfo->SetGC();
+		}
+		else if (bMeta == TRUE)
+		{
+			pstVBInfo->SetMeta();
+		}
+		else
+		{
+			ASSERT(0);
+		}
+
+		pstVBInfo->SetActive();
+		pstVBInfo->SetInvalidPageCount(0);
+		pstVBInfo->SetValidPageCount(0);
+
+		m_nFreeBlocks[channel][way]--;
+		m_nUsedBlocks[channel][way]++;
+
+		return pstVBInfo->m_nVBN;
 	}
 	else
 	{
-		ASSERT(0);
-	}
+        VBINFO *pstVBInfo = NULL;
+        VBINFO* pos;
+        list_for_each_entry(VBINFO, pos, &m_dlFreeBlocks[channel][way], m_dlList) {
+            if (pos->m_nVBN == (UINT32)nextVBN) {
+                pstVBInfo = pos;
+                break;
+            }
+        }
 
-	pstVBInfo->SetActive();
-	pstVBInfo->SetInvalidPageCount(0);
-	pstVBInfo->SetValidPageCount(0);
+        list_del_init(&pstVBInfo->m_dlList);
+        list_add_tail(&pstVBInfo->m_dlList, &m_dlUsedBlocks[channel][way]);
 
-	m_nFreeBlocks[channel][way]--;
-	m_nUsedBlocks[channel][way]++;
+        pstVBInfo->ClearFree();
+        pstVBInfo->ClearUser();
+        pstVBInfo->ClearGC();
+        pstVBInfo->ClearMeta();
 
-	if ((FLAG == 1) && (!pstVBInfo->IsMeta())) {
+        if (bUser == TRUE) {
+            pstVBInfo->INIT = 0;
+            pstVBInfo->SetUser();
+        } else if (bGC == TRUE) {
+            pstVBInfo->SetGC();
+        } else if (bMeta == TRUE) {
+            pstVBInfo->SetMeta();
+        } else {
+            ASSERT(0);
+        }
+
+        pstVBInfo->SetActive();
+        pstVBInfo->SetInvalidPageCount(0);
+        pstVBInfo->SetValidPageCount(0);
+
+        m_nFreeBlocks[channel][way]--;
+        m_nUsedBlocks[channel][way]++;
+
 	    SBINFO_MGR* sbm = DFTL_GLOBAL::GetSBInfoMgr();
 	    SBINFO* sb = &sbm->m_pastSBInfo[pstVBInfo->m_nVBN];
 
@@ -274,12 +314,8 @@ BLOCK_MGR::Allocate(UINT32 channel, UINT32 way, BOOL bUser, BOOL bGC, BOOL bMeta
 	        sb->ClearFree();
 	    }
 	    sb->m_nUSED += 1;
-
-	    // xil_printf("\t[ALLOC] SUPER VBN:%u [free:%u], USED:%u\r\n",
-	    //            pstVBInfo->m_nVBN, (sb->m_nUSED==0), sb->m_nUSED);
+        return pstVBInfo->m_nVBN;
 	}
-
-	return pstVBInfo->m_nVBN;
 }
 
 VOID BLOCK_MGR::Release(UINT32 channel, UINT32 way, UINT32 nVBN, UINT32 FLAG)
@@ -320,7 +356,7 @@ VOID BLOCK_MGR::Release(UINT32 channel, UINT32 way, UINT32 nVBN, UINT32 FLAG)
 
 	    if (sb->m_nUSED == 0)
 	    {
-	        if ((sb->m_bBad == 0) && (sb->m_bMeta == 0) && (nVBN > 20))
+	        if ((sb->m_bBad == 0) && (sb->m_bMeta == 0) && (nVBN > 19))
 	        {
 	            if (sb->m_dlList.next != &sb->m_dlList) {
 	                list_del_init(&sb->m_dlList);
@@ -440,7 +476,7 @@ VOID BLOCK_MGR::DebugPrintAllByVBN_CW(UINT32 channel, UINT32 way, UINT32 FLAG) c
 		}
 	}
 
-	PRINTF("[%u/%u] SUMMARY: free=%u (used approx=%u)\r\n\n",
+	PRINTF("[%u/%u] SUMMARY: free=%u (used approx=%u)\r\n",
 		   channel, way, m_nFreeBlocks[channel][way],
 		   vblk_cnt - m_nFreeBlocks[channel][way]);
 }

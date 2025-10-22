@@ -1,0 +1,8 @@
+22:13:32 **** Incremental Build of configuration Debug for project Superblock ****
+make pre-build main-build 
+a9-linaro-pre-build-step
+' '
+make: Nothing to be done for 'main-build'.
+
+22:13:33 Build Finished (took 532ms)
+

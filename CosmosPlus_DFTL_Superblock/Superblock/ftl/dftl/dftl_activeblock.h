@@ -129,7 +129,7 @@ private:
 	BUFFERING_LPN	m_stMetaBufferingMgr;
 
 	ACTIVE_BLOCK*	_GetCurActiveBlock(IOTYPE eIOType);
-	ACTIVE_BLOCK*	_GoToNextActiveBlock(IOTYPE eIOType);
+	ACTIVE_BLOCK*	_GoToNextActiveBlock(IOTYPE eIOType, UINT32 nextVBN);
 
 	INT8			m_nCurActiveBlockHost;
 	INT8			m_nCurActiveBlockGC;

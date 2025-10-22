@@ -529,7 +529,7 @@ ACTIVE_BLOCK_MGR::_GetCurActiveBlock(IOTYPE eIOType)
 }
 
 ACTIVE_BLOCK*
-ACTIVE_BLOCK_MGR::_GoToNextActiveBlock(IOTYPE eIOType)
+ACTIVE_BLOCK_MGR::_GoToNextActiveBlock(IOTYPE eIOType, UINT32 nextVBN)
 {
 	ACTIVE_BLOCK*		pstActiveBlock;
 	BOOL				bUser = FALSE;
@@ -588,7 +588,7 @@ ACTIVE_BLOCK_MGR::_GoToNextActiveBlock(IOTYPE eIOType)
 	}
 
 	// Allocate New Block
-	UINT32 nVBN = pstBlockMgr->Allocate(m_nchannel, m_nway, bUser, bGC, bMeta, 1);
+	UINT32 nVBN = pstBlockMgr->Allocate(m_nchannel, m_nway, bUser, bGC, bMeta, nextVBN, 1);
 
 	pstActiveBlock->m_nVBN = nVBN;
 	pstActiveBlock->m_nCurVPPN = GET_VPPN_FROM_VPN_VBN(m_nchannel, m_nway, 0, nVBN);
@@ -626,45 +626,41 @@ ACTIVE_BLOCK_MGR::GetActiveBlock(IOTYPE eIOType)
 {
 	ACTIVE_BLOCK*		pstActiveBlock;
 	pstActiveBlock = _GetCurActiveBlock(eIOType);
+	UINT32 nextVBN = INVALID_VBN;
 
 	if (pstActiveBlock->m_nCurVPPN == INVALID_PPN)
 	{
+//		if (eIOType != IOTYPE_META)
 		if (eIOType == IOTYPE_HOST)
 		{
-			if (DFTL_GLOBAL::GetInstance()->m_ActiveBlockAllocCnt == (USER_CHANNELS * USER_WAYS))
+			int check = 0;
+			for (int i=0; i<USER_CHANNELS; i++)
 			{
-				int check = 0;
-				for (int i=0; i<USER_CHANNELS; i++)
+				for (int j=0; j<USER_WAYS; j++)
 				{
-					for (int j=0; j<USER_WAYS; j++)
-					{
-						UINT32 wp = DFTL_GLOBAL::GetInstance()->GetActiveBlockMgr(i,j)->_GetCurActiveBlock(eIOType)->m_nCurVPPN;
-						if (wp != INVALID_VPPN)
-						{
-//							UINT32 wpp = VPN_FROM_VPPN(wp);
-//							UINT32 wb = DFTL_GLOBAL::GetInstance()->GetActiveBlockMgr(i,j)->_GetCurActiveBlock(eIOType)->m_nVBN;
-//							xil_printf("CH:%u, WY:%u, VBN:%u, VPPN:%u, VPN:%u\r\n", i, j, wb, wp, wpp);
-							check = 1;
-						}
-//						else
-//						{
-//							UINT32 wb = DFTL_GLOBAL::GetInstance()->GetActiveBlockMgr(i,j)->_GetCurActiveBlock(eIOType)->m_nVBN;
-//							xil_printf("CH:%u, WY:%u, VBN:%u, VPPN:%u\r\n", i, j, wb, wp);
-//						}
-					}
-				}
-				if (check == 1)
-				{
-//					UINT32 wb = pstActiveBlock->m_nVBN;
-//					xil_printf("CAN'T GET AB, CH:%u, WY:%u, VBN:%u\r\n", m_nchannel, m_nway, wb);
-					return NULL;
+					UINT32 wp = DFTL_GLOBAL::GetInstance()->GetActiveBlockMgr(i,j)->_GetCurActiveBlock(eIOType)->m_nCurVPPN;
+					if (wp != INVALID_VPPN)
+						check = 1;
 				}
 			}
-			DFTL_GLOBAL::GetInstance()->m_ActiveBlockAllocCnt -= 1;
-			if (DFTL_GLOBAL::GetInstance()->m_ActiveBlockAllocCnt == 0)
-				DFTL_GLOBAL::GetInstance()->m_ActiveBlockAllocCnt = USER_CHANNELS * USER_WAYS;
+
+			if (check == 1)
+				return NULL;
+
+			SBINFO_MGR* sbm = DFTL_GLOBAL::GetSBInfoMgr();
+			SBINFO* sb = list_first_entry(&sbm->m_dlFreeList, SBINFO, m_dlList);
+			nextVBN = sb->m_nVBN;
+
+			for (int i = 0; i < USER_CHANNELS; i++) {
+				for (int j = 0; j < USER_WAYS; j++) {
+					ACTIVE_BLOCK_MGR* mgr = DFTL_GLOBAL::GetInstance()->GetActiveBlockMgr(i, j);
+					mgr->_GoToNextActiveBlock(eIOType, (INT32)nextVBN);
+				}
+			}
+			pstActiveBlock = _GetCurActiveBlock(eIOType);
 		}
-		pstActiveBlock = _GoToNextActiveBlock(eIOType);
+		else
+			pstActiveBlock = _GoToNextActiveBlock(eIOType, nextVBN);
 	}
 	return pstActiveBlock;
 }
