@@ -36,6 +36,22 @@ VOID DFTL_GLOBAL::WritePtr_GetAndAdvance()
     }
 }
 
+VOID DFTL_GLOBAL::GC_WritePtr_GetAndAdvance()
+{
+    m_gc_page_cnt++;
+    if (m_gc_page_cnt >= LPN_PER_PHYSICAL_PAGE) {
+        m_gc_page_cnt = 0;
+        m_gc_wp_ch++;
+        if (m_gc_wp_ch >= USER_CHANNELS) {
+            m_gc_wp_ch = 0;
+            m_gc_wp_wy++;
+            if (m_gc_wp_wy >= USER_WAYS) {
+                m_gc_wp_wy = 0;
+            }
+        }
+    }
+}
+
 VOID DFTL_GLOBAL::DebugBlockPrint(UINT32 FLAG)
 {
     GetUserBlockMgr()->DebugPrintAllByVBN(FLAG);
@@ -91,16 +107,23 @@ VOID DFTL_GLOBAL::SB_INIT()
         }
         PRINTF("[SB_INIT] ===== FREE SB LIST END =====\n\r");
     }
+    SB_INIT_FLAG = TRUE;
 }
 
 
 VIRTUAL VOID 
 DFTL_GLOBAL::Initialize(VOID)
 {
+	SB_INIT_FLAG = FALSE;
 	m_wp_ch = 0;
 	m_wp_wy = 0;
 	m_page_cnt = 0;
 	m_ActiveBlockAllocCnt = USER_CHANNELS * USER_WAYS;
+
+	m_gc_wp_ch = 0;
+	m_gc_wp_wy = 0;
+	m_gc_page_cnt = 0;
+	m_GCActiveBlockAllocCnt = USER_CHANNELS * USER_WAYS;
 
 	m_pstInstance = this;
 	_Initialize();
@@ -164,9 +187,12 @@ DFTL_GLOBAL::Run(VOID)
 		}
 	}
 #endif
-	for (UINT32 channel = 0; channel < USER_CHANNELS; channel++) {
-		for (UINT32 way = 0; way < USER_WAYS; way++) {
-			GetGCMgr(channel, way)->CheckAndStartGC();
+	if (GetSuperGCMgr()->CheckAndStartGC())
+	{
+		for (UINT32 channel = 0; channel < USER_CHANNELS; channel++) {
+			for (UINT32 way = 0; way < USER_WAYS; way++) {
+				GetGCMgr(channel, way)->CheckAndStartGC();
+			}
 		}
 	}
 

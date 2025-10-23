@@ -196,8 +196,22 @@ GC_REQUEST::_ProcessWrite_Wait(VOID)
 	{
 		return FALSE;
 	}
-	pstActiveBlock = DFTL_GLOBAL::GetActiveBlockMgr(m_nChannel, m_nWay)->GetActiveBlock(m_eIOType);
-	bSuccess = pstActiveBlock->Write(this, IOTYPE_GC, m_eIOType);
+	if (m_eIOType == IOTYPE_META)
+	{
+		pstActiveBlock = DFTL_GLOBAL::GetActiveBlockMgr(m_nChannel, m_nWay)->GetActiveBlock(m_eIOType);
+		bSuccess = pstActiveBlock->Write(this, IOTYPE_GC, m_eIOType);
+	}
+	else
+	{
+		UINT32 ch = DFTL_GLOBAL::GetInstance()->m_gc_wp_ch;
+		UINT32 wy = DFTL_GLOBAL::GetInstance()->m_gc_wp_wy;
+		pstActiveBlock = DFTL_GLOBAL::GetActiveBlockMgr(ch, wy)->GetActiveBlock(m_eIOType);
+		bSuccess = pstActiveBlock->Write(this, IOTYPE_GC, m_eIOType);
+		if (bSuccess == TRUE)
+		{
+			DFTL_GLOBAL::GetInstance()->GC_WritePtr_GetAndAdvance();
+		}
+	}
 	if (bSuccess == TRUE)
 	{
 		GoToNextStatus();

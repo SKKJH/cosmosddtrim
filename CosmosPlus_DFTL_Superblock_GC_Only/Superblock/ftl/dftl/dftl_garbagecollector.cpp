@@ -16,6 +16,98 @@
 
 #include "dftl_internal.h"
 
+VOID
+SUPER_GC_MGR::Initialize(VOID)
+{
+	m_nThreshold	= DFTL_GLOBAL::GetGCMgr(0,0)->m_nThreshold;
+	m_nVictimVBN 	= INVALID_VBN;
+	m_nGCCnt 		= 0;
+
+	ch_0_wy_0		= 0;
+	ch_0_wy_1		= 0;
+	ch_1_wy_0		= 0;
+	ch_1_wy_1		= 0;
+}
+
+BOOL
+SUPER_GC_MGR::IsGCRunning(VOID)
+{
+	if (m_nVictimVBN == INVALID_VBN)
+		return 0;
+	else
+		return 1;
+}
+
+UINT32
+SUPER_GC_MGR::GetVictimVBN(VOID)
+{
+    SBINFO_MGR* pSBMgr   = DFTL_GLOBAL::GetSBInfoMgr();
+    VNAND*      pVNAND   = DFTL_GLOBAL::GetVNandMgr();
+    UINT32      vblk_cnt = DFTL_GLOBAL::GetInstance()->m_nVBlockCount;
+
+    UINT32 best_vbn = INVALID_VBN;
+    UINT32 best_vpc = pVNAND->GetVPagesPerVBlock();
+    for (UINT32 vbn = 0; vbn < vblk_cnt; ++vbn)
+    {
+        SBINFO& sb = pSBMgr->m_pastSBInfo[vbn];
+
+        if (sb.IsMeta() || sb.IsBad() || sb.IsFree()) {
+            continue;
+        }
+        UINT32 sb_vpc_total = 0;
+
+        for (UINT32 ch = 0; ch < USER_CHANNELS; ++ch)
+        {
+            for (UINT32 wy = 0; wy < USER_WAYS; ++wy)
+            {
+                VBINFO* vbi   = DFTL_GLOBAL::GetVBInfoMgr(ch, wy)->GetVBInfo(vbn);
+                UINT32  invalid = vbi->GetInvalidLPNCount();
+                UINT32 	valid = pVNAND->GetVPagesPerVBlock() - invalid;
+
+                sb_vpc_total += valid;
+            }
+        }
+
+        if (sb_vpc_total < best_vpc) {
+            best_vpc = sb_vpc_total;
+            best_vbn = vbn;
+            if (best_vpc == 0) {
+            	xil_printf("SB BEST VBN:%u, VPC:%u\r\n", best_vbn, best_vpc);
+                return best_vbn; // 조기 종료
+            }
+        }
+    }
+
+    if (best_vbn != INVALID_VBN)
+    	xil_printf("SB BEST VBN:%u, VPC:%u\r\n", best_vbn, best_vpc);
+    return best_vbn;
+}
+
+
+VOID
+SUPER_GC_MGR::CheckAndStartGC()
+{
+	// check is there anys running GC
+	if (IsGCRunning() == TRUE)
+	{
+		return;
+	}
+
+	UINT32 nFreeBlock;
+
+	DFTL_GLOBAL*	pstGlobal = DFTL_GLOBAL::GetInstance();
+
+	nFreeBlock = pstGlobal->GetSBInfoMgr()->m_nFreeCount;
+
+	if (nFreeBlock > m_nThreshold)
+	{
+		// enough free block
+		return;
+	}
+	m_nVictimVBN = GetVictimVBN();
+	xil_printf("[SUPER-GC-START] VictimVBN:%u\r\n", m_nVictimVBN);
+}
+
 VOID 
 GC_MGR::Initialize(UINT32 nGCTh, IOTYPE eIOType, UINT32 channel, UINT32 way)
 {
@@ -64,14 +156,24 @@ GC_MGR::IsGCRunning(VOID)
 VOID
 GC_MGR::CheckAndStartGC(VOID)
 {
+	INT32 ckpt = 0;
 	// check is there anys running GC
-	if (IsGCRunning() == TRUE)
+	if (m_eIOType != IOTYPE_META)
 	{
-		return;
+		if (IsGCRunning() == TRUE)
+		{
+			return;
+		}
+	}
+	else
+	{
+		if (IsGCRunning() == TRUE)
+		{
+			return;
+		}
 	}
 
 	UINT32 nFreeBlock;
-
 	DFTL_GLOBAL*	pstGlobal = DFTL_GLOBAL::GetInstance();
 
 	nFreeBlock = m_pstBlockMgr->GetFreeBlockCount(m_channel, m_way);
@@ -82,17 +184,57 @@ GC_MGR::CheckAndStartGC(VOID)
 		return;
 	}
 	m_nVictimVBN = GetVictimVBN(m_channel, m_way);
-	m_nVPC = pstGlobal->GetVPagePerVBlock() - DFTL_GLOBAL::GetVBInfoMgr(m_channel, m_way)->GetVBInfo(m_nVictimVBN)->GetInvalidLPNCount();
-	m_nVCNT = DFTL_GLOBAL::GetVBInfoMgr(m_channel, m_way)->GetVBInfo(m_nVictimVBN)->GetValidLPNCount();
-	m_nCurReadVPageOffset = 0;
-	m_nWriteCount = 0;
-	m_nIssuedCount = 0;
+//	if (m_eIOType == IOTYPE_META)
+//	{
+		m_nVPC = pstGlobal->GetVPagePerVBlock() - DFTL_GLOBAL::GetVBInfoMgr(m_channel, m_way)->GetVBInfo(m_nVictimVBN)->GetInvalidLPNCount();
+		m_nVCNT = DFTL_GLOBAL::GetVBInfoMgr(m_channel, m_way)->GetVBInfo(m_nVictimVBN)->GetValidLPNCount();
+		m_nCurReadVPageOffset = 0;
+		m_nWriteCount = 0;
+		m_nIssuedCount = 0;
+//	}
+//	else
+//	{
+//		for (int i=0; i<USER_CHANNELS; i++)
+//		{
+//			for (int j=0; j<USER_WAYS; j++)
+//			{
+//				if (DFTL_GLOBAL::GetGCMgr(i,j)->IsGCRunning())
+//					continue;
+//				if (!DFTL_GLOBAL::GetVBInfoMgr(i,j)->GetVBInfo(m_nVictimVBN)->IsFree())
+//				{
+//					DFTL_GLOBAL::GetGCMgr(i,j)->m_nVictimVBN = m_nVictimVBN;
+//					DFTL_GLOBAL::GetGCMgr(i,j)->m_nVPC =
+//							pstGlobal->GetVPagePerVBlock() - DFTL_GLOBAL::GetVBInfoMgr(i, j)->GetVBInfo(m_nVictimVBN)->GetInvalidLPNCount();
+//					DFTL_GLOBAL::GetGCMgr(i,j)->m_nVCNT = DFTL_GLOBAL::GetVBInfoMgr(i, j)->GetVBInfo(m_nVictimVBN)->GetValidLPNCount();
+//					DFTL_GLOBAL::GetGCMgr(i,j)->m_nCurReadVPageOffset = 0;
+//					DFTL_GLOBAL::GetGCMgr(i,j)->m_nWriteCount = 0;
+//					DFTL_GLOBAL::GetGCMgr(i,j)->m_nIssuedCount = 0;
+//					if (DFTL_GLOBAL::GetSuperGCMgr()->m_nVictimVBN == INVALID_VBN)
+//					{
+//						DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt += 1;
+//						DFTL_GLOBAL::GetSuperGCMgr()->m_nVictimVBN = m_nVictimVBN;
+//						if ((i==0)&&(j==0))
+//							DFTL_GLOBAL::GetSuperGCMgr()->ch_0_wy_0 = 1;
+//						else if ((i==0)&&(j==1))
+//							DFTL_GLOBAL::GetSuperGCMgr()->ch_0_wy_1 = 1;
+//						else if ((i==1)&&(j==0))
+//							DFTL_GLOBAL::GetSuperGCMgr()->ch_1_wy_0 = 1;
+//						else if ((i==1)&&(j==1))
+//							DFTL_GLOBAL::GetSuperGCMgr()->ch_1_wy_1 = 1;
+//						ckpt += 1;
+//					}
+//				}
+//			}
+//		}
+//	}
 
 	if (m_eIOType == IOTYPE_META) {
 		DFTL_GLOBAL::GetInstance()->SetMetaGCing();
 		DFTL_IncreaseProfile(Prof_CMTGC_count);
 	}
 	else {
+		if (ckpt != 0)
+			xil_printf("[SUPER-GC-START] VictimVBN:%u, [%d]CNT, [%d]Req\r\n", m_nVictimVBN, DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt, ckpt);
 		DFTL_IncreaseProfile(Prof_GC_count);
 	}
 
@@ -139,7 +281,40 @@ GC_MGR::IncreaseWriteCount(VOID)
 		}
 		else
 		{
-//			xil_printf("[GC-END] CH:%u, WAY:%u, VictimVBN:%u, VPC:[%u]\r\n", m_channel, m_way, pastVBN, m_nVPC);
+//			if (pastVBN == DFTL_GLOBAL::GetSuperGCMgr()->m_nVictimVBN)
+//			{
+//				int ckpt = 0;
+//				if ((m_channel == 0) && (m_way == 0) && (DFTL_GLOBAL::GetSuperGCMgr()->ch_0_wy_0 == 1))
+//				{
+//					ckpt = 1;
+//					DFTL_GLOBAL::GetSuperGCMgr()->ch_0_wy_0 = 0;
+//				}
+//				if ((m_channel == 0) && (m_way == 1) && (DFTL_GLOBAL::GetSuperGCMgr()->ch_0_wy_1 == 1))
+//				{
+//					ckpt = 1;
+//					DFTL_GLOBAL::GetSuperGCMgr()->ch_0_wy_1 = 0;
+//				}
+//				if ((m_channel == 1) && (m_way == 0) && (DFTL_GLOBAL::GetSuperGCMgr()->ch_1_wy_0 == 1))
+//				{
+//					ckpt = 1;
+//					DFTL_GLOBAL::GetSuperGCMgr()->ch_1_wy_0 = 0;
+//				}
+//				if ((m_channel == 1) && (m_way == 1) && (DFTL_GLOBAL::GetSuperGCMgr()->ch_1_wy_1 == 1))
+//				{
+//					ckpt = 1;
+//					DFTL_GLOBAL::GetSuperGCMgr()->ch_1_wy_1 = 0;
+//				}
+//
+//				if (ckpt == 1)
+//				{
+//					DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt -= 1;
+//					if (DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt == 0)
+//					{
+//						xil_printf("[SUPER-GC-END] VictimVBN:%u [%d]CNT\r\n", pastVBN, DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt);
+//						DFTL_GLOBAL::GetSuperGCMgr()->m_nVictimVBN = INVALID_VBN;
+//					}
+//				}
+//			}
 		}
 #endif
 	}
@@ -169,6 +344,41 @@ GC_MGR::_Read(VOID)
 			{
 				if (m_nWriteCount == m_nIssuedCount)
 				{
+//					if (m_nVictimVBN == DFTL_GLOBAL::GetSuperGCMgr()->m_nVictimVBN)
+//					{
+//
+//						int ckpt = 0;
+//						if ((m_channel == 0) && (m_way == 0) && (DFTL_GLOBAL::GetSuperGCMgr()->ch_0_wy_0 == 1))
+//						{
+//							ckpt = 1;
+//							DFTL_GLOBAL::GetSuperGCMgr()->ch_0_wy_0 = 0;
+//						}
+//						if ((m_channel == 0) && (m_way == 1) && (DFTL_GLOBAL::GetSuperGCMgr()->ch_0_wy_1 == 1))
+//						{
+//							ckpt = 1;
+//							DFTL_GLOBAL::GetSuperGCMgr()->ch_0_wy_1 = 0;
+//						}
+//						if ((m_channel == 1) && (m_way == 0) && (DFTL_GLOBAL::GetSuperGCMgr()->ch_1_wy_0 == 1))
+//						{
+//							ckpt = 1;
+//							DFTL_GLOBAL::GetSuperGCMgr()->ch_1_wy_0 = 0;
+//						}
+//						if ((m_channel == 1) && (m_way == 1) && (DFTL_GLOBAL::GetSuperGCMgr()->ch_1_wy_1 == 1))
+//						{
+//							ckpt = 1;
+//							DFTL_GLOBAL::GetSuperGCMgr()->ch_1_wy_1 = 0;
+//						}
+//
+//						if (ckpt == 1)
+//						{
+//							DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt -= 1;
+//							if (DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt == 0)
+//							{
+//								xil_printf("[SUPER-GC-END] VictimVBN:%u [%d]CNT\r\n", m_nVictimVBN, DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt);
+//								DFTL_GLOBAL::GetSuperGCMgr()->m_nVictimVBN = INVALID_VBN;
+//							}
+//						}
+//					}
 					m_nVictimVBN = INVALID_VBN;
 				}
 				else

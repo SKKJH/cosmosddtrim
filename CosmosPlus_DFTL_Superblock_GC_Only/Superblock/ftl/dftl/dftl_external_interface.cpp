@@ -90,4 +90,5 @@ VOID FTL_IOCtl(IOCTL_TYPE eType)
 VOID FTL_SB_INIT(VOID)
 {
 	g_pstDFTL->SB_INIT();
+	g_pstDFTL->GetSuperGCMgr()->Initialize();
 }

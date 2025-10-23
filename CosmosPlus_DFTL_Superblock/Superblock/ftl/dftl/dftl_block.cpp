@@ -364,8 +364,8 @@ VOID BLOCK_MGR::Release(UINT32 channel, UINT32 way, UINT32 nVBN, UINT32 FLAG)
 	            sb->SetFree();
 	            list_add_tail(&sb->m_dlList, &sbm->m_dlFreeList);
 	            sbm->m_nFreeCount++;
-//	            xil_printf("\t[FREE] SUPER VBN:%u [free:%u], USED:%u\r\n",
-//	                       nVBN, (sb->m_nUSED == 0), sb->m_nUSED);
+	            xil_printf("\t[FREE] SUPER VBN:%u [free:%u], USED:%u\r\n",
+	                       nVBN, (sb->m_nUSED == 0), sb->m_nUSED);
 	        }
 	    }
 	}

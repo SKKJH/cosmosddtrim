@@ -87,7 +87,7 @@ public:
 
 private:
 	VOID _Read(VOID);
-
+public:
 	UINT32		m_nThreshold;
 	IOTYPE		m_eIOType;
 
@@ -105,4 +105,28 @@ private:
 	UINT32 m_way;
 };
 
+//SUPER_GC_MGR
+class SUPER_GC_MGR
+{
+public:
+	VOID Initialize(VOID);
+
+	BOOL IsGCRunning(VOID);
+
+	VOID CheckAndStartGC(VOID);
+
+	UINT32 GetVictimVBN(VOID);
+
+	INT32 return_VBN(VOID) {return m_nVictimVBN;}
+
+	UINT32		m_nThreshold;
+
+	INT32	m_nVictimVBN;			// Victim block
+	INT32	m_nGCCnt;
+
+	INT32	ch_0_wy_0;
+	INT32	ch_0_wy_1;
+	INT32	ch_1_wy_0;
+	INT32	ch_1_wy_1;
+};
 #endif

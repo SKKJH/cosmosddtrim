@@ -191,6 +191,8 @@ DFTL_GLOBAL::Run(VOID)
 		}
 	}
 
+//	GetSuperGCMgr()->CheckAndStartGC();
+
 #if (SUPPORT_META_DEMAND_LOADING == 1)
 	for (UINT32 channel = 0; channel < USER_CHANNELS; channel++) {
 		for (UINT32 way = 0; way < USER_WAYS; way++) {

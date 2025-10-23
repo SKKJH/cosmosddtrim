@@ -157,7 +157,14 @@ public:
 	INT32 m_wp_wy;
 	INT32 m_page_cnt;
 
+	INT32 m_gc_wp_ch;
+	INT32 m_gc_wp_wy;
+	INT32 m_gc_page_cnt;
+
+	BOOL SB_INIT_FLAG;
+
 	VIRTUAL VOID WritePtr_GetAndAdvance(VOID);
+	VIRTUAL VOID GC_WritePtr_GetAndAdvance(VOID);
 	VIRTUAL VOID DebugBlockPrint(UINT32 FLAG);
 
 	VIRTUAL VOID Initialize(VOID);
@@ -179,6 +186,7 @@ public:
 	static VBINFO_MGR*		GetVBInfoMgr(UINT32 channel, UINT32 way) { return &m_pstInstance->m_stVBInfoMgr[channel][way]; }
 	static REQUEST_MGR*		GetRequestMgr(VOID)	{return &m_pstInstance->m_stRequestMgr;}
 	static GC_MGR*			GetGCMgr(UINT32 channel, UINT32 way) { return &m_pstInstance->m_stGCMgr[channel][way]; }
+	static SUPER_GC_MGR*	GetSuperGCMgr(VOID) { return &m_pstInstance->m_stSUPERGCMgr; }
 #if (SUPPORT_META_DEMAND_LOADING == 1)
 	static GC_MGR*			GetMetaGCMgr(UINT32 channel, UINT32 way) { return &m_pstInstance->m_stMetaGCMgr[channel][way]; }
 #endif
@@ -244,6 +252,7 @@ private:
 
 	VBINFO_MGR			m_stVBInfoMgr[USER_CHANNELS][USER_WAYS];			// Virtual Information Manager
 	REQUEST_MGR			m_stRequestMgr;			// read/write request manager
+	SUPER_GC_MGR		m_stSUPERGCMgr;
 	GC_MGR				m_stGCMgr[USER_CHANNELS][USER_WAYS];				// garbage collector
 #if (SUPPORT_META_DEMAND_LOADING == 1)
 	GC_MGR				m_stMetaGCMgr[USER_CHANNELS][USER_WAYS];			// meta garbage collector
@@ -267,7 +276,6 @@ private:
 	UINT32		m_nLogicalFlashSizeKB;
 
 	UINT32		m_nLPNCount;
-	UINT32		m_nVBlockCount;
 
 	UINT32		m_nGCTh;				// free block count for GC trigger
 
@@ -281,6 +289,8 @@ private:
 public:
 	int 		m_bEnable = 0;
 	INT32 		m_ActiveBlockAllocCnt;
+	INT32		m_GCActiveBlockAllocCnt;
+	UINT32		m_nVBlockCount;
 };
 
 #endif		// end of #ifndef __DFTL_H__

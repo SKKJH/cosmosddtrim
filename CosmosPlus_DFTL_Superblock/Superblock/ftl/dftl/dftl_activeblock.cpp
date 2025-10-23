@@ -621,7 +621,7 @@ ACTIVE_BLOCK_MGR::_GoToNextActiveBlock(IOTYPE eIOType, UINT32 nextVBN)
 /*
 	@brief get active block for writes
 */
-ACTIVE_BLOCK* 
+ACTIVE_BLOCK*
 ACTIVE_BLOCK_MGR::GetActiveBlock(IOTYPE eIOType)
 {
 	ACTIVE_BLOCK*		pstActiveBlock;
@@ -630,8 +630,8 @@ ACTIVE_BLOCK_MGR::GetActiveBlock(IOTYPE eIOType)
 
 	if (pstActiveBlock->m_nCurVPPN == INVALID_PPN)
 	{
-//		if (eIOType != IOTYPE_META)
-		if (eIOType == IOTYPE_HOST)
+//		if (eIOType == IOTYPE_HOST)
+		if (eIOType != IOTYPE_META)
 		{
 			int check = 0;
 			for (int i=0; i<USER_CHANNELS; i++)
@@ -648,13 +648,30 @@ ACTIVE_BLOCK_MGR::GetActiveBlock(IOTYPE eIOType)
 				return NULL;
 
 			SBINFO_MGR* sbm = DFTL_GLOBAL::GetSBInfoMgr();
+
+			if (DFTL_GLOBAL::GetInstance()->m_bEnable > 1)
+			{
+				if (eIOType == IOTYPE_HOST)
+					xil_printf("[HOST] SB FREE CNT:%u\r\n", sbm->m_nFreeCount);
+				else if (eIOType == IOTYPE_GC)
+					xil_printf("[GC] SB FREE CNT:%u\r\n", sbm->m_nFreeCount);
+			}
+
 			SBINFO* sb = list_first_entry(&sbm->m_dlFreeList, SBINFO, m_dlList);
 			nextVBN = sb->m_nVBN;
+
+			if (DFTL_GLOBAL::GetInstance()->m_bEnable > 1)
+			{
+				if (eIOType == IOTYPE_HOST)
+					xil_printf("[HOST] SB Next VBN:%u\r\n", nextVBN);
+				if (eIOType == IOTYPE_GC)
+					xil_printf("[GC] SB Next VBN:%u\r\n", nextVBN);
+			}
 
 			for (int i = 0; i < USER_CHANNELS; i++) {
 				for (int j = 0; j < USER_WAYS; j++) {
 					ACTIVE_BLOCK_MGR* mgr = DFTL_GLOBAL::GetInstance()->GetActiveBlockMgr(i, j);
-					mgr->_GoToNextActiveBlock(eIOType, (INT32)nextVBN);
+					mgr->_GoToNextActiveBlock(eIOType, nextVBN);
 				}
 			}
 			pstActiveBlock = _GetCurActiveBlock(eIOType);
@@ -664,6 +681,45 @@ ACTIVE_BLOCK_MGR::GetActiveBlock(IOTYPE eIOType)
 	}
 	return pstActiveBlock;
 }
+
+//ACTIVE_BLOCK*
+//ACTIVE_BLOCK_MGR::GetActiveBlock(IOTYPE eIOType)
+//{
+//	ACTIVE_BLOCK*		pstActiveBlock;
+//	pstActiveBlock = _GetCurActiveBlock(eIOType);
+//	UINT32 nextVBN = INVALID_VBN;
+//
+//	if (pstActiveBlock->m_nCurVPPN == INVALID_PPN)
+//	{
+//		if (eIOType == IOTYPE_HOST)
+//		{
+//			if (DFTL_GLOBAL::GetInstance()->m_ActiveBlockAllocCnt == (USER_CHANNELS * USER_WAYS))
+//			{
+//				int check = 0;
+//				for (int i=0; i<USER_CHANNELS; i++)
+//				{
+//					for (int j=0; j<USER_WAYS; j++)
+//					{
+//						UINT32 wp = DFTL_GLOBAL::GetInstance()->GetActiveBlockMgr(i,j)->_GetCurActiveBlock(eIOType)->m_nCurVPPN;
+//						if (wp != INVALID_VPPN)
+//						{
+//							check = 1;
+//						}
+//					}
+//				}
+//				if (check == 1)
+//				{
+//					return NULL;
+//				}
+//			}
+//			DFTL_GLOBAL::GetInstance()->m_ActiveBlockAllocCnt -= 1;
+//			if (DFTL_GLOBAL::GetInstance()->m_ActiveBlockAllocCnt == 0)
+//				DFTL_GLOBAL::GetInstance()->m_ActiveBlockAllocCnt = USER_CHANNELS * USER_WAYS;
+//		}
+//		pstActiveBlock = _GoToNextActiveBlock(eIOType, nextVBN);
+//	}
+//	return pstActiveBlock;
+//}
 
 /*
 	@brief get active block data structure

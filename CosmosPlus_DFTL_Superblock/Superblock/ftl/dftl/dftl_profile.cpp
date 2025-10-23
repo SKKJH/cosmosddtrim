@@ -121,8 +121,8 @@ VOID DFTL_PrintProfile(UINT32 FLAG)
 	            SBINFO* pos;
 	            // 프로젝트 매크로 스타일 유지: (TYPE, var, head, member)
 	            list_for_each_entry(SBINFO, pos, &sbm->m_dlFreeList, m_dlList) {
-	                xil_printf("[%c] %u is FREE, %u blks\r\n",
-	                           pos->IsMeta() ? 'M' : 'H', pos->m_nVBN, pos->m_nUSED);
+//	                xil_printf("[%c] %u is FREE, %u blks\r\n",
+//	                           pos->IsMeta() ? 'M' : 'H', pos->m_nVBN, pos->m_nUSED);
 	                freeWalk++;
 
 	                // 일관성 체크(경고용)

@@ -183,6 +183,7 @@ public:
 #endif
 	static VBINFO_MGR*		GetVBInfoMgr(UINT32 channel, UINT32 way) { return &m_pstInstance->m_stVBInfoMgr[channel][way]; }
 	static REQUEST_MGR*		GetRequestMgr(VOID)	{return &m_pstInstance->m_stRequestMgr;}
+	static SUPER_GC_MGR*	GetSuperGCMgr(VOID) { return &m_pstInstance->m_stSUPERGCMgr; }
 	static GC_MGR*			GetGCMgr(UINT32 channel, UINT32 way) { return &m_pstInstance->m_stGCMgr[channel][way]; }
 #if (SUPPORT_META_DEMAND_LOADING == 1)
 	static GC_MGR*			GetMetaGCMgr(UINT32 channel, UINT32 way) { return &m_pstInstance->m_stMetaGCMgr[channel][way]; }
@@ -250,6 +251,8 @@ private:
 	VBINFO_MGR			m_stVBInfoMgr[USER_CHANNELS][USER_WAYS];			// Virtual Information Manager
 	REQUEST_MGR			m_stRequestMgr;			// read/write request manager
 	GC_MGR				m_stGCMgr[USER_CHANNELS][USER_WAYS];				// garbage collector
+	SUPER_GC_MGR				m_stSUPERGCMgr;
+
 #if (SUPPORT_META_DEMAND_LOADING == 1)
 	GC_MGR				m_stMetaGCMgr[USER_CHANNELS][USER_WAYS];			// meta garbage collector
 #endif
@@ -272,6 +275,7 @@ private:
 	UINT32		m_nLogicalFlashSizeKB;
 
 	UINT32		m_nLPNCount;
+public:
 	UINT32		m_nVBlockCount;
 
 	UINT32		m_nGCTh;				// free block count for GC trigger

@@ -105,6 +105,7 @@ public:
 	VOID	Initialize(BLOCK_MGR_TYPE eType);
 	VOID	Format(VOID);
 	UINT32	Allocate(UINT32 channel, UINT32 way, BOOL bUser, BOOL bGC, BOOL bMeta, UINT32 nextVBN, UINT32 FLAG);				// get a free Virtual Block
+	UINT32	Allocate(UINT32 channel, UINT32 way, BOOL bUser, BOOL bGC, BOOL bMeta, UINT32 FLAG);				// get a free Virtual Block
 	VOID	Release(UINT32 channel, UINT32 way, UINT32 nVBN, UINT32 FLAG);
 
 	UINT32	GetFreeBlockCount(UINT32 channel, UINT32 way) { return m_nFreeBlocks[channel][way]; }

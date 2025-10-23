@@ -16,6 +16,107 @@
 
 #include "dftl_internal.h"
 
+VOID
+SUPER_GC_MGR::Initialize(VOID)
+{
+	m_nThreshold	= 500;
+			//DFTL_GLOBAL::GetGCMgr(0,0)->m_nThreshold;
+	m_nVictimVBN 	= INVALID_VBN;
+	m_nGCCnt 		= 0;
+}
+
+BOOL
+SUPER_GC_MGR::IsGCRunning(VOID)
+{
+	if (m_nVictimVBN == INVALID_VBN)
+		return 0;
+	else
+		return 1;
+}
+
+UINT32
+SUPER_GC_MGR::GetVictimVBN(VOID)
+{
+    SBINFO_MGR* pSBMgr   = DFTL_GLOBAL::GetSBInfoMgr();
+    VNAND*      pVNAND   = DFTL_GLOBAL::GetVNandMgr();
+    UINT32      vblk_cnt = DFTL_GLOBAL::GetInstance()->m_nVBlockCount;
+
+    UINT32 best_vbn = INVALID_VBN;
+    UINT32 best_vpc = pVNAND->GetVPagesPerVBlock();
+    for (UINT32 vbn = 0; vbn < vblk_cnt; ++vbn)
+    {
+        SBINFO& sb = pSBMgr->m_pastSBInfo[vbn];
+
+        if (sb.IsMeta() || sb.IsBad() || sb.IsFree()) {
+            continue;
+        }
+        UINT32 sb_vpc_total = 0;
+
+        for (UINT32 ch = 0; ch < USER_CHANNELS; ++ch)
+        {
+            for (UINT32 wy = 0; wy < USER_WAYS; ++wy)
+            {
+                VBINFO* vbi   = DFTL_GLOBAL::GetVBInfoMgr(ch, wy)->GetVBInfo(vbn);
+                UINT32  invalid = vbi->GetInvalidLPNCount();
+                UINT32 	valid = pVNAND->GetVPagesPerVBlock() - invalid;
+
+                sb_vpc_total += valid;
+            }
+        }
+
+        if (sb_vpc_total < best_vpc) {
+            best_vpc = sb_vpc_total;
+            best_vbn = vbn;
+            if (best_vpc == 0) {
+            	xil_printf("SB BEST VBN:%u, VPC:%u\r\n", best_vbn, best_vpc);
+                return best_vbn; // 조기 종료
+            }
+        }
+    }
+
+    if (best_vbn != INVALID_VBN)
+    	xil_printf("SB BEST VBN:%u, VPC:%u\r\n", best_vbn, best_vpc);
+    return best_vbn;
+}
+
+
+BOOL
+SUPER_GC_MGR::CheckAndStartGC()
+{
+	if (DFTL_GLOBAL::GetInstance()->SB_INIT_FLAG == FALSE)
+		return 0;
+
+	// check is there anys running GC
+	if (IsGCRunning() == TRUE)
+	{
+		return 0;
+	}
+
+	UINT32 nFreeBlock;
+
+	DFTL_GLOBAL*	pstGlobal = DFTL_GLOBAL::GetInstance();
+
+	nFreeBlock = pstGlobal->GetSBInfoMgr()->m_nFreeCount;
+
+	if (nFreeBlock > m_nThreshold)
+	{
+		// enough free block
+		return 0;
+	}
+	UINT32 CandVBN = GetVictimVBN();
+	if (CandVBN != INVALID_VBN)
+	{
+		m_nVictimVBN = CandVBN;
+		xil_printf("[SUPER-GC-START] VictimVBN:%u\r\n", m_nVictimVBN);
+		return 1;
+	}
+	else
+	{
+		xil_printf("[SUPER-GC] INVALID VictimVBN\r\n");
+		return 0;
+	}
+}
+
 VOID 
 GC_MGR::Initialize(UINT32 nGCTh, IOTYPE eIOType, UINT32 channel, UINT32 way)
 {
@@ -65,9 +166,12 @@ VOID
 GC_MGR::CheckAndStartGC(VOID)
 {
 	// check is there anys running GC
-	if (IsGCRunning() == TRUE)
+	if (m_eIOType == IOTYPE_META)
 	{
-		return;
+		if (IsGCRunning() == TRUE)
+		{
+			return;
+		}
 	}
 
 	UINT32 nFreeBlock;
@@ -76,12 +180,32 @@ GC_MGR::CheckAndStartGC(VOID)
 
 	nFreeBlock = m_pstBlockMgr->GetFreeBlockCount(m_channel, m_way);
 
-	if (nFreeBlock > m_nThreshold)
+	if (m_eIOType == IOTYPE_META)
 	{
-		// enough free block
-		return;
+		if (nFreeBlock > m_nThreshold)
+		{
+			// enough free block
+			return;
+		}
 	}
-	m_nVictimVBN = GetVictimVBN(m_channel, m_way);
+
+	if (m_eIOType == IOTYPE_META)
+	{
+		m_nVictimVBN = GetVictimVBN(m_channel, m_way);
+	}
+	else
+	{
+		UINT32 cand_victim = pstGlobal->GetSuperGCMgr()->m_nVictimVBN;
+		xil_printf("[SUPER-GC-CHECK][%d/%d] VictimVBN:%u, %u CNT\r\n",
+				m_channel, m_way, cand_victim, pstGlobal->GetSuperGCMgr()->m_nGCCnt);
+		if (DFTL_GLOBAL::GetVBInfoMgr(m_channel, m_way)->GetVBInfo(cand_victim)->IsFree())
+			return;
+		pstGlobal->GetSuperGCMgr()->m_nGCCnt += 1;
+		m_nVictimVBN = cand_victim;
+		xil_printf("[SUPER-GC-START][%d/%d] VictimVBN:%u, %u CNT\r\n",
+				m_channel, m_way, m_nVictimVBN, pstGlobal->GetSuperGCMgr()->m_nGCCnt);
+	}
+
 	m_nVPC = pstGlobal->GetVPagePerVBlock() - DFTL_GLOBAL::GetVBInfoMgr(m_channel, m_way)->GetVBInfo(m_nVictimVBN)->GetInvalidLPNCount();
 	m_nVCNT = DFTL_GLOBAL::GetVBInfoMgr(m_channel, m_way)->GetVBInfo(m_nVictimVBN)->GetValidLPNCount();
 	m_nCurReadVPageOffset = 0;
@@ -93,10 +217,6 @@ GC_MGR::CheckAndStartGC(VOID)
 		DFTL_IncreaseProfile(Prof_CMTGC_count);
 	}
 	else {
-//		xil_printf("[GC-START] CH:%u, WAY:%u, VictimVBN:%u, VPC:[%u]\r\n", m_channel, m_way, m_nVictimVBN, m_nVPC);
-		int print = DFTL_GLOBAL::GetInstance()->GetUserBlockMgr()->CheckVPC(m_channel, m_way, m_nVictimVBN, 0);
-//		if (print == 1)
-//			xil_printf("GC Check Result\r\n");//	xil_printf("[VNAND::ProgramPageSimul] nLPN: %u, nVPPN: %u\r\n", nLPN, nVPPN);
 		DFTL_IncreaseProfile(Prof_GC_count);
 	}
 
@@ -143,7 +263,13 @@ GC_MGR::IncreaseWriteCount(VOID)
 		}
 		else
 		{
-//			xil_printf("[GC-END] CH:%u, WAY:%u, VictimVBN:%u, VPC:[%u]\r\n", m_channel, m_way, pastVBN, m_nVPC);
+			DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt -= 1;
+			if (DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt == 0)
+			{
+				xil_printf("[SUPER-GC-END] VictimVBN:%u [%d]CNT\r\n",
+						DFTL_GLOBAL::GetSuperGCMgr()->m_nVictimVBN, DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt);
+				DFTL_GLOBAL::GetSuperGCMgr()->m_nVictimVBN = INVALID_VBN;
+			}
 		}
 #endif
 	}
@@ -174,20 +300,19 @@ GC_MGR::_Read(VOID)
 			{
 				if (m_nWriteCount == m_nIssuedCount)
 				{
-//					xil_printf("[R_D, VBN:%u] ISSUED CNT:%u, WRITE CNT:%u, VPC:%u\r\n", m_nVictimVBN, m_nIssuedCount, m_nWriteCount, m_nVPC);
-//					int print = DFTL_GLOBAL::GetInstance()->GetUserBlockMgr()->CheckVPC(m_channel, m_way, m_nVictimVBN, 1);
-//					if (print == 1)
-//						xil_printf("[R_D, VBN:%u] Result\r\n", m_nVictimVBN);
 					m_nVictimVBN = INVALID_VBN;
+					DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt -= 1;
+					if (DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt == 0)
+					{
+						xil_printf("[SUPER-GC-END] VictimVBN:%u [%d]CNT\r\n",
+								DFTL_GLOBAL::GetSuperGCMgr()->m_nVictimVBN, DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt);
+						DFTL_GLOBAL::GetSuperGCMgr()->m_nVictimVBN = INVALID_VBN;
+					}
 				}
 				else
 				{
 					if (m_nVPC != m_nIssuedCount)
 					{
-//						xil_printf("[R_I, VBN:%u] ISSUED CNT:%u, WRITE CNT:%u, VPC:%u\r\n", m_nVictimVBN, m_nIssuedCount, m_nWriteCount, m_nVPC);
-//						int print = DFTL_GLOBAL::GetInstance()->GetUserBlockMgr()->CheckVPC(m_channel, m_way, m_nVictimVBN, 1);
-//						if (print == 1)
-//							xil_printf("[R_I, VBN:%u] Result\r\n", m_nVictimVBN);
 						m_nVPC = m_nIssuedCount;
 					}
 				}
