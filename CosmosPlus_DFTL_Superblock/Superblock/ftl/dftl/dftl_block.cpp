@@ -150,6 +150,7 @@ VOID BLOCK_MGR::_FormatUser(VOID)
 
 					m_nUsedBlocks[channel][way]++; // to avoid underflow by release without allocation
 					Release(channel, way, i, 0);
+					DFTL_GLOBAL::GetSBInfoMgr()->m_pastSBInfo[i].m_bBad = 0;
 				}
 				else
 				{
@@ -364,8 +365,7 @@ VOID BLOCK_MGR::Release(UINT32 channel, UINT32 way, UINT32 nVBN, UINT32 FLAG)
 	            sb->SetFree();
 	            list_add_tail(&sb->m_dlList, &sbm->m_dlFreeList);
 	            sbm->m_nFreeCount++;
-	            xil_printf("\t[FREE] SUPER VBN:%u [free:%u], USED:%u\r\n",
-	                       nVBN, (sb->m_nUSED == 0), sb->m_nUSED);
+	            xil_printf("\t[FREE] SUPER VBN:%u [free:%u], USED:%u\r\n", nVBN, sb->m_bFree, sb->m_nUSED);
 	        }
 	    }
 	}

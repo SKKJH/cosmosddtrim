@@ -19,8 +19,7 @@
 VOID
 SUPER_GC_MGR::Initialize(VOID)
 {
-	m_nThreshold	= 500;
-			//DFTL_GLOBAL::GetGCMgr(0,0)->m_nThreshold;
+	m_nThreshold	= DFTL_GLOBAL::GetGCMgr(0,0)->m_nThreshold;
 	m_nVictimVBN 	= INVALID_VBN;
 	m_nGCCnt 		= 0;
 }
@@ -42,24 +41,60 @@ SUPER_GC_MGR::GetVictimVBN(VOID)
     UINT32      vblk_cnt = DFTL_GLOBAL::GetInstance()->m_nVBlockCount;
 
     UINT32 best_vbn = INVALID_VBN;
-    UINT32 best_vpc = pVNAND->GetVPagesPerVBlock();
-    for (UINT32 vbn = 0; vbn < vblk_cnt; ++vbn)
+    UINT32 best_vpc = pVNAND->GetVPagesPerVBlock() * (USER_CHANNELS * USER_WAYS);
+
+//	xil_printf("CHECK START\r\n");
+    for (UINT32 vbn = 20; vbn < vblk_cnt; ++vbn)
     {
         SBINFO& sb = pSBMgr->m_pastSBInfo[vbn];
 
-        if (sb.IsMeta() || sb.IsBad() || sb.IsFree()) {
+        if ((sb.IsMeta() == TRUE) || (sb.IsBad() == TRUE) || (sb.IsFree() == TRUE)) {
+//        	if (sb.IsMeta())
+//        		xil_printf("PASS META BLOCK [%u]\r\n", vbn);
+//        	if (sb.IsFree())
+//        		xil_printf("PASS FREE BLOCK [%u]\r\n", vbn);
+//        	if (sb.IsBad())
+//        		xil_printf("PASS BAD BLOCK [%u]\r\n", vbn);
             continue;
         }
+//        else
+//        {
+//    		xil_printf("CHECK HOST BLOCK [%u]\r\n", vbn);
+//        }
         UINT32 sb_vpc_total = 0;
+//        UINT32 _0_0 = 0;
+//        UINT32 _0_1 = 0;
+//        UINT32 _1_0 = 0;
+//        UINT32 _1_1 = 0;
 
         for (UINT32 ch = 0; ch < USER_CHANNELS; ++ch)
         {
             for (UINT32 wy = 0; wy < USER_WAYS; ++wy)
             {
+            	UINT32  invalid;
+            	UINT32 	valid;
                 VBINFO* vbi   = DFTL_GLOBAL::GetVBInfoMgr(ch, wy)->GetVBInfo(vbn);
-                UINT32  invalid = vbi->GetInvalidLPNCount();
-                UINT32 	valid = pVNAND->GetVPagesPerVBlock() - invalid;
-
+                if (vbi->IsFree())
+                	valid = 0;
+                else
+                {
+                	invalid = vbi->GetInvalidLPNCount();
+                	valid = pVNAND->GetVPagesPerVBlock() - invalid;
+                }
+//                if (ch == 0)
+//                {
+//                	if (wy == 0)
+//                		_0_0 = valid;
+//                	else
+//                		_0_1 = valid;
+//                }
+//                else
+//                {
+//                	if (wy == 0)
+//                		_1_0 = valid;
+//                	else
+//                		_1_1 = valid;
+//                }
                 sb_vpc_total += valid;
             }
         }
@@ -67,6 +102,8 @@ SUPER_GC_MGR::GetVictimVBN(VOID)
         if (sb_vpc_total < best_vpc) {
             best_vpc = sb_vpc_total;
             best_vbn = vbn;
+//        	xil_printf("FIND Candidate VBN:%u, VPC:%u, [0/0:%u], [0/1:%u], [1/0:%u], [1/1:%u]", vbn, sb_vpc_total,
+//        			_0_0, _0_1, _1_0, _1_1);
             if (best_vpc == 0) {
             	xil_printf("SB BEST VBN:%u, VPC:%u\r\n", best_vbn, best_vpc);
                 return best_vbn; // 조기 종료
@@ -75,7 +112,7 @@ SUPER_GC_MGR::GetVictimVBN(VOID)
     }
 
     if (best_vbn != INVALID_VBN)
-    	xil_printf("SB BEST VBN:%u, VPC:%u\r\n", best_vbn, best_vpc);
+//    	xil_printf("SB BEST VBN:%u, VPC:%u\r\n", best_vbn, best_vpc);
     return best_vbn;
 }
 
@@ -103,16 +140,17 @@ SUPER_GC_MGR::CheckAndStartGC()
 		// enough free block
 		return 0;
 	}
+
 	UINT32 CandVBN = GetVictimVBN();
 	if (CandVBN != INVALID_VBN)
 	{
 		m_nVictimVBN = CandVBN;
-		xil_printf("[SUPER-GC-START] VictimVBN:%u\r\n", m_nVictimVBN);
+//		xil_printf("[SUPER-GC-START] VictimVBN:%u\r\n", m_nVictimVBN);
 		return 1;
 	}
 	else
 	{
-		xil_printf("[SUPER-GC] INVALID VictimVBN\r\n");
+//		xil_printf("[SUPER-GC] INVALID VictimVBN\r\n");
 		return 0;
 	}
 }
@@ -196,14 +234,14 @@ GC_MGR::CheckAndStartGC(VOID)
 	else
 	{
 		UINT32 cand_victim = pstGlobal->GetSuperGCMgr()->m_nVictimVBN;
-		xil_printf("[SUPER-GC-CHECK][%d/%d] VictimVBN:%u, %u CNT\r\n",
-				m_channel, m_way, cand_victim, pstGlobal->GetSuperGCMgr()->m_nGCCnt);
+//		xil_printf("[SUPER-GC-CHECK][%d/%d] VictimVBN:%u, %u CNT\r\n",
+//				m_channel, m_way, cand_victim, pstGlobal->GetSuperGCMgr()->m_nGCCnt);
 		if (DFTL_GLOBAL::GetVBInfoMgr(m_channel, m_way)->GetVBInfo(cand_victim)->IsFree())
 			return;
 		pstGlobal->GetSuperGCMgr()->m_nGCCnt += 1;
 		m_nVictimVBN = cand_victim;
-		xil_printf("[SUPER-GC-START][%d/%d] VictimVBN:%u, %u CNT\r\n",
-				m_channel, m_way, m_nVictimVBN, pstGlobal->GetSuperGCMgr()->m_nGCCnt);
+//		xil_printf("[SUPER-GC-START][%d/%d] VictimVBN:%u, %u CNT\r\n",
+//				m_channel, m_way, m_nVictimVBN, pstGlobal->GetSuperGCMgr()->m_nGCCnt);
 	}
 
 	m_nVPC = pstGlobal->GetVPagePerVBlock() - DFTL_GLOBAL::GetVBInfoMgr(m_channel, m_way)->GetVBInfo(m_nVictimVBN)->GetInvalidLPNCount();
@@ -266,8 +304,8 @@ GC_MGR::IncreaseWriteCount(VOID)
 			DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt -= 1;
 			if (DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt == 0)
 			{
-				xil_printf("[SUPER-GC-END] VictimVBN:%u [%d]CNT\r\n",
-						DFTL_GLOBAL::GetSuperGCMgr()->m_nVictimVBN, DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt);
+//				xil_printf("[SUPER-GC-END] VictimVBN:%u [%d]CNT\r\n",
+//						DFTL_GLOBAL::GetSuperGCMgr()->m_nVictimVBN, DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt);
 				DFTL_GLOBAL::GetSuperGCMgr()->m_nVictimVBN = INVALID_VBN;
 			}
 		}
@@ -304,8 +342,8 @@ GC_MGR::_Read(VOID)
 					DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt -= 1;
 					if (DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt == 0)
 					{
-						xil_printf("[SUPER-GC-END] VictimVBN:%u [%d]CNT\r\n",
-								DFTL_GLOBAL::GetSuperGCMgr()->m_nVictimVBN, DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt);
+//						xil_printf("[SUPER-GC-END] VictimVBN:%u [%d]CNT\r\n",
+//								DFTL_GLOBAL::GetSuperGCMgr()->m_nVictimVBN, DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt);
 						DFTL_GLOBAL::GetSuperGCMgr()->m_nVictimVBN = INVALID_VBN;
 					}
 				}

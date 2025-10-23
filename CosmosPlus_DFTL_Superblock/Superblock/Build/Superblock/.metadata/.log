@@ -10988,3 +10988,1818 @@ Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.]. Thread: Worker-462
 
 !ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:18:09.220
 !MESSAGE XSCT command with result: [con], Result: [null, ]. Thread: Worker-462
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 14:34:30.481
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 14:34:32.213
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 14:36:23.584
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 14:36:25.320
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 14:36:26.318
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 14:36:28.200
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 14:37:58.134
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 14:37:59.838
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 14:38:32.066
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 14:38:33.772
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 14:50:54.242
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 14:50:55.953
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 14:51:02.119
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 14:51:03.804
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 14:51:07.711
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 14:51:09.385
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 14:51:28.667
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 14:51:30.349
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:38.295
+!MESSAGE XSCT Command: [ ::hsi::utils::set_current_hw_sw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss ], Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:38.301
+!MESSAGE XSCT command with result: [ ::hsi::utils::set_current_hw_sw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss ], Result: [null, ]. Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:38.302
+!MESSAGE XSCT Command: [::hsi::utils::get_hw_sw_details -json C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss], Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:38.305
+!MESSAGE XSCT command with result: [::hsi::utils::get_hw_sw_details -json C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss], Result: [null, {"procname": "ps7_cortexa9_0",
+"osname": "standalone",
+"osver": "7.0",
+}]. Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:38.306
+!MESSAGE XSCT Command: [::hsi::utils::closesw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss], Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:38.309
+!MESSAGE XSCT command with result: [::hsi::utils::closesw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss], Result: [null, ]. Thread: main
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 14:51:42.423
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:42.527
+!MESSAGE XSCT Command: [disconnect tcfchan#58], Thread: Thread-9185
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:42.550
+!MESSAGE XSCT command with result: [disconnect tcfchan#58], Result: [null, ]. Thread: Thread-9185
+
+!ENTRY com.xilinx.sdk.utils 1 0 2025-10-23 14:51:43.529
+!MESSAGE Updating toolusage
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.530
+!MESSAGE XSCT Command: [connect -url tcp:127.0.0.1:3121], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.535
+!MESSAGE XSCT command with result: [connect -url tcp:127.0.0.1:3121], Result: [null, tcfchan#59]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.535
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.546
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.547
+!MESSAGE XSCT Command: [version -server], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.549
+!MESSAGE XSCT command with result: [version -server], Result: [null, 2019.1]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.550
+!MESSAGE XSCT Command: [version], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.551
+!MESSAGE XSCT command with result: [version], Result: [null, xsct 2019.1
+SW Build 2552052 on Fri May 24 14:49:42 MDT 2019
+Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.551
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.557
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.558
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.575
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.576
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.583
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.583
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.603
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.603
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.609
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.610
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.627
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.628
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.633
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.634
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.650
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.651
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.657
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.658
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.674
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.674
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.681
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.681
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.697
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.698
+!MESSAGE XSCT Command: [jtag targets -set -filter {name =~ "Digilent JTAG-SMT2 210251A543E7" && level == 0}], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.715
+!MESSAGE XSCT command with result: [jtag targets -set -filter {name =~ "Digilent JTAG-SMT2 210251A543E7" && level == 0}], Result: [null, ]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.716
+!MESSAGE XSCT Command: [jtag frequency], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.717
+!MESSAGE XSCT command with result: [jtag frequency], Result: [null, 15000000]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.718
+!MESSAGE XSCT Command: [source C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/ps7_init.tcl], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.720
+!MESSAGE XSCT command with result: [source C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/ps7_init.tcl], Result: [null, ]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.722
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.747
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.749
+!MESSAGE XSCT Command: [rst -system], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.894
+!MESSAGE XSCT command with result: [rst -system], Result: [null, ]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:43.894
+!MESSAGE XSCT Command: [after 3000], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:46.896
+!MESSAGE XSCT command with result: [after 3000], Result: [null, ]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:46.926
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:46.932
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:46.933
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:46.950
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:46.950
+!MESSAGE XSCT Command: [targets -set -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==0} -index 1], Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:46.977
+!MESSAGE XSCT command with result: [targets -set -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==0} -index 1], Result: [null, ]. Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:46.978
+!MESSAGE XSCT Command: [fpga -file C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/OpenSSD2.bit], Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:54.591
+!MESSAGE XSCT command with result: [fpga -file C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/OpenSSD2.bit], Result: [null, ]. Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:54.626
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:54.652
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:54.653
+!MESSAGE XSCT Command: [loadhw -hw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:54.674
+!MESSAGE XSCT command with result: [loadhw -hw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]], Result: [null, OpenSSD2_1]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:54.675
+!MESSAGE XSCT Command: [configparams force-mem-access 1], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:54.677
+!MESSAGE XSCT command with result: [configparams force-mem-access 1], Result: [null, ]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:54.678
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:54.701
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:54.701
+!MESSAGE XSCT Command: [ps7_init], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:55.108
+!MESSAGE XSCT command with result: [ps7_init], Result: [null, ]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:55.109
+!MESSAGE XSCT Command: [ps7_post_config], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:55.130
+!MESSAGE XSCT command with result: [ps7_post_config], Result: [null, ]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:55.131
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:55.154
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:55.155
+!MESSAGE XSCT Command: [dow C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock/Debug/Superblock.elf], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:55.601
+!MESSAGE XSCT command with result: [dow C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock/Debug/Superblock.elf], Result: [null, ]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:55.602
+!MESSAGE XSCT Command: [configparams force-mem-access 0], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:55.608
+!MESSAGE XSCT command with result: [configparams force-mem-access 0], Result: [null, ]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:55.719
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:55.769
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:55.770
+!MESSAGE XSCT Command: [con], Thread: Worker-478
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 14:51:55.796
+!MESSAGE XSCT command with result: [con], Result: [null, ]. Thread: Worker-478
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:08:30.512
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:08:32.233
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:08:54.552
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:08:56.236
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:09:02.610
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:09:04.309
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:10:17.066
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:10:18.765
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:11:03.501
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:11:05.190
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:11:20.564
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:11:22.239
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:11:27.678
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:11:29.394
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:11:38.634
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:11:40.344
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:12:13.883
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:12:15.585
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:12:33.824
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:12:35.499
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:12:38.237
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:12:39.914
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:13:04.607
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:13:06.309
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:19.114
+!MESSAGE XSCT Command: [ ::hsi::utils::set_current_hw_sw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss ], Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:19.119
+!MESSAGE XSCT command with result: [ ::hsi::utils::set_current_hw_sw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss ], Result: [null, ]. Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:19.121
+!MESSAGE XSCT Command: [::hsi::utils::get_hw_sw_details -json C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss], Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:19.125
+!MESSAGE XSCT command with result: [::hsi::utils::get_hw_sw_details -json C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss], Result: [null, {"procname": "ps7_cortexa9_0",
+"osname": "standalone",
+"osver": "7.0",
+}]. Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:19.126
+!MESSAGE XSCT Command: [::hsi::utils::closesw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss], Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:19.129
+!MESSAGE XSCT command with result: [::hsi::utils::closesw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss], Result: [null, ]. Thread: main
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:13:23.286
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:23.360
+!MESSAGE XSCT Command: [disconnect tcfchan#59], Thread: Thread-9412
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:23.395
+!MESSAGE XSCT command with result: [disconnect tcfchan#59], Result: [null, ]. Thread: Thread-9412
+
+!ENTRY com.xilinx.sdk.utils 1 0 2025-10-23 15:13:24.389
+!MESSAGE Updating toolusage
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.390
+!MESSAGE XSCT Command: [connect -url tcp:127.0.0.1:3121], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.394
+!MESSAGE XSCT command with result: [connect -url tcp:127.0.0.1:3121], Result: [null, tcfchan#60]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.395
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.406
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.406
+!MESSAGE XSCT Command: [version -server], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.420
+!MESSAGE XSCT command with result: [version -server], Result: [null, 2019.1]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.420
+!MESSAGE XSCT Command: [version], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.421
+!MESSAGE XSCT command with result: [version], Result: [null, xsct 2019.1
+SW Build 2552052 on Fri May 24 14:49:42 MDT 2019
+Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.422
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.428
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.429
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.447
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.448
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.455
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.455
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.471
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.472
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.479
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.480
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.496
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.497
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.503
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.503
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.522
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.522
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.528
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.529
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.545
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.547
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.553
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.553
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.570
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.570
+!MESSAGE XSCT Command: [jtag targets -set -filter {name =~ "Digilent JTAG-SMT2 210251A543E7" && level == 0}], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.586
+!MESSAGE XSCT command with result: [jtag targets -set -filter {name =~ "Digilent JTAG-SMT2 210251A543E7" && level == 0}], Result: [null, ]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.587
+!MESSAGE XSCT Command: [jtag frequency], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.588
+!MESSAGE XSCT command with result: [jtag frequency], Result: [null, 15000000]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.589
+!MESSAGE XSCT Command: [source C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/ps7_init.tcl], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.593
+!MESSAGE XSCT command with result: [source C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/ps7_init.tcl], Result: [null, ]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.594
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.631
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.632
+!MESSAGE XSCT Command: [rst -system], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.786
+!MESSAGE XSCT command with result: [rst -system], Result: [null, ]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:24.787
+!MESSAGE XSCT Command: [after 3000], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:27.795
+!MESSAGE XSCT command with result: [after 3000], Result: [null, ]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:27.830
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:27.841
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:27.842
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:27.859
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:27.859
+!MESSAGE XSCT Command: [targets -set -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==0} -index 1], Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:27.878
+!MESSAGE XSCT command with result: [targets -set -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==0} -index 1], Result: [null, ]. Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:27.879
+!MESSAGE XSCT Command: [fpga -file C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/OpenSSD2.bit], Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:35.477
+!MESSAGE XSCT command with result: [fpga -file C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/OpenSSD2.bit], Result: [null, ]. Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:35.519
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:35.544
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:35.545
+!MESSAGE XSCT Command: [loadhw -hw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:35.567
+!MESSAGE XSCT command with result: [loadhw -hw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]], Result: [null, OpenSSD2_1]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:35.568
+!MESSAGE XSCT Command: [configparams force-mem-access 1], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:35.570
+!MESSAGE XSCT command with result: [configparams force-mem-access 1], Result: [null, ]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:35.571
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:35.594
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:35.595
+!MESSAGE XSCT Command: [ps7_init], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:35.963
+!MESSAGE XSCT command with result: [ps7_init], Result: [null, ]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:35.964
+!MESSAGE XSCT Command: [ps7_post_config], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:35.994
+!MESSAGE XSCT command with result: [ps7_post_config], Result: [null, ]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:35.995
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:36.018
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:36.018
+!MESSAGE XSCT Command: [dow C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock/Debug/Superblock.elf], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:36.472
+!MESSAGE XSCT command with result: [dow C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock/Debug/Superblock.elf], Result: [null, ]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:36.474
+!MESSAGE XSCT Command: [configparams force-mem-access 0], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:36.476
+!MESSAGE XSCT command with result: [configparams force-mem-access 0], Result: [null, ]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:36.584
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:36.634
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:36.636
+!MESSAGE XSCT Command: [con], Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:13:36.662
+!MESSAGE XSCT command with result: [con], Result: [null, ]. Thread: Worker-471
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:17.188
+!MESSAGE XSCT Command: [ ::hsi::utils::set_current_hw_sw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss ], Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:17.193
+!MESSAGE XSCT command with result: [ ::hsi::utils::set_current_hw_sw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss ], Result: [null, ]. Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:17.193
+!MESSAGE XSCT Command: [::hsi::utils::get_hw_sw_details -json C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss], Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:17.197
+!MESSAGE XSCT command with result: [::hsi::utils::get_hw_sw_details -json C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss], Result: [null, {"procname": "ps7_cortexa9_0",
+"osname": "standalone",
+"osver": "7.0",
+}]. Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:17.198
+!MESSAGE XSCT Command: [::hsi::utils::closesw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss], Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:17.200
+!MESSAGE XSCT command with result: [::hsi::utils::closesw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss], Result: [null, ]. Thread: main
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:27:22.189
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:27:24.476
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:24.565
+!MESSAGE XSCT Command: [disconnect tcfchan#60], Thread: Thread-9493
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:24.568
+!MESSAGE XSCT command with result: [disconnect tcfchan#60], Result: [null, ]. Thread: Thread-9493
+
+!ENTRY com.xilinx.sdk.utils 1 0 2025-10-23 15:27:25.575
+!MESSAGE Updating toolusage
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.576
+!MESSAGE XSCT Command: [connect -url tcp:127.0.0.1:3121], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.581
+!MESSAGE XSCT command with result: [connect -url tcp:127.0.0.1:3121], Result: [null, tcfchan#61]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.581
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.601
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.601
+!MESSAGE XSCT Command: [version -server], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.604
+!MESSAGE XSCT command with result: [version -server], Result: [null, 2019.1]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.604
+!MESSAGE XSCT Command: [version], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.605
+!MESSAGE XSCT command with result: [version], Result: [null, xsct 2019.1
+SW Build 2552052 on Fri May 24 14:49:42 MDT 2019
+Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.606
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.612
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.612
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.629
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.630
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.635
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.636
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.652
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.654
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.660
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.661
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.677
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.678
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.684
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.684
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.701
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.702
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.708
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.709
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.725
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.726
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.731
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.732
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.749
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.749
+!MESSAGE XSCT Command: [jtag targets -set -filter {name =~ "Digilent JTAG-SMT2 210251A543E7" && level == 0}], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.766
+!MESSAGE XSCT command with result: [jtag targets -set -filter {name =~ "Digilent JTAG-SMT2 210251A543E7" && level == 0}], Result: [null, ]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.767
+!MESSAGE XSCT Command: [jtag frequency], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.768
+!MESSAGE XSCT command with result: [jtag frequency], Result: [null, 15000000]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.769
+!MESSAGE XSCT Command: [source C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/ps7_init.tcl], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.772
+!MESSAGE XSCT command with result: [source C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/ps7_init.tcl], Result: [null, ]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.773
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.816
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.817
+!MESSAGE XSCT Command: [rst -system], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.958
+!MESSAGE XSCT command with result: [rst -system], Result: [null, ]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:25.959
+!MESSAGE XSCT Command: [after 3000], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:28.961
+!MESSAGE XSCT command with result: [after 3000], Result: [null, ]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:29.004
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:29.012
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:29.012
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:29.031
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:29.032
+!MESSAGE XSCT Command: [targets -set -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==0} -index 1], Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:29.060
+!MESSAGE XSCT command with result: [targets -set -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==0} -index 1], Result: [null, ]. Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:29.061
+!MESSAGE XSCT Command: [fpga -file C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/OpenSSD2.bit], Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:36.650
+!MESSAGE XSCT command with result: [fpga -file C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/OpenSSD2.bit], Result: [null, ]. Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:36.682
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:36.704
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:36.706
+!MESSAGE XSCT Command: [loadhw -hw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:36.742
+!MESSAGE XSCT command with result: [loadhw -hw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]], Result: [null, OpenSSD2_1]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:36.743
+!MESSAGE XSCT Command: [configparams force-mem-access 1], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:36.745
+!MESSAGE XSCT command with result: [configparams force-mem-access 1], Result: [null, ]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:36.745
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:36.770
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:36.771
+!MESSAGE XSCT Command: [ps7_init], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:37.160
+!MESSAGE XSCT command with result: [ps7_init], Result: [null, ]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:37.161
+!MESSAGE XSCT Command: [ps7_post_config], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:37.195
+!MESSAGE XSCT command with result: [ps7_post_config], Result: [null, ]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:37.195
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:37.217
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:37.217
+!MESSAGE XSCT Command: [dow C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock/Debug/Superblock.elf], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:37.694
+!MESSAGE XSCT command with result: [dow C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock/Debug/Superblock.elf], Result: [null, ]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:37.695
+!MESSAGE XSCT Command: [configparams force-mem-access 0], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:37.697
+!MESSAGE XSCT command with result: [configparams force-mem-access 0], Result: [null, ]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:37.818
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:37.882
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:37.882
+!MESSAGE XSCT Command: [con], Thread: Worker-487
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:27:37.909
+!MESSAGE XSCT command with result: [con], Result: [null, ]. Thread: Worker-487
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:29:34.459
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:29:36.171
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:29:47.493
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:29:49.169
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:29:58.401
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:30:00.085
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:30:16.044
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:30:17.739
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:30:31.612
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:30:33.289
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:30:52.370
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:30:54.071
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:31:54.737
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:31:56.450
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:32:39.392
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:32:40.457
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:32:52.686
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:32:53.681
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:33:23.948
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:33:25.020
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:33:28.620
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:33:29.670
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:33:54.599
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:33:55.622
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:34:58.352
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:34:59.428
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:35:07.724
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:35:08.756
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:35:27.785
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:35:28.822
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:35:37.785
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:35:38.854
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:36:31.393
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:36:33.086
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:36:59.062
+!MESSAGE XSCT Command: [ ::hsi::utils::set_current_hw_sw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss ], Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:36:59.067
+!MESSAGE XSCT command with result: [ ::hsi::utils::set_current_hw_sw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss ], Result: [null, ]. Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:36:59.067
+!MESSAGE XSCT Command: [::hsi::utils::get_hw_sw_details -json C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss], Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:36:59.071
+!MESSAGE XSCT command with result: [::hsi::utils::get_hw_sw_details -json C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss], Result: [null, {"procname": "ps7_cortexa9_0",
+"osname": "standalone",
+"osver": "7.0",
+}]. Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:36:59.072
+!MESSAGE XSCT Command: [::hsi::utils::closesw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss], Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:36:59.074
+!MESSAGE XSCT command with result: [::hsi::utils::closesw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss], Result: [null, ]. Thread: main
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:37:03.652
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:03.742
+!MESSAGE XSCT Command: [disconnect tcfchan#61], Thread: Thread-9731
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:03.756
+!MESSAGE XSCT command with result: [disconnect tcfchan#61], Result: [null, ]. Thread: Thread-9731
+
+!ENTRY com.xilinx.sdk.utils 1 0 2025-10-23 15:37:04.752
+!MESSAGE Updating toolusage
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.754
+!MESSAGE XSCT Command: [connect -url tcp:127.0.0.1:3121], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.758
+!MESSAGE XSCT command with result: [connect -url tcp:127.0.0.1:3121], Result: [null, tcfchan#62]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.759
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.774
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.774
+!MESSAGE XSCT Command: [version -server], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.777
+!MESSAGE XSCT command with result: [version -server], Result: [null, 2019.1]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.778
+!MESSAGE XSCT Command: [version], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.780
+!MESSAGE XSCT command with result: [version], Result: [null, xsct 2019.1
+SW Build 2552052 on Fri May 24 14:49:42 MDT 2019
+Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.782
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.790
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.791
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.813
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.814
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.824
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.824
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.844
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.845
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.853
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.854
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.877
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.878
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.886
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.886
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.906
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.907
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.915
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.915
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.934
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.935
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.942
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.943
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.959
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.960
+!MESSAGE XSCT Command: [jtag targets -set -filter {name =~ "Digilent JTAG-SMT2 210251A543E7" && level == 0}], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.978
+!MESSAGE XSCT command with result: [jtag targets -set -filter {name =~ "Digilent JTAG-SMT2 210251A543E7" && level == 0}], Result: [null, ]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.979
+!MESSAGE XSCT Command: [jtag frequency], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.981
+!MESSAGE XSCT command with result: [jtag frequency], Result: [null, 15000000]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.982
+!MESSAGE XSCT Command: [source C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/ps7_init.tcl], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.986
+!MESSAGE XSCT command with result: [source C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/ps7_init.tcl], Result: [null, ]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:04.987
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:05.018
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:05.019
+!MESSAGE XSCT Command: [rst -system], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:05.180
+!MESSAGE XSCT command with result: [rst -system], Result: [null, ]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:05.181
+!MESSAGE XSCT Command: [after 3000], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:08.186
+!MESSAGE XSCT command with result: [after 3000], Result: [null, ]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:08.220
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:08.227
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:08.227
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:08.245
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:08.245
+!MESSAGE XSCT Command: [targets -set -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==0} -index 1], Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:08.264
+!MESSAGE XSCT command with result: [targets -set -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==0} -index 1], Result: [null, ]. Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:08.265
+!MESSAGE XSCT Command: [fpga -file C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/OpenSSD2.bit], Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:15.856
+!MESSAGE XSCT command with result: [fpga -file C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/OpenSSD2.bit], Result: [null, ]. Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:15.913
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:15.939
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:15.940
+!MESSAGE XSCT Command: [loadhw -hw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:15.966
+!MESSAGE XSCT command with result: [loadhw -hw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]], Result: [null, OpenSSD2_1]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:15.967
+!MESSAGE XSCT Command: [configparams force-mem-access 1], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:15.969
+!MESSAGE XSCT command with result: [configparams force-mem-access 1], Result: [null, ]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:15.970
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:15.996
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:15.997
+!MESSAGE XSCT Command: [ps7_init], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:16.402
+!MESSAGE XSCT command with result: [ps7_init], Result: [null, ]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:16.403
+!MESSAGE XSCT Command: [ps7_post_config], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:16.410
+!MESSAGE XSCT command with result: [ps7_post_config], Result: [null, ]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:16.411
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:16.434
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:16.435
+!MESSAGE XSCT Command: [dow C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock/Debug/Superblock.elf], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:16.896
+!MESSAGE XSCT command with result: [dow C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock/Debug/Superblock.elf], Result: [null, ]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:16.897
+!MESSAGE XSCT Command: [configparams force-mem-access 0], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:16.899
+!MESSAGE XSCT command with result: [configparams force-mem-access 0], Result: [null, ]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:17.002
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:17.057
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:17.058
+!MESSAGE XSCT Command: [con], Thread: Worker-502
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 15:37:17.087
+!MESSAGE XSCT command with result: [con], Result: [null, ]. Thread: Worker-502
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:37:25.428
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:37:27.117
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:37:52.237
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 15:37:53.954
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 16:03:12.496
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 16:03:14.206
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 16:03:49.391
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 16:03:51.081
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 16:03:54.710
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 16:03:56.397
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 16:03:57.260
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 16:03:59.222
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 16:04:38.837
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 16:04:40.545
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 16:05:14.669
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 16:05:16.369
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 16:05:29.729
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 16:05:31.410
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 16:06:06.127
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 16:06:07.820
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:38.716
+!MESSAGE XSCT Command: [ ::hsi::utils::set_current_hw_sw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss ], Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:38.720
+!MESSAGE XSCT command with result: [ ::hsi::utils::set_current_hw_sw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss ], Result: [null, ]. Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:38.721
+!MESSAGE XSCT Command: [::hsi::utils::get_hw_sw_details -json C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss], Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:38.724
+!MESSAGE XSCT command with result: [::hsi::utils::get_hw_sw_details -json C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss], Result: [null, {"procname": "ps7_cortexa9_0",
+"osname": "standalone",
+"osver": "7.0",
+}]. Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:38.726
+!MESSAGE XSCT Command: [::hsi::utils::closesw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss], Thread: main
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:38.727
+!MESSAGE XSCT command with result: [::hsi::utils::closesw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock_bsp/system.mss], Result: [null, ]. Thread: main
+
+!ENTRY org.eclipse.core.resources 4 2 2025-10-23 16:06:43.048
+!MESSAGE Problems occurred when invoking code from plug-in: "org.eclipse.core.resources".
+!STACK 0
+java.lang.NullPointerException
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:43.122
+!MESSAGE XSCT Command: [disconnect tcfchan#62], Thread: Thread-9854
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:43.137
+!MESSAGE XSCT command with result: [disconnect tcfchan#62], Result: [null, ]. Thread: Thread-9854
+
+!ENTRY com.xilinx.sdk.utils 1 0 2025-10-23 16:06:44.129
+!MESSAGE Updating toolusage
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.129
+!MESSAGE XSCT Command: [connect -url tcp:127.0.0.1:3121], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.166
+!MESSAGE XSCT command with result: [connect -url tcp:127.0.0.1:3121], Result: [null, tcfchan#63]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.167
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.177
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.177
+!MESSAGE XSCT Command: [version -server], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.179
+!MESSAGE XSCT command with result: [version -server], Result: [null, 2019.1]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.179
+!MESSAGE XSCT Command: [version], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.180
+!MESSAGE XSCT command with result: [version], Result: [null, xsct 2019.1
+SW Build 2552052 on Fri May 24 14:49:42 MDT 2019
+Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.181
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.187
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.187
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.204
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.204
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.211
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.212
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.227
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.228
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.235
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.235
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.251
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.253
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.260
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.260
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.277
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.278
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.284
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.285
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.301
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.302
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.308
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.309
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.326
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.327
+!MESSAGE XSCT Command: [jtag targets -set -filter {name =~ "Digilent JTAG-SMT2 210251A543E7" && level == 0}], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.344
+!MESSAGE XSCT command with result: [jtag targets -set -filter {name =~ "Digilent JTAG-SMT2 210251A543E7" && level == 0}], Result: [null, ]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.344
+!MESSAGE XSCT Command: [jtag frequency], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.345
+!MESSAGE XSCT command with result: [jtag frequency], Result: [null, 15000000]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.346
+!MESSAGE XSCT Command: [source C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/ps7_init.tcl], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.349
+!MESSAGE XSCT command with result: [source C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/ps7_init.tcl], Result: [null, ]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.350
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.374
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.376
+!MESSAGE XSCT Command: [rst -system], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.529
+!MESSAGE XSCT command with result: [rst -system], Result: [null, ]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:44.530
+!MESSAGE XSCT Command: [after 3000], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:47.538
+!MESSAGE XSCT command with result: [after 3000], Result: [null, ]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:47.572
+!MESSAGE XSCT Command: [jtag targets -filter {level == 0}], Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:47.578
+!MESSAGE XSCT command with result: [jtag targets -filter {level == 0}], Result: [null,   1* Digilent JTAG-SMT2 210251A543E7]. Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:47.579
+!MESSAGE XSCT Command: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:47.596
+!MESSAGE XSCT command with result: [jtag targets -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==1}], Result: [null,      2  arm_dap (idcode 4ba00477 irlen 4)
+     3  xc7z045 (idcode 23731093 irlen 6 fpga)]. Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:47.596
+!MESSAGE XSCT Command: [targets -set -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==0} -index 1], Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:47.633
+!MESSAGE XSCT command with result: [targets -set -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==0} -index 1], Result: [null, ]. Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:47.634
+!MESSAGE XSCT Command: [fpga -file C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/OpenSSD2.bit], Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:55.237
+!MESSAGE XSCT command with result: [fpga -file C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/OpenSSD2.bit], Result: [null, ]. Thread: ModalContext
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:55.261
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:55.283
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:55.284
+!MESSAGE XSCT Command: [loadhw -hw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:55.305
+!MESSAGE XSCT command with result: [loadhw -hw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]], Result: [null, OpenSSD2_1]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:55.306
+!MESSAGE XSCT Command: [configparams force-mem-access 1], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:55.308
+!MESSAGE XSCT command with result: [configparams force-mem-access 1], Result: [null, ]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:55.309
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:55.331
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:55.332
+!MESSAGE XSCT Command: [ps7_init], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:55.766
+!MESSAGE XSCT command with result: [ps7_init], Result: [null, ]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:55.767
+!MESSAGE XSCT Command: [ps7_post_config], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:55.774
+!MESSAGE XSCT command with result: [ps7_post_config], Result: [null, ]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:55.774
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:55.797
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:55.798
+!MESSAGE XSCT Command: [dow C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock/Debug/Superblock.elf], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:56.265
+!MESSAGE XSCT command with result: [dow C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock/Debug/Superblock.elf], Result: [null, ]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:56.266
+!MESSAGE XSCT Command: [configparams force-mem-access 0], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:56.268
+!MESSAGE XSCT command with result: [configparams force-mem-access 0], Result: [null, ]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:56.380
+!MESSAGE XSCT Command: [targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:56.431
+!MESSAGE XSCT command with result: [targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0], Result: [null, ]. Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:56.431
+!MESSAGE XSCT Command: [con], Thread: Worker-508
+
+!ENTRY com.xilinx.sdk.utils 0 0 2025-10-23 16:06:56.452
+!MESSAGE XSCT command with result: [con], Result: [null, ]. Thread: Worker-508

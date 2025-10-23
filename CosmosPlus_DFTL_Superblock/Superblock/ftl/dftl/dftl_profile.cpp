@@ -91,20 +91,20 @@ VOID DFTL_PrintProfile(UINT32 FLAG)
 		{
 			if (!sb[i].IsBad())
 			{
-				if (sb[i].m_bFree)
-				{
-					if (sb[i].IsMeta())
-						xil_printf("[M] %u is FREE, %u blks\r\n",sb[i].m_nVBN, sb[i].m_nUSED);
-					else
-						xil_printf("[H] %u is FREE, %u blks\r\n",sb[i].m_nVBN, sb[i].m_nUSED);
-				}
-				else
-				{
-					if (sb[i].IsMeta())
-						xil_printf("[M] %u is USED, %u blks\r\n",sb[i].m_nVBN, sb[i].m_nUSED);
-					else
-						xil_printf("[H] %u is USED, %u blks\r\n",sb[i].m_nVBN, sb[i].m_nUSED);
-				}
+//				if (sb[i].m_bFree)
+//				{
+//					if (sb[i].IsMeta())
+//						xil_printf("[M] %u is FREE, %u blks\r\n",sb[i].m_nVBN, sb[i].m_nUSED);
+//					else
+//						xil_printf("[H] %u is FREE, %u blks\r\n",sb[i].m_nVBN, sb[i].m_nUSED);
+//				}
+//				else
+//				{
+//					if (sb[i].IsMeta())
+//						xil_printf("[M] %u is USED, %u blks\r\n",sb[i].m_nVBN, sb[i].m_nUSED);
+//					else
+//						xil_printf("[H] %u is USED, %u blks\r\n",sb[i].m_nVBN, sb[i].m_nUSED);
+//				}
 			}
 //			else
 //				xil_printf("[BAD] %u is BAD Block\r\n",sb[i].m_nVBN);

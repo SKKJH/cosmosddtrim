@@ -91,8 +91,8 @@ VOID DFTL_GLOBAL::SB_INIT()
         PRINTF("[SB_INIT] ===== FREE SB LIST START =====\n\r");
         SBINFO* pos;
         list_for_each_entry(SBINFO, pos, &sbm->m_dlFreeList, m_dlList) {
-            PRINTF("[SB_INIT][FREE] VBN:%u, USED:%u, BAD:%u, META:%u\n\r",
-                   pos->m_nVBN, pos->m_nUSED, pos->m_bBad, pos->m_bMeta);
+//            PRINTF("[SB_INIT][FREE] VBN:%u, USED:%u, BAD:%u, META:%u\n\r",
+//                   pos->m_nVBN, pos->m_nUSED, pos->m_bBad, pos->m_bMeta);
             freeWalk++;
 
             if (pos->m_bBad)  badInFree++;
@@ -488,9 +488,15 @@ VOID SBINFO_MGR::Initialize()
 		m_pastSBInfo[i].m_nUSED = 0;
 		m_pastSBInfo[i].m_bBad = 0;
 		if (i<20)
+		{
+			xil_printf("SBINFO META INIT %d\r\n", i);
 			m_pastSBInfo[i].m_bMeta = 1;
+		}
 		else
+		{
+//			xil_printf("SBINFO HOST INIT %d\r\n", i);
 			m_pastSBInfo[i].m_bMeta = 0;
+		}
 	}
 }
 
