@@ -2922,3 +2922,144 @@ con
 ----------------End of Script----------------
 
 15:37:17 INFO  : Launch script is exported to file 'C:\COSMOS_KJH\CosmosPlus_DFTL_Superblock\Superblock\Build\Superblock\.sdk\launch_scripts\xilinx_c-c++_application_(system_debugger)\system_debugger_using_debug_superblock.elf_on_local.tcl'
+16:06:43 INFO  : Disconnected from the channel tcfchan#62.
+16:06:44 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+16:06:44 INFO  : Jtag cable 'Digilent JTAG-SMT2 210251A543E7' is selected.
+16:06:44 INFO  : 'jtag frequency' command is executed.
+16:06:44 INFO  : Sourcing of 'C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/ps7_init.tcl' is done.
+16:06:44 INFO  : Context for 'APU' is selected.
+16:06:44 INFO  : System reset is completed.
+16:06:47 INFO  : 'after 3000' command is executed.
+16:06:47 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==0} -index 1' command is executed.
+16:06:55 INFO  : FPGA configured successfully with bitstream "C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/OpenSSD2.bit"
+16:06:55 INFO  : Context for 'APU' is selected.
+16:06:55 INFO  : Hardware design information is loaded from 'C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf'.
+16:06:55 INFO  : 'configparams force-mem-access 1' command is executed.
+16:06:55 INFO  : Context for 'APU' is selected.
+16:06:55 INFO  : 'ps7_init' command is executed.
+16:06:55 INFO  : 'ps7_post_config' command is executed.
+16:06:55 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+16:06:56 INFO  : The application 'C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock/Debug/Superblock.elf' is downloaded to processor 'ps7_cortexa9_0'.
+16:06:56 INFO  : 'configparams force-mem-access 0' command is executed.
+16:06:56 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+source C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/ps7_init.tcl
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0
+rst -system
+after 3000
+targets -set -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==0} -index 1
+fpga -file C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/OpenSSD2.bit
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0
+loadhw -hw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0
+dow C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock/Debug/Superblock.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+16:06:56 INFO  : Memory regions updated for context APU
+16:06:56 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+16:06:56 INFO  : 'con' command is executed.
+16:06:56 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0
+con
+----------------End of Script----------------
+
+16:06:56 INFO  : Launch script is exported to file 'C:\COSMOS_KJH\CosmosPlus_DFTL_Superblock\Superblock\Build\Superblock\.sdk\launch_scripts\xilinx_c-c++_application_(system_debugger)\system_debugger_using_debug_superblock.elf_on_local.tcl'
+16:43:42 INFO  : Disconnected from the channel tcfchan#63.
+16:43:43 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+16:43:43 INFO  : Jtag cable 'Digilent JTAG-SMT2 210251A543E7' is selected.
+16:43:43 INFO  : 'jtag frequency' command is executed.
+16:43:43 INFO  : Sourcing of 'C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/ps7_init.tcl' is done.
+16:43:43 INFO  : Context for 'APU' is selected.
+16:43:43 INFO  : System reset is completed.
+16:43:46 INFO  : 'after 3000' command is executed.
+16:43:46 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==0} -index 1' command is executed.
+16:43:54 INFO  : FPGA configured successfully with bitstream "C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/OpenSSD2.bit"
+16:43:54 INFO  : Context for 'APU' is selected.
+16:43:54 INFO  : Hardware design information is loaded from 'C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf'.
+16:43:54 INFO  : 'configparams force-mem-access 1' command is executed.
+16:43:54 INFO  : Context for 'APU' is selected.
+16:43:54 INFO  : 'ps7_init' command is executed.
+16:43:54 INFO  : 'ps7_post_config' command is executed.
+16:43:54 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+16:43:55 INFO  : The application 'C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock/Debug/Superblock.elf' is downloaded to processor 'ps7_cortexa9_0'.
+16:43:55 INFO  : 'configparams force-mem-access 0' command is executed.
+16:43:55 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+source C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/ps7_init.tcl
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0
+rst -system
+after 3000
+targets -set -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==0} -index 1
+fpga -file C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/OpenSSD2.bit
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0
+loadhw -hw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0
+dow C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock/Debug/Superblock.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+16:43:55 INFO  : Memory regions updated for context APU
+16:43:55 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+16:43:55 INFO  : 'con' command is executed.
+16:43:55 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0
+con
+----------------End of Script----------------
+
+16:43:55 INFO  : Launch script is exported to file 'C:\COSMOS_KJH\CosmosPlus_DFTL_Superblock\Superblock\Build\Superblock\.sdk\launch_scripts\xilinx_c-c++_application_(system_debugger)\system_debugger_using_debug_superblock.elf_on_local.tcl'
+19:33:45 INFO  : Disconnected from the channel tcfchan#64.
+19:33:46 INFO  : Connected to target on host '127.0.0.1' and port '3121'.
+19:33:46 INFO  : Jtag cable 'Digilent JTAG-SMT2 210251A543E7' is selected.
+19:33:46 INFO  : 'jtag frequency' command is executed.
+19:33:46 INFO  : Sourcing of 'C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/ps7_init.tcl' is done.
+19:33:46 INFO  : Context for 'APU' is selected.
+19:33:46 INFO  : System reset is completed.
+19:33:49 INFO  : 'after 3000' command is executed.
+19:33:50 INFO  : 'targets -set -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==0} -index 1' command is executed.
+19:33:57 INFO  : FPGA configured successfully with bitstream "C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/OpenSSD2.bit"
+19:33:57 INFO  : Context for 'APU' is selected.
+19:33:57 INFO  : Hardware design information is loaded from 'C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf'.
+19:33:57 INFO  : 'configparams force-mem-access 1' command is executed.
+19:33:57 INFO  : Context for 'APU' is selected.
+19:33:58 INFO  : 'ps7_init' command is executed.
+19:33:58 INFO  : 'ps7_post_config' command is executed.
+19:33:58 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+19:33:58 INFO  : The application 'C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock/Debug/Superblock.elf' is downloaded to processor 'ps7_cortexa9_0'.
+19:33:58 INFO  : 'configparams force-mem-access 0' command is executed.
+19:33:58 INFO  : ----------------XSDB Script----------------
+connect -url tcp:127.0.0.1:3121
+source C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/ps7_init.tcl
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0
+rst -system
+after 3000
+targets -set -filter {jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7" && level==0} -index 1
+fpga -file C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/OpenSSD2.bit
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0
+loadhw -hw C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/system_hw_platform_0/system.hdf -mem-ranges [list {0x40000000 0xbfffffff}]
+configparams force-mem-access 1
+targets -set -nocase -filter {name =~"APU*" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0
+ps7_init
+ps7_post_config
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0
+dow C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock/Superblock/Build/Superblock/Superblock/Debug/Superblock.elf
+configparams force-mem-access 0
+----------------End of Script----------------
+
+19:33:58 INFO  : Memory regions updated for context APU
+19:33:58 INFO  : Context for processor 'ps7_cortexa9_0' is selected.
+19:33:58 INFO  : 'con' command is executed.
+19:33:58 INFO  : ----------------XSDB Script (After Launch)----------------
+targets -set -nocase -filter {name =~ "ARM*#0" && jtag_cable_name =~ "Digilent JTAG-SMT2 210251A543E7"} -index 0
+con
+----------------End of Script----------------
+
+19:33:58 INFO  : Launch script is exported to file 'C:\COSMOS_KJH\CosmosPlus_DFTL_Superblock\Superblock\Build\Superblock\.sdk\launch_scripts\xilinx_c-c++_application_(system_debugger)\system_debugger_using_debug_superblock.elf_on_local.tcl'
