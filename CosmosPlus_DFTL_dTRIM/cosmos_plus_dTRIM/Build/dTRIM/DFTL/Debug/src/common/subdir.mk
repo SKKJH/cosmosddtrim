@@ -4,10 +4,10 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/common/list.c \
-C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/common/random.c \
-C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/common/statistics.c \
-C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/common/util.c 
+C:/COSMOS_KJH/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/common/list.c \
+C:/COSMOS_KJH/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/common/random.c \
+C:/COSMOS_KJH/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/common/statistics.c \
+C:/COSMOS_KJH/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/common/util.c 
 
 OBJS += \
 ./src/common/list.o \
@@ -23,28 +23,28 @@ C_DEPS += \
 
 
 # Each subdirectory must supply rules for building sources it contributes
-src/common/list.o: C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/common/list.c
+src/common/list.o: C:/COSMOS_KJH/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/common/list.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: ARM v7 g++ compiler'
 	arm-none-eabi-g++ -DCOSMOS_PLUS=1 -DDFTL=1 -Wall -O0 -g3 -I../../DFTL_bsp/ps7_cortexa9_0/include -I../../../../common -I../../../../fil -I../../../../ftl -I../../../../ftl/dftl -I../../../../hil -I../../../../hil/nvme -I../../../../target -I../../../../target/cosmos_plus -c -fmessage-length=0 -MT"$@" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
-src/common/random.o: C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/common/random.c
+src/common/random.o: C:/COSMOS_KJH/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/common/random.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: ARM v7 g++ compiler'
 	arm-none-eabi-g++ -DCOSMOS_PLUS=1 -DDFTL=1 -Wall -O0 -g3 -I../../DFTL_bsp/ps7_cortexa9_0/include -I../../../../common -I../../../../fil -I../../../../ftl -I../../../../ftl/dftl -I../../../../hil -I../../../../hil/nvme -I../../../../target -I../../../../target/cosmos_plus -c -fmessage-length=0 -MT"$@" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
-src/common/statistics.o: C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/common/statistics.c
+src/common/statistics.o: C:/COSMOS_KJH/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/common/statistics.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: ARM v7 g++ compiler'
 	arm-none-eabi-g++ -DCOSMOS_PLUS=1 -DDFTL=1 -Wall -O0 -g3 -I../../DFTL_bsp/ps7_cortexa9_0/include -I../../../../common -I../../../../fil -I../../../../ftl -I../../../../ftl/dftl -I../../../../hil -I../../../../hil/nvme -I../../../../target -I../../../../target/cosmos_plus -c -fmessage-length=0 -MT"$@" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
-src/common/util.o: C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/common/util.c
+src/common/util.o: C:/COSMOS_KJH/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/common/util.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: ARM v7 g++ compiler'
 	arm-none-eabi-g++ -DCOSMOS_PLUS=1 -DDFTL=1 -Wall -O0 -g3 -I../../DFTL_bsp/ps7_cortexa9_0/include -I../../../../common -I../../../../fil -I../../../../ftl -I../../../../ftl/dftl -I../../../../hil -I../../../../hil/nvme -I../../../../target -I../../../../target/cosmos_plus -c -fmessage-length=0 -MT"$@" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"

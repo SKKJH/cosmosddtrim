@@ -117,9 +117,12 @@ DFTL_GLOBAL::ReadPage(UINT32 nCmdSlotTag, UINT32 nLPN, UINT32 nCount)
 {
 	HIL_REQUEST*	pstRequest;
 
-	if ((nLPN == 77) && ((nCount == 77)|| (nCount == 78)))
+	if (nLPN == 77)
 	{
-		DFTL_PrintProfile();
+		if ((nCount == 77) || (nCount == 78))
+			DFTL_PrintProfile();
+		else
+			DFTL_PrintProfile();
 		m_bDSMEnable += 1;
 	}
 

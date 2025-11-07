@@ -1,0 +1,12 @@
+#-----------------------------------------------------------
+# Webtalk v2019.1 (64-bit)
+# SW Build 2552052 on Fri May 24 14:49:42 MDT 2019
+# 
+# Start of session at: Wed Nov  5 00:40:24 2025
+# Process ID: 16864
+# Current directory: C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock_DTRIM/SDTRIM/Build/SDTRIM/webtalk
+# Command line: wbtcv.exe -mode batch -source sdk_webtalk.tcl
+# Log file: C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock_DTRIM/SDTRIM/Build/SDTRIM/webtalk/webtalk.log
+# Journal file: C:/COSMOS_KJH/CosmosPlus_DFTL_Superblock_DTRIM/SDTRIM/Build/SDTRIM/webtalk\webtalk.jou
+#-----------------------------------------------------------
+source sdk_webtalk.tcl

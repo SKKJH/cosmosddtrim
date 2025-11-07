@@ -180,7 +180,7 @@
 //off:  channel and way can use only # of 2^x ch/way
 
 #define USER_CHANNELS					(2)		//4 (FOR NO GC EVAL: 4/4)
-#define USER_WAYS						(1)		//4 (FOR GC EVAL: 2/2)
+#define USER_WAYS						(2)		//4 (FOR GC EVAL: 2/2)
 
 //row -> page
 #define	BYTES_PER_DATA_REGION_OF_PAGE	16384

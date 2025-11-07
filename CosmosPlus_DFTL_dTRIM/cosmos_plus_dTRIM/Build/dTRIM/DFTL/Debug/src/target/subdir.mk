@@ -4,8 +4,8 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/target/main.c \
-C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/target/osal.c 
+C:/COSMOS_KJH/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/target/main.c \
+C:/COSMOS_KJH/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/target/osal.c 
 
 OBJS += \
 ./src/target/main.o \
@@ -17,14 +17,14 @@ C_DEPS += \
 
 
 # Each subdirectory must supply rules for building sources it contributes
-src/target/main.o: C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/target/main.c
+src/target/main.o: C:/COSMOS_KJH/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/target/main.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: ARM v7 g++ compiler'
 	arm-none-eabi-g++ -DCOSMOS_PLUS=1 -DDFTL=1 -Wall -O0 -g3 -I../../DFTL_bsp/ps7_cortexa9_0/include -I../../../../common -I../../../../fil -I../../../../ftl -I../../../../ftl/dftl -I../../../../hil -I../../../../hil/nvme -I../../../../target -I../../../../target/cosmos_plus -c -fmessage-length=0 -MT"$@" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 
-src/target/osal.o: C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/target/osal.c
+src/target/osal.o: C:/COSMOS_KJH/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/target/osal.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: ARM v7 g++ compiler'
 	arm-none-eabi-g++ -DCOSMOS_PLUS=1 -DDFTL=1 -Wall -O0 -g3 -I../../DFTL_bsp/ps7_cortexa9_0/include -I../../../../common -I../../../../fil -I../../../../ftl -I../../../../ftl/dftl -I../../../../hil -I../../../../hil/nvme -I../../../../target -I../../../../target/cosmos_plus -c -fmessage-length=0 -MT"$@" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"

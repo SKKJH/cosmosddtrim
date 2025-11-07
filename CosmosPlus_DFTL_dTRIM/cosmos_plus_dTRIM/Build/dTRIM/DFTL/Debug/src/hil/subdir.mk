@@ -4,7 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/hil/hil.c 
+C:/COSMOS_KJH/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/hil/hil.c 
 
 OBJS += \
 ./src/hil/hil.o 
@@ -14,7 +14,7 @@ C_DEPS += \
 
 
 # Each subdirectory must supply rules for building sources it contributes
-src/hil/hil.o: C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/hil/hil.c
+src/hil/hil.o: C:/COSMOS_KJH/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/hil/hil.c
 	@echo 'Building file: $<'
 	@echo 'Invoking: ARM v7 g++ compiler'
 	arm-none-eabi-g++ -DCOSMOS_PLUS=1 -DDFTL=1 -Wall -O0 -g3 -I../../DFTL_bsp/ps7_cortexa9_0/include -I../../../../common -I../../../../fil -I../../../../ftl -I../../../../ftl/dftl -I../../../../hil -I../../../../hil/nvme -I../../../../target -I../../../../target/cosmos_plus -c -fmessage-length=0 -MT"$@" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"

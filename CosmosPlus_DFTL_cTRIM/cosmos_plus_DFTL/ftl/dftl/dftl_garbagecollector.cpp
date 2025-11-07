@@ -119,6 +119,9 @@ GC_MGR::IncreaseWriteCount(VOID)
 
 	if (m_nWriteCount == m_nVPC)
 	{
+		if(m_eIOType != IOTYPE_META)
+			DFTL_IncreaseProfile(Prof_GC_write_set, DFTL_GLOBAL::GetGCMgr(m_channel, m_way)->m_nWriteCount);
+
 		// GC Done for current victim
 		m_nVictimVBN = INVALID_VBN;
 #if (SUPPORT_META_DEMAND_LOADING == 1)
@@ -156,6 +159,13 @@ GC_MGR::_Read(VOID)
 	}
 	do
 	{
+		if (m_nCurReadVPageOffset == pstGlobal->GetVPagePerVBlock())
+		{
+			if (m_eIOType != IOTYPE_META) {
+				DFTL_IncreaseProfile(Prof_GC_read_set, DFTL_GLOBAL::GetGCMgr(m_channel, m_way)->m_nIssuedCount);
+			}
+		}
+
 		if (m_nCurReadVPageOffset >= pstGlobal->GetVPagePerVBlock())
 		{
 			// end of block, GC Read Done
@@ -198,6 +208,10 @@ GC_MGR::_Read(VOID)
 	}
 	else {
 		DFTL_IncreaseProfile(Prof_GC_read);
+		if (m_nCurReadVPageOffset >= pstGlobal->GetVPagePerVBlock())
+		{
+			DFTL_IncreaseProfile(Prof_GC_read_set, DFTL_GLOBAL::GetGCMgr(m_channel, m_way)->m_nIssuedCount);
+		}
 	}
 	return;
 }

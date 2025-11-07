@@ -16,6 +16,7 @@ RM := rm -rf
 -include src/ftl/subdir.mk
 -include src/fil/subdir.mk
 -include src/common/subdir.mk
+-include .metadata/.plugins/org.eclipse.cdt.make.core/subdir.mk
 -include subdir.mk
 -include objects.mk
 

@@ -2,20 +2,20 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="Format" key="selection"/>
+		<item value="FindTopKTrimSegments" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
-			<item value="format"/>
-			<item value="Initial"/>
-			<item value="initial"/>
-			<item value="allocate"/>
-			<item value="issue"/>
-			<item value="issue_pro"/>
-			<item value="Capacity"/>
-			<item value="global"/>
+			<item value="FindTopKTrimSegments"/>
+			<item value="clear"/>
+			<item value="_ProcessWrite_Wait"/>
+			<item value="Write"/>
+			<item value="GetVictimVBN"/>
+			<item value="_ProcessDSM_Wait"/>
+			<item value="v-&gt;Inval"/>
+			<item value="_safe_store_u32"/>
 		</list>
 		<list key="replacehistory">
 		</list>

@@ -1,5 +1,5 @@
 src/target/osal.o src/target/osal.o: \
- C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/target/osal.c \
+ C:/COSMOS_KJH/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/target/osal.c \
  ../../DFTL_bsp/ps7_cortexa9_0/include/Xtime_l.h \
  ../../DFTL_bsp/ps7_cortexa9_0/include/xil_types.h \
  ../../DFTL_bsp/ps7_cortexa9_0/include/xparameters.h \
@@ -12,7 +12,7 @@ src/target/osal.o src/target/osal.o: \
  ../../DFTL_bsp/ps7_cortexa9_0/include/xreg_cortexa9.h \
  ../../DFTL_bsp/ps7_cortexa9_0/include/xpseudo_asm_gcc.h \
  ../../../../common/util.h \
- C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/target/osal.h \
+ C:/COSMOS_KJH/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/target/osal.h \
  ../../DFTL_bsp/ps7_cortexa9_0/include/xil_printf.h \
  ../../../../target/cosmos_plus/cosmos_plus_memory_map.h \
  ../../../../common/debug.h
@@ -41,7 +41,7 @@ src/target/osal.o src/target/osal.o: \
 
 ../../../../common/util.h:
 
-C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/target/osal.h:
+C:/COSMOS_KJH/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/target/osal.h:
 
 ../../DFTL_bsp/ps7_cortexa9_0/include/xil_printf.h:
 

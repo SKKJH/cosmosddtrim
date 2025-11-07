@@ -1,17 +1,17 @@
 src/hil/nvme/nvme_admin_cmd.o src/hil/nvme/nvme_admin_cmd.o: \
- C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/nvme_admin_cmd.c \
+ C:/COSMOS_KJH/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/nvme_admin_cmd.c \
  ../../DFTL_bsp/ps7_cortexa9_0/include/xil_printf.h \
  ../../DFTL_bsp/ps7_cortexa9_0/include/xil_types.h \
  ../../DFTL_bsp/ps7_cortexa9_0/include/xparameters.h \
  ../../DFTL_bsp/ps7_cortexa9_0/include/xparameters_ps.h \
  ../../DFTL_bsp/ps7_cortexa9_0/include/bspconfig.h \
  ../../../../common/debug.h \
- C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/io_access.h \
- C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/nvme.h \
- C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/host_lld.h \
+ C:/COSMOS_KJH/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/io_access.h \
+ C:/COSMOS_KJH/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/nvme.h \
+ C:/COSMOS_KJH/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/host_lld.h \
  ../../../../target/cosmos_plus_global_config.h \
- C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/nvme_identify.h \
- C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/nvme_admin_cmd.h \
+ C:/COSMOS_KJH/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/nvme_identify.h \
+ C:/COSMOS_KJH/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/nvme_admin_cmd.h \
  ../../../../ftl/dftl/dftl_internal.h ../../../../common/cosmos_types.h \
  ../../../../hil/nvme/nvme.h \
  ../../../../target/cosmos_plus/cosmos_plus_system.h \
@@ -45,17 +45,17 @@ src/hil/nvme/nvme_admin_cmd.o src/hil/nvme/nvme_admin_cmd.o: \
 
 ../../../../common/debug.h:
 
-C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/io_access.h:
+C:/COSMOS_KJH/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/io_access.h:
 
-C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/nvme.h:
+C:/COSMOS_KJH/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/nvme.h:
 
-C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/host_lld.h:
+C:/COSMOS_KJH/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/host_lld.h:
 
 ../../../../target/cosmos_plus_global_config.h:
 
-C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/nvme_identify.h:
+C:/COSMOS_KJH/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/nvme_identify.h:
 
-C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/nvme_admin_cmd.h:
+C:/COSMOS_KJH/CosmosPlus_DFTL_cTRIM/cosmos_plus_DFTL/hil/nvme/nvme_admin_cmd.h:
 
 ../../../../ftl/dftl/dftl_internal.h:
 

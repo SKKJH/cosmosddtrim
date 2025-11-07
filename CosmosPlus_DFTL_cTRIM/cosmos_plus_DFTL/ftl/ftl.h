@@ -45,7 +45,7 @@
 #ifdef WIN32
 #define SUPPORT_STATIC_DENSITY				(16)			// user density, GB
 #else
-#define SUPPORT_STATIC_DENSITY				(15)			// user density, GB
+#define SUPPORT_STATIC_DENSITY				(30)			// user density, GB
 #endif
 #define SUPPORT_META_BLOCK					(0)				// consume meta data block on initializing
 

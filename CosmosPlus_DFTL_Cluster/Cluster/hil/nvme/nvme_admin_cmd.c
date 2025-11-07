@@ -523,7 +523,7 @@ void handle_nvme_admin_cmd(NVME_COMMAND *nvmeCmd)
 		default:
 		{
 			xil_printf("Not Support Admin Command OPC: %X\r\n", opc);
-//			DFTL_PrintProfile(1);
+			DFTL_PrintProfile(1);
 			ASSERT(0);
 			break;
 		}

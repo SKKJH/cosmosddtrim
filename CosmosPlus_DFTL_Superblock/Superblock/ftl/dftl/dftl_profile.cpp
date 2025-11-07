@@ -53,6 +53,8 @@ VOID DFTL_PrintProfile(UINT32 FLAG)
 
 			"Prof_GC_read",
 			"Prof_GC_write",
+			"Prof_GC_read_set",
+			"Prof_GC_write_set",
 			"Prof_GC_count",	//2MB block
 
 			"Prof_NAND_read",	//16KB

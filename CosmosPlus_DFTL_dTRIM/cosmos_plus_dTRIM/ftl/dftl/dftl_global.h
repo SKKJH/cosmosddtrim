@@ -164,12 +164,10 @@ static void clear_range_same_segment(UINT32 nStartLPN, UINT32 nEndLPN, UINT32 se
         }
     }
 
-    // delta는 '지워진 비트 수'
     DEBUG_ASSERT(g_trim_seg_count[seg_idx] >= (UINT32)delta);
     if (delta > 0) {
         g_trim_seg_count[seg_idx] -= (UINT32)delta;
     }
-//    xil_printf("SEG[%u] have [%u]bits \r\n", seg_idx, g_trim_seg_count[seg_idx]);
 }
 
 #define get_channel_from_lpn(lpn)	(((lpn) >> NUM_BIT_LPN_PER_PAGE) % USER_CHANNELS)

@@ -1,6 +1,6 @@
 src/target/cosmos_plus/cosmos_plus_system.o \
  src/target/cosmos_plus/cosmos_plus_system.o: \
- C:/CosmosPlus_DFTL_TRIM/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/target/cosmos_plus/cosmos_plus_system.c \
+ C:/COSMOS_KJH/CosmosPlus_DFTL_dTRIM/cosmos_plus_dTRIM/target/cosmos_plus/cosmos_plus_system.c \
  ../../DFTL_bsp/ps7_cortexa9_0/include/xil_cache.h \
  ../../DFTL_bsp/ps7_cortexa9_0/include/xil_types.h \
  ../../DFTL_bsp/ps7_cortexa9_0/include/xil_exception.h \
@@ -22,9 +22,9 @@ src/target/cosmos_plus/cosmos_plus_system.o \
  ../../DFTL_bsp/ps7_cortexa9_0/include/xscugic_hw.h \
  ../../../../common/debug.h \
  ../../DFTL_bsp/ps7_cortexa9_0/include/xil_printf.h \
- c:\cosmosplus_dftl_trim\cosmosplus_dftl_dtrim\cosmos_plus_dtrim\hil\nvme\nvme.h \
- c:\cosmosplus_dftl_trim\cosmosplus_dftl_dtrim\cosmos_plus_dtrim\hil\nvme\nvme_main.h \
- c:\cosmosplus_dftl_trim\cosmosplus_dftl_dtrim\cosmos_plus_dtrim\hil\nvme\host_lld.h \
+ c:\cosmos_kjh\cosmosplus_dftl_dtrim\cosmos_plus_dtrim\hil\nvme\nvme.h \
+ c:\cosmos_kjh\cosmosplus_dftl_dtrim\cosmos_plus_dtrim\hil\nvme\nvme_main.h \
+ c:\cosmos_kjh\cosmosplus_dftl_dtrim\cosmos_plus_dtrim\hil\nvme\host_lld.h \
  ../../../../target/cosmos_plus_global_config.h
 
 ../../DFTL_bsp/ps7_cortexa9_0/include/xil_cache.h:
@@ -69,10 +69,10 @@ src/target/cosmos_plus/cosmos_plus_system.o \
 
 ../../DFTL_bsp/ps7_cortexa9_0/include/xil_printf.h:
 
-c:\cosmosplus_dftl_trim\cosmosplus_dftl_dtrim\cosmos_plus_dtrim\hil\nvme\nvme.h:
+c:\cosmos_kjh\cosmosplus_dftl_dtrim\cosmos_plus_dtrim\hil\nvme\nvme.h:
 
-c:\cosmosplus_dftl_trim\cosmosplus_dftl_dtrim\cosmos_plus_dtrim\hil\nvme\nvme_main.h:
+c:\cosmos_kjh\cosmosplus_dftl_dtrim\cosmos_plus_dtrim\hil\nvme\nvme_main.h:
 
-c:\cosmosplus_dftl_trim\cosmosplus_dftl_dtrim\cosmos_plus_dtrim\hil\nvme\host_lld.h:
+c:\cosmos_kjh\cosmosplus_dftl_dtrim\cosmos_plus_dtrim\hil\nvme\host_lld.h:
 
 ../../../../target/cosmos_plus_global_config.h:
