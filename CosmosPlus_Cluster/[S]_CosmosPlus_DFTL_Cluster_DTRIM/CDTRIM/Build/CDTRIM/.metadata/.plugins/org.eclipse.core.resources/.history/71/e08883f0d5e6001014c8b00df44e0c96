@@ -1,0 +1,1415 @@
+/*******************************************************
+*
+* Copyright (C) 2018-2019 
+* Embedded Software Laboratory(ESLab), SUNG KYUN KWAN UNIVERSITY
+* * This file is part of ESLab's Flash memory firmware
+* * This source can not be copied and/or distributed without the express
+* permission of ESLab
+*
+* Author: DongYoung Seo (dongyoung.seo@gmail.com)
+		  Kyuhwa Han (hgh6877@gmail.com)
+* ESLab: http://nyx.skku.ac.kr
+*
+*******************************************************/
+
+#include "hil.h"
+#include "dftl_internal.h"
+
+// [Helper] 메모리 초기화 및 주소 계산 헬퍼
+static inline void memset_volatile_u8(volatile UINT8* dst, UINT8 value, size_t len)
+{
+    for (size_t i = 0; i < len; ++i) dst[i] = value;
+}
+
+static inline UINT32 seg_base_lpn(UINT32 seg_idx) { return seg_idx * 1024; }
+static inline UINT32 seg_end_lpn (UINT32 seg_idx) { return seg_base_lpn(seg_idx) + 1024 - 1; }
+static inline UINT32 byte_idx_from_lpn(UINT32 lpn) { return lpn / 8; }
+static inline UINT32 bit_off_from_lpn (UINT32 lpn) { return lpn % 8; }
+
+#define GET_TRIM_BIT(lpn) ((g_trim_bitmap[(lpn)/8] >> ((lpn)%8)) & 0x1)
+
+// 전역 TRIM 변수 정의
+volatile UINT8* g_trim_bitmap     	= NULL;
+volatile UINT16* g_trim_seg_count	= NULL;
+volatile UINT32 g_trim_pending    	= 0;
+volatile UINT32 g_trim_going    	= 0;
+
+#define TRIM_BITMAP_BYTES ((TOTAL_LPN_COUNT + 7ull) / 8ull)
+#define SEGMENT_COUNT     (TOTAL_LPN_COUNT / LPNS_PER_SEGMENT)
+#define LPNS_PER_SEGMENT  (1024)
+
+// 비교 함수에서 참조하기 위해 static 전역으로 선언
+static UINT32 g_clusterUtils[USER_CLUSTERS];
+
+DFTL_GLOBAL* DFTL_GLOBAL::m_pstInstance;
+
+// ----------------------------------------------------------------------------
+//  TRIM Management Functions
+// ----------------------------------------------------------------------------
+
+VOID IncreaseTrimSize(UINT32 cID, UINT32 count) {
+    DFTL_GLOBAL::GetInstance()->m_nTrimSize[cID] += count;
+    DFTL_GLOBAL::GetInstance()->m_nTotalPendingTrimCount += count;
+    DFTL_IncreaseProfile(Prof_DS_INCREASE_BIT, count);
+}
+
+VOID DecreaseTrimSize(UINT32 cID, UINT32 count) {
+    DFTL_GLOBAL* inst = DFTL_GLOBAL::GetInstance();
+
+    if (inst->m_nTrimSize[cID] >= count)
+        inst->m_nTrimSize[cID] -= count;
+    else
+        inst->m_nTrimSize[cID] = 0;
+
+    if (inst->m_nTotalPendingTrimCount >= count)
+    {
+        DFTL_IncreaseProfile(Prof_DS_DECREASE_BIT, count);
+        inst->m_nTotalPendingTrimCount -= count;
+    }
+    else
+    {
+        DFTL_IncreaseProfile(Prof_DS_DECREASE_BIT, inst->m_nTotalPendingTrimCount);
+        inst->m_nTotalPendingTrimCount = 0;
+    }
+
+//    xil_printf("Decrease TRIM SIZE: %u[=%u]\r\n", count, DFTL_GLOBAL::GetInstance()->m_nTotalPendingTrimCount);
+}
+
+void TrimBitmap_Init(void)
+{
+    g_trim_bitmap = (volatile UINT8*)OSAL_MemAlloc(MEM_TYPE_BUF, (int)TRIM_BITMAP_BYTES, 64);
+    DEBUG_ASSERT(g_trim_bitmap != NULL);
+    OSAL_MEMSET((void*)g_trim_bitmap, 0, (UINT32)TRIM_BITMAP_BYTES);
+
+    UINT32 count_array_size = SEGMENT_COUNT * sizeof(UINT16);
+    g_trim_seg_count = (volatile UINT16*)OSAL_MemAlloc(MEM_TYPE_BUF, (int)count_array_size, 64);
+    DEBUG_ASSERT(g_trim_seg_count != NULL);
+    OSAL_MEMSET((void*)g_trim_seg_count, 0, count_array_size);
+}
+
+void CheckPendingTrim()
+{
+    for (UINT32 i = 0; i < SEGMENT_COUNT; ++i)
+    {
+        if (g_trim_seg_count[i] > 0)
+        {
+            return;
+        }
+    }
+    TrimPending_Clear();
+    if (DFTL_GLOBAL::GetInstance()->m_nTotalPendingTrimCount != 0)
+    {
+    	xil_printf("UNMATCH\r\n");
+    }
+	xil_printf("TRIM DONE\r\n");
+}
+
+// [SetTrimRange] Cluster 경계 처리를 포함한 최적화 로직
+void SetTrimRange(UINT32 nStartLPN, UINT32 nEndLPN)
+{
+    DEBUG_ASSERT(nStartLPN <= nEndLPN);
+    DEBUG_ASSERT(nEndLPN < TOTAL_LPN_COUNT);
+
+    UINT32 segS = nStartLPN / LPNS_PER_SEGMENT;
+    UINT32 segE = nEndLPN   / LPNS_PER_SEGMENT;
+
+    // Helper Lambda: 비트 확인, 설정, 카운팅, Cluster 집계 (정밀 처리)
+    auto process_range_set = [&](UINT32 s, UINT32 e, UINT32 segIdx) {
+        UINT32 currentCID = INVALID_INDEX;
+        UINT32 pendingCountInCluster = 0;
+        UINT32 changedCnt = 0;
+
+        for (UINT32 lpn = s; lpn <= e; ++lpn) {
+            UINT32 byte_idx = lpn / 8;
+            UINT32 bit_off  = lpn % 8;
+            volatile UINT8* pByte = &g_trim_bitmap[byte_idx];
+
+            if (!((*pByte >> bit_off) & 0x1)) { // 0 -> 1 (New Pending)
+                *pByte |= (1 << bit_off);
+                changedCnt++;
+                UINT32 tempCID = DFTL_GLOBAL::GetInstance()->GetClusterID(lpn);
+                if (tempCID != currentCID) {
+                    if (currentCID != INVALID_INDEX && pendingCountInCluster > 0) {
+                        IncreaseTrimSize(currentCID, pendingCountInCluster);
+                    }
+                    currentCID = tempCID;
+                    pendingCountInCluster = 0;
+                }
+                pendingCountInCluster++;
+            }
+        }
+
+        if (currentCID != INVALID_INDEX && pendingCountInCluster > 0) {
+            IncreaseTrimSize(currentCID, pendingCountInCluster);
+        }
+        if (changedCnt > 0) {
+            g_trim_seg_count[segIdx] += (UINT16)changedCnt;
+        }
+    };
+
+    if (segS == segE) {
+        process_range_set(nStartLPN, nEndLPN, segS);
+        TrimPending_Set();
+        return;
+    }
+
+    UINT32 head_end = seg_end_lpn(segS);
+    process_range_set(nStartLPN, head_end, segS);
+
+    for (UINT32 s = segS + 1; s < segE; ++s) {
+        UINT32 seg_base = seg_base_lpn(s);
+        UINT32 seg_last = seg_end_lpn(s);
+        UINT32 cid_start = DFTL_GLOBAL::GetInstance()->GetClusterID(seg_base);
+        UINT32 cid_end   = DFTL_GLOBAL::GetInstance()->GetClusterID(seg_last);
+
+        if (cid_start == cid_end) { // Cluster 내부 세그먼트 (고속 처리)
+            UINT32 cnt = LPNS_PER_SEGMENT - g_trim_seg_count[s];
+            if (cnt > 0) {
+//            	xil_printf("[3] Increase Start %u ~ End %u\r\n", nStartLPN, nEndLPN);
+                IncreaseTrimSize(cid_start, cnt);
+                UINT32 seg_bytes = (LPNS_PER_SEGMENT + 7) / 8;
+                UINT32 base_byte = byte_idx_from_lpn(seg_base);
+                memset_volatile_u8(&g_trim_bitmap[base_byte], 0xFF, seg_bytes);
+                g_trim_seg_count[s] = LPNS_PER_SEGMENT;
+            }
+        } else { // 경계 세그먼트 (정밀 처리)
+            process_range_set(seg_base, seg_last, s);
+        }
+    }
+
+    UINT32 tail_begin = seg_base_lpn(segE);
+    process_range_set(tail_begin, nEndLPN, segE);
+    TrimPending_Set();
+}
+
+// [ClearTrimRange] Cluster 경계 처리를 포함한 최적화 로직
+void ClearTrimRange(UINT32 nStartLPN, UINT32 nEndLPN)
+{
+    DEBUG_ASSERT(nStartLPN <= nEndLPN);
+    DEBUG_ASSERT(nEndLPN < TOTAL_LPN_COUNT);
+    UINT32 segS = nStartLPN / LPNS_PER_SEGMENT;
+    UINT32 segE = nEndLPN   / LPNS_PER_SEGMENT;
+
+    auto process_range_clear = [&](UINT32 s, UINT32 e, UINT32 segIdx) {
+        UINT32 currentCID = INVALID_INDEX;
+        UINT32 clearedCountInCluster = 0;
+        UINT32 changedCnt = 0;
+        for (UINT32 lpn = s; lpn <= e; ++lpn) {
+            UINT32 byte_idx = lpn / 8;
+            UINT32 bit_off  = lpn % 8;
+            volatile UINT8* pByte = &g_trim_bitmap[byte_idx];
+
+            if ((*pByte >> bit_off) & 0x1) { // 1 -> 0 (Clear Pending)
+                *pByte &= ~(1 << bit_off);
+                changedCnt++;
+                UINT32 tempCID = DFTL_GLOBAL::GetInstance()->GetClusterID(lpn);
+                if (tempCID != currentCID) {
+                    if (currentCID != INVALID_INDEX && clearedCountInCluster > 0) {
+//                    	xil_printf("[1] Decrease Start %u ~ End %u\r\n", nStartLPN, nEndLPN);
+                        DecreaseTrimSize(currentCID, clearedCountInCluster);
+                    }
+                    currentCID = tempCID;
+                    clearedCountInCluster = 0;
+                }
+                clearedCountInCluster++;
+            }
+        }
+        if (currentCID != INVALID_INDEX && clearedCountInCluster > 0) {
+//        	xil_printf("[2] Decrease Start %u ~ End %u\r\n", nStartLPN, nEndLPN);
+            DecreaseTrimSize(currentCID, clearedCountInCluster);
+        }
+        if (changedCnt > 0) {
+            if (g_trim_seg_count[segIdx] >= changedCnt)
+                g_trim_seg_count[segIdx] -= (UINT16)changedCnt;
+            else
+                g_trim_seg_count[segIdx] = 0;
+        }
+    };
+
+    if (segS == segE) {
+        process_range_clear(nStartLPN, nEndLPN, segS);
+        return;
+    }
+
+    UINT32 head_end = seg_end_lpn(segS);
+    process_range_clear(nStartLPN, head_end, segS);
+
+    for (UINT32 s = segS + 1; s < segE; ++s) {
+        UINT32 seg_base = seg_base_lpn(s);
+        UINT32 seg_last = seg_end_lpn(s);
+        UINT32 cid_start = DFTL_GLOBAL::GetInstance()->GetClusterID(seg_base);
+        UINT32 cid_end   = DFTL_GLOBAL::GetInstance()->GetClusterID(seg_last);
+
+        if (cid_start == cid_end) {
+            UINT32 cnt = g_trim_seg_count[s];
+            if (cnt > 0) {
+//            	xil_printf("[3] Decrease Start %u ~ End %u\r\n", nStartLPN, nEndLPN);
+                DecreaseTrimSize(cid_start, cnt);
+                UINT32 seg_bytes = (LPNS_PER_SEGMENT + 7) / 8;
+                UINT32 base_byte = byte_idx_from_lpn(seg_base);
+                memset_volatile_u8(&g_trim_bitmap[base_byte], 0x00, seg_bytes);
+                g_trim_seg_count[s] = 0;
+            }
+        } else {
+            process_range_clear(seg_base, seg_last, s);
+        }
+    }
+
+    UINT32 tail_begin = seg_base_lpn(segE);
+    process_range_clear(tail_begin, nEndLPN, segE);
+}
+
+// ----------------------------------------------------------------------------
+//  Custom Sorting & Policy (Manual Implementation, No Lib)
+// ----------------------------------------------------------------------------
+
+// [비교 함수] 1. Util 오름차순, 2. PendingCnt 내림차순
+static int CompareSegs(const void* a, const void* b) {
+    UINT32 segIdx1 = *(UINT32*)a;
+    UINT32 segIdx2 = *(UINT32*)b;
+
+    // 1. 정보 조회
+    UINT32 cid1 = DFTL_GLOBAL::GetInstance()->GetClusterID(segIdx1 * LPNS_PER_SEGMENT);
+    UINT32 cid2 = DFTL_GLOBAL::GetInstance()->GetClusterID(segIdx2 * LPNS_PER_SEGMENT);
+    UINT32 util1 = g_clusterUtils[cid1];
+    UINT32 util2 = g_clusterUtils[cid2];
+    UINT16 cnt1 = g_trim_seg_count[segIdx1];
+    UINT16 cnt2 = g_trim_seg_count[segIdx2];
+
+    // 2. 비교 로직
+    if (util1 != util2) {
+        return (int)util1 - (int)util2; // 1순위: Cluster Util (Low First)
+    }
+    return (int)cnt2 - (int)cnt1;       // 2순위: Pending Count (High First)
+}
+
+// [Swap Helper]
+static void swap_u32(UINT32* a, UINT32* b) {
+    UINT32 t = *a; *a = *b; *b = t;
+}
+
+// [Partition Helper] for QuickSort
+static int partition(UINT32* arr, int low, int high, int (*compar)(const void*, const void*)) {
+    UINT32 pivot = arr[high];
+    int i = (low - 1);
+    for (int j = low; j <= high - 1; j++) {
+        if (compar(&arr[j], &pivot) < 0) {
+            i++;
+            swap_u32(&arr[i], &arr[j]);
+        }
+    }
+    swap_u32(&arr[i + 1], &arr[high]);
+    return (i + 1);
+}
+
+// [Custom QuickSort] Recursive
+static void QuickSort(UINT32* arr, int low, int high, int (*compar)(const void*, const void*)) {
+    if (low < high) {
+        int pi = partition(arr, low, high, compar);
+        QuickSort(arr, low, pi - 1, compar);
+        QuickSort(arr, pi + 1, high, compar);
+    }
+}
+
+
+//UINT32 ApplyTrimByPolicy_CMTCnt(UINT32 LoadCount, UINT32 ClusterID)
+//{
+//    if (LoadCount == 0u) return 0u;
+//
+//    DFTL_GLOBAL* pstGlobal = DFTL_GLOBAL::GetInstance();
+//
+//    // 1. 클러스터별 세그먼트 범위 계산
+//    const UINT32 LPNS_PER_CLUSTER = TOTAL_LPN_COUNT / USER_CLUSTERS;
+//    UINT32 clusterSegStart[USER_CLUSTERS];
+//    UINT32 clusterSegEnd[USER_CLUSTERS];
+//
+//    for (UINT32 cid = 0; cid < USER_CLUSTERS; ++cid) {
+//        UINT32 cluster_lpn_start = cid * LPNS_PER_CLUSTER;
+//        UINT32 cluster_lpn_end   = (cid == USER_CLUSTERS - 1)
+//                                    ? (TOTAL_LPN_COUNT - 1)
+//                                    : ((cid + 1) * LPNS_PER_CLUSTER - 1);
+//
+//        clusterSegStart[cid] = cluster_lpn_start / LPNS_PER_SEGMENT;
+//        clusterSegEnd[cid]   = cluster_lpn_end   / LPNS_PER_SEGMENT;
+//
+//        if (clusterSegEnd[cid] >= SEGMENT_COUNT) {
+//            clusterSegEnd[cid] = SEGMENT_COUNT - 1;
+//        }
+//    }
+//
+//    UINT32 processedTotal = 0; // == CMT load count
+//    META_MGR* pstMetaMgr = DFTL_GLOBAL::GetMetaMgr();
+//
+//    BOOL   visited[USER_CLUSTERS] = { 0 };
+//    UINT32 remainingClusters      = USER_CLUSTERS;
+//
+//    while (processedTotal < LoadCount && remainingClusters > 0u)
+//    {
+//        INT32  bestCid  = -1;
+//        UINT32 bestTrim = 0;
+//
+//        for (UINT32 cid = 0; cid < USER_CLUSTERS; ++cid) {
+//            if (visited[cid]) continue;
+//
+//            UINT32 currentTrimSize = pstGlobal->m_nTrimSize[cid];
+//            if (currentTrimSize == 0) continue;
+//
+//            BOOL isBetter = FALSE;
+//            if (currentTrimSize > bestTrim) {
+//                isBetter = TRUE;
+//            }
+//            else if (currentTrimSize == bestTrim) {
+//                if (ClusterID < USER_CLUSTERS && cid == ClusterID) {
+//                    isBetter = TRUE;
+//                }
+//            }
+//
+//            if (isBetter) {
+//                bestTrim = currentTrimSize;
+//                bestCid  = (INT32)cid;
+//            }
+//        }
+//
+//        if (bestCid < 0) break;
+//
+//        visited[bestCid] = TRUE;
+//        --remainingClusters;
+//
+//        UINT32 sBeg = clusterSegStart[bestCid];
+//        UINT32 sEnd = clusterSegEnd[bestCid];
+//
+//        for (UINT32 segIdx = sBeg; segIdx <= sEnd && processedTotal < LoadCount; ++segIdx)
+//        {
+//            UINT16 p_cnt = g_trim_seg_count[segIdx];
+//            if (p_cnt <= 256) continue;
+//
+//            UINT32 startLPN = segIdx * LPNS_PER_SEGMENT;
+//
+//            // --- [메타 로딩 로직 유지 시작] ---
+//            if (pstMetaMgr->IsMetaAvailable(startLPN, META_OPT) == FALSE) {
+//
+//                while (pstMetaMgr->IsMetaAvailable(startLPN, META_OPT) == FALSE)
+//                {
+//                    pstMetaMgr->LoadMeta(startLPN, 1, META_OPT);
+//
+//                    META_REQUEST_INFO* pstMetaReqInfo =
+//                        DFTL_GLOBAL::GetRequestMgr()->GetMetaRequestInfo();
+//                    META_REQUEST* pstRequest;
+//
+//                    do {
+//                        REQUEST_MGR* pstReqMgr = DFTL_GLOBAL::GetInstance()->GetRequestMgr();
+//                        pstReqMgr->_ProcessMetaRequestWaitQ();
+//                        FIL_Run();
+//                        pstRequest = pstMetaReqInfo->GetDoneRequest();
+//                        if (pstRequest != NULL) {
+//                            pstRequest->Run();
+//                        }
+//                    } while (pstRequest != NULL);
+//                }
+//
+//                DFTL_GLOBAL::GetSuperGCMgr()->loadCNT += 1;
+//                processedTotal += 1;
+//
+//                if (DFTL_GLOBAL::GetSuperGCMgr()->loadCNT == 40u) {
+//                    return processedTotal;
+//                }
+//            }
+//        }
+//    }
+//    return processedTotal;
+//}
+
+UINT32 ApplyTrimByPolicy_TrimSize(UINT32 targetPageCount, UINT32 ClusterID)
+{
+    if (targetPageCount == 0u) return 0u;
+
+    DFTL_GLOBAL* pstGlobal = DFTL_GLOBAL::GetInstance();
+
+    // 1. 클러스터별 세그먼트 범위 계산
+    const UINT32 LPNS_PER_CLUSTER = TOTAL_LPN_COUNT / USER_CLUSTERS;
+    UINT32 clusterSegStart[USER_CLUSTERS];
+    UINT32 clusterSegEnd[USER_CLUSTERS];
+
+    for (UINT32 cid = 0; cid < USER_CLUSTERS; ++cid) {
+        UINT32 cluster_lpn_start = cid * LPNS_PER_CLUSTER;
+        UINT32 cluster_lpn_end = (cid == USER_CLUSTERS - 1) ? (TOTAL_LPN_COUNT - 1) : ((cid + 1) * LPNS_PER_CLUSTER - 1);
+
+        clusterSegStart[cid] = cluster_lpn_start / LPNS_PER_SEGMENT;
+        clusterSegEnd[cid]   = cluster_lpn_end   / LPNS_PER_SEGMENT;
+
+        if (clusterSegEnd[cid] >= SEGMENT_COUNT) {
+            clusterSegEnd[cid] = SEGMENT_COUNT - 1;
+        }
+    }
+
+    UINT32 processedTotal = 0;
+    META_MGR* pstMetaMgr = DFTL_GLOBAL::GetMetaMgr();
+
+    BOOL   visited[USER_CLUSTERS] = { 0 };
+    UINT32 remainingClusters      = USER_CLUSTERS;
+
+    // 2. 정책에 따른 클러스터 선택 루프
+    while (processedTotal < targetPageCount && remainingClusters > 0u)
+    {
+        INT32  bestCid  = -1;
+        UINT32 bestTrim = 0;
+
+        for (UINT32 cid = 0; cid < USER_CLUSTERS; ++cid) {
+            if (visited[cid]) continue;
+
+            UINT32 currentTrimSize = pstGlobal->m_nTrimSize[cid];
+            if (currentTrimSize == 0) continue;
+
+            BOOL isBetter = FALSE;
+            if (currentTrimSize > bestTrim) {
+                // Case 1: Trim Size가 더 큰 경우
+                isBetter = TRUE;
+            }
+            else if (currentTrimSize == bestTrim) {
+                // Case 2: Trim Size가 같고, 현재 처리중인 ClusterID와 일치할 경우 우선
+                if (ClusterID < USER_CLUSTERS && cid == ClusterID) {
+                    isBetter = TRUE;
+                }
+            }
+
+            if (isBetter) {
+                bestTrim = currentTrimSize;
+                bestCid  = (INT32)cid;
+            }
+        }
+
+        // 더 이상 처리할 TRIM 대상 클러스터가 없으면 종료
+        if (bestCid < 0) break;
+
+        visited[bestCid] = TRUE;
+        --remainingClusters;
+
+        UINT32 sBeg = clusterSegStart[bestCid];
+        UINT32 sEnd = clusterSegEnd[bestCid];
+
+        // 3. 선택된 클러스터 내 세그먼트 순회
+        for (UINT32 segIdx = sBeg; segIdx <= sEnd && processedTotal < targetPageCount; ++segIdx)
+        {
+            UINT16 p_cnt = g_trim_seg_count[segIdx];
+            if (p_cnt <= 256) continue;
+
+            UINT32 startLPN = segIdx * LPNS_PER_SEGMENT;
+
+            // --- [요청 사항: 메타 로딩 로직 유지 시작] ---
+            if (pstMetaMgr->IsMetaAvailable(startLPN, META_OPT) == FALSE) {
+                while (pstMetaMgr->IsMetaAvailable(startLPN, META_OPT) == FALSE)
+                {
+                    pstMetaMgr->LoadMeta(startLPN, 1, META_OPT);
+
+                    META_REQUEST_INFO* pstMetaReqInfo =
+                        DFTL_GLOBAL::GetRequestMgr()->GetMetaRequestInfo();
+                    META_REQUEST* pstRequest;
+
+                    do {
+                        REQUEST_MGR* pstReqMgr = DFTL_GLOBAL::GetInstance()->GetRequestMgr();
+                        pstReqMgr->_ProcessMetaRequestWaitQ();
+                        FIL_Run();
+                        pstRequest = pstMetaReqInfo->GetDoneRequest();
+                        if (pstRequest != NULL) {
+                            pstRequest->Run();
+                        }
+                    } while (pstRequest != NULL);
+                }
+                DFTL_GLOBAL::GetSuperGCMgr()->loadCNT += 1;
+            }
+            // --- [요청 사항: 메타 로딩 로직 유지 종료] ---
+
+            processedTotal += p_cnt;
+
+            // 로드 제한 도달 시 즉시 반환
+            if (DFTL_GLOBAL::GetSuperGCMgr()->loadCNT == 40u) {
+                return processedTotal;
+            }
+        }
+    }
+
+    return processedTotal;
+}
+
+// 정렬 및 관리를 위한 구조체 (함수 내부 혹은 상단에 정의)
+typedef struct {
+    UINT32 segIdx;
+    UINT16 count;
+} SEG_SORT_INFO;
+
+UINT32 ApplyTrimByPolicy_CMT(int flag)
+{
+    const UINT32 MAX_LOAD_COUNT = 40;
+    UINT32 processedTotal = 0;
+
+    DFTL_GLOBAL* pstGlobal = DFTL_GLOBAL::GetInstance();
+    META_MGR* pstMetaMgr = DFTL_GLOBAL::GetMetaMgr();
+
+    BOOL visited[USER_CLUSTERS] = { FALSE };
+
+    while (processedTotal < MAX_LOAD_COUNT)
+    {
+        INT32 bestCid = -1;
+        UINT32 maxTrim = 0;
+
+        // 1. 대상 클러스터 선정
+        for (UINT32 cid = 0; cid < USER_CLUSTERS; ++cid)
+        {
+            if (visited[cid] == TRUE) continue;
+
+            if (pstGlobal->m_nTrimSize[cid] > maxTrim)
+            {
+                maxTrim = pstGlobal->m_nTrimSize[cid];
+                bestCid = (INT32)cid;
+            }
+        }
+
+        if (bestCid < 0) break;
+
+        visited[bestCid] = TRUE;
+
+        const UINT32 LPNS_PER_CLUSTER = TOTAL_LPN_COUNT / USER_CLUSTERS;
+        UINT32 cluster_lpn_start = bestCid * LPNS_PER_CLUSTER;
+        UINT32 cluster_lpn_end = (bestCid == USER_CLUSTERS - 1)
+                                     ? (TOTAL_LPN_COUNT - 1)
+                                     : ((bestCid + 1) * LPNS_PER_CLUSTER - 1);
+
+        UINT32 sBeg = cluster_lpn_start / LPNS_PER_SEGMENT;
+        UINT32 sEnd = cluster_lpn_end / LPNS_PER_SEGMENT;
+        if (sEnd >= SEGMENT_COUNT) sEnd = SEGMENT_COUNT - 1;
+
+        if (flag == 1)
+        {
+            SEG_SORT_INFO topSegs[MAX_LOAD_COUNT];
+
+            for(UINT32 i=0; i<MAX_LOAD_COUNT; i++) {
+                topSegs[i].segIdx = 0xFFFFFFFF;
+                topSegs[i].count = 0;
+            }
+
+            UINT32 minIdx = 0; // 배열 내에서 가장 작은 값을 가진 인덱스 캐싱
+
+            for (UINT32 idx = sBeg; idx <= sEnd; ++idx)
+            {
+                UINT16 cnt = g_trim_seg_count[idx];
+
+                if (cnt == 0) continue;
+                if (cnt <= topSegs[minIdx].count) continue;
+
+                UINT32 checkLPN = idx * LPNS_PER_SEGMENT;
+                if (pstMetaMgr->IsMetaAvailable(checkLPN, META_OPT) == TRUE) continue;
+
+                topSegs[minIdx].segIdx = idx;
+                topSegs[minIdx].count = cnt;
+
+                UINT16 minVal = 0xFFFF;
+                for(UINT32 k=0; k<MAX_LOAD_COUNT; k++) {
+                    if(topSegs[k].count < minVal) {
+                        minVal = topSegs[k].count;
+                        minIdx = k;
+                    }
+                }
+            }
+
+            for (UINT32 i = 0; i < MAX_LOAD_COUNT; ++i) {
+                for (UINT32 j = 0; j < MAX_LOAD_COUNT - 1 - i; ++j) {
+                    if (topSegs[j].count < topSegs[j + 1].count) {
+                        SEG_SORT_INFO temp = topSegs[j];
+                        topSegs[j] = topSegs[j + 1];
+                        topSegs[j + 1] = temp;
+                    }
+                }
+            }
+
+            for (UINT32 k = 0; k < MAX_LOAD_COUNT; ++k)
+            {
+                if (processedTotal >= MAX_LOAD_COUNT) break;
+                if (topSegs[k].count == 0) continue; // 빈 슬롯 스킵
+
+                UINT32 startLPN = topSegs[k].segIdx * LPNS_PER_SEGMENT;
+
+                if (pstMetaMgr->IsMetaAvailable(startLPN, META_OPT) == FALSE)
+                {
+                    while (pstMetaMgr->IsMetaAvailable(startLPN, META_OPT) == FALSE)
+                    {
+                        pstMetaMgr->LoadMeta(startLPN, 1, META_OPT);
+
+                        META_REQUEST_INFO* pstMetaReqInfo = DFTL_GLOBAL::GetRequestMgr()->GetMetaRequestInfo();
+                        META_REQUEST* pstRequest;
+                        do {
+                            REQUEST_MGR* pstReqMgr = DFTL_GLOBAL::GetInstance()->GetRequestMgr();
+                            pstReqMgr->_ProcessMetaRequestWaitQ();
+                            FIL_Run();
+                            pstRequest = pstMetaReqInfo->GetDoneRequest();
+                            if (pstRequest != NULL) {
+                                pstRequest->Run();
+                            }
+                        } while (pstRequest != NULL);
+                    }
+                    DFTL_GLOBAL::GetSuperGCMgr()->loadCNT += 1;
+                    processedTotal++;
+                }
+            }
+        }
+        else
+        {
+            for (UINT32 segIdx = sBeg; segIdx <= sEnd; ++segIdx)
+            {
+                if (processedTotal >= MAX_LOAD_COUNT) return processedTotal;
+                if (g_trim_seg_count[segIdx] == 0) continue;
+
+                UINT32 startLPN = segIdx * LPNS_PER_SEGMENT;
+
+                if (pstMetaMgr->IsMetaAvailable(startLPN, META_OPT) == TRUE) continue;
+                else
+                {
+                    while (pstMetaMgr->IsMetaAvailable(startLPN, META_OPT) == FALSE)
+                    {
+                        pstMetaMgr->LoadMeta(startLPN, 1, META_OPT);
+                        META_REQUEST_INFO* pstMetaReqInfo = DFTL_GLOBAL::GetRequestMgr()->GetMetaRequestInfo();
+                        META_REQUEST* pstRequest;
+                        do {
+                            REQUEST_MGR* pstReqMgr = DFTL_GLOBAL::GetInstance()->GetRequestMgr();
+                            pstReqMgr->_ProcessMetaRequestWaitQ();
+                            FIL_Run();
+                            pstRequest = pstMetaReqInfo->GetDoneRequest();
+                            if (pstRequest != NULL) pstRequest->Run();
+                        } while (pstRequest != NULL);
+                    }
+                    DFTL_GLOBAL::GetSuperGCMgr()->loadCNT += 1;
+                    processedTotal++;
+                }
+            }
+        }
+    }
+    return processedTotal;
+}
+
+//UINT32 ApplyTrimByPolicy_CMT(int flag)
+//{
+//    const UINT32 MAX_LOAD_COUNT = 40;
+//    UINT32 processedTotal = 0;
+//
+//    DFTL_GLOBAL* pstGlobal = DFTL_GLOBAL::GetInstance();
+//    META_MGR* pstMetaMgr = DFTL_GLOBAL::GetMetaMgr();
+//
+//    BOOL visited[USER_CLUSTERS] = { FALSE };
+//
+//    while (processedTotal < MAX_LOAD_COUNT)
+//    {
+//        INT32 bestCid = -1;
+//        UINT32 maxTrim = 0;
+//
+//        for (UINT32 cid = 0; cid < USER_CLUSTERS; ++cid)
+//        {
+//            if (visited[cid] == TRUE) continue;
+//
+//            if (pstGlobal->m_nTrimSize[cid] > maxTrim)
+//            {
+//                maxTrim = pstGlobal->m_nTrimSize[cid];
+//                bestCid = (INT32)cid;
+//            }
+//        }
+//
+//        if (bestCid < 0)
+//        {
+//            break;
+//        }
+//
+//        visited[bestCid] = TRUE;
+//
+//        const UINT32 LPNS_PER_CLUSTER = TOTAL_LPN_COUNT / USER_CLUSTERS;
+//        UINT32 cluster_lpn_start = bestCid * LPNS_PER_CLUSTER;
+//        UINT32 cluster_lpn_end = (bestCid == USER_CLUSTERS - 1)
+//                                     ? (TOTAL_LPN_COUNT - 1)
+//                                     : ((bestCid + 1) * LPNS_PER_CLUSTER - 1);
+//
+//        UINT32 sBeg = cluster_lpn_start / LPNS_PER_SEGMENT;
+//        UINT32 sEnd = cluster_lpn_end / LPNS_PER_SEGMENT;
+//        if (sEnd >= SEGMENT_COUNT) sEnd = SEGMENT_COUNT - 1;
+//
+//        for (UINT32 segIdx = sBeg; segIdx <= sEnd; ++segIdx)
+//        {
+//            if (processedTotal >= MAX_LOAD_COUNT)
+//            {
+//                return processedTotal;
+//            }
+//
+//            if (g_trim_seg_count[segIdx] == 0) continue;
+//            UINT32 startLPN = segIdx * LPNS_PER_SEGMENT;
+//            if (pstMetaMgr->IsMetaAvailable(startLPN, META_OPT) == TRUE) {
+//            	continue;
+//            }
+//            else
+//            {
+//                while (pstMetaMgr->IsMetaAvailable(startLPN, META_OPT) == FALSE)
+//                {
+//                    pstMetaMgr->LoadMeta(startLPN, 1, META_OPT);
+//
+//                    META_REQUEST_INFO* pstMetaReqInfo = DFTL_GLOBAL::GetRequestMgr()->GetMetaRequestInfo();
+//                    META_REQUEST* pstRequest;
+//                    do {
+//                        REQUEST_MGR* pstReqMgr = DFTL_GLOBAL::GetInstance()->GetRequestMgr();
+//                        pstReqMgr->_ProcessMetaRequestWaitQ();
+//                        FIL_Run();
+//                        pstRequest = pstMetaReqInfo->GetDoneRequest();
+//                        if (pstRequest != NULL) {
+//                            pstRequest->Run();
+//                        }
+//                    } while (pstRequest != NULL);
+//                }
+//                DFTL_GLOBAL::GetSuperGCMgr()->loadCNT += 1;
+//                processedTotal++;
+//            }
+//        }
+//    }
+//    return processedTotal;
+//}
+
+
+
+UINT32 ApplyTrimBySegScan(VOID)
+{
+    const UINT32 loadBudget = INVALID_INDEX;
+
+    UINT32 processedTotal = 0; // == meta load count
+    META_MGR* pstMetaMgr  = DFTL_GLOBAL::GetMetaMgr();
+
+    META_REQUEST_INFO* pstMetaReqInfo =
+        DFTL_GLOBAL::GetRequestMgr()->GetMetaRequestInfo();
+
+    for (UINT32 segIdx = 0; segIdx < SEGMENT_COUNT && processedTotal < loadBudget; ++segIdx)
+    {
+        const UINT16 p_cnt = g_trim_seg_count[segIdx];
+        if (p_cnt == 0u) continue;  // TRIM 누적 없음 -> 스킵
+
+        const UINT32 startLPN = segIdx * LPNS_PER_SEGMENT;
+
+        // 이미 메타가 올라와 있으면 굳이 로드할 필요 없음
+        if (pstMetaMgr->IsMetaAvailable(startLPN, META_OPT) == TRUE) {
+            continue;
+        }
+
+        // --- [메타 로딩 + 완료 대기 로직(기존과 동일)] ---
+        while (pstMetaMgr->IsMetaAvailable(startLPN, META_OPT) == FALSE)
+        {
+            pstMetaMgr->LoadMeta(startLPN, 1, META_OPT);
+
+            META_REQUEST* pstRequest = NULL;
+            do {
+                REQUEST_MGR* pstReqMgr = DFTL_GLOBAL::GetInstance()->GetRequestMgr();
+                pstReqMgr->_ProcessMetaRequestWaitQ();
+                FIL_Run();
+                pstRequest = pstMetaReqInfo->GetDoneRequest();
+                if (pstRequest != NULL) {
+                    pstRequest->Run();
+                }
+            } while (pstRequest != NULL);
+        }
+
+        {
+    	for (UINT32 channel = 0; channel < USER_CHANNELS; channel++) {
+    		for (UINT32 way = 0; way < USER_WAYS; way++) {
+    			DFTL_GLOBAL::GetMetaGCMgr(channel, way)->CheckAndStartGC();
+    		}
+    	}
+
+    	for (UINT32 channel = 0; channel < USER_CHANNELS; channel++) {
+    		for (UINT32 way = 0; way < USER_WAYS; way++) {
+    			DFTL_GLOBAL::GetMetaGCMgr(channel, way)->Run();
+    		}
+    	}
+
+    	META_REQUEST* pstRequest = NULL;
+    	do {
+    		REQUEST_MGR* pstReqMgr = DFTL_GLOBAL::GetInstance()->GetRequestMgr();
+    		pstReqMgr->_ProcessMetaRequestWaitQ();
+    		FIL_Run();
+    		pstRequest = pstMetaReqInfo->GetDoneRequest();
+    		if (pstRequest != NULL) {
+    			pstRequest->Run();
+    		}
+    	} while (pstRequest != NULL);
+        }
+
+        // accounting
+        DFTL_GLOBAL::GetSuperGCMgr()->loadCNT += 1;
+        processedTotal += 1;
+    }
+
+    return processedTotal;
+}
+
+// ----------------------------------------------------------------------------
+//  DFTL_GLOBAL Member Functions
+// ----------------------------------------------------------------------------
+
+VOID DFTL_GLOBAL::WritePtr_GetAndAdvance(UINT32 clusterID)
+{
+    m_page_cnt[clusterID]++;
+    if (m_page_cnt[clusterID] >= LPN_PER_PHYSICAL_PAGE) {
+        m_page_cnt[clusterID] = 0;
+        m_wp_ch[clusterID]++;
+        if (m_wp_ch[clusterID] >= USER_CHANNELS) {
+            m_wp_ch[clusterID] = 0;
+            m_wp_wy[clusterID]++;
+            if (m_wp_wy[clusterID] >= USER_WAYS) {
+                m_wp_wy[clusterID] = 0;
+            }
+        }
+    }
+}
+
+VOID DFTL_GLOBAL::GC_WritePtr_GetAndAdvance(UINT32 clusterID)
+{
+    m_gc_page_cnt[clusterID]++;
+    if (m_gc_page_cnt[clusterID] >= LPN_PER_PHYSICAL_PAGE) {
+        m_gc_page_cnt[clusterID] = 0;
+        m_gc_wp_ch[clusterID]++;
+        if (m_gc_wp_ch[clusterID] >= USER_CHANNELS) {
+            m_gc_wp_ch[clusterID] = 0;
+            m_gc_wp_wy[clusterID]++;
+            if (m_gc_wp_wy[clusterID] >= USER_WAYS) {
+                m_gc_wp_wy[clusterID] = 0;
+            }
+        }
+    }
+}
+
+VOID DFTL_GLOBAL::DebugBlockPrint(UINT32 FLAG)
+{
+    GetUserBlockMgr()->DebugPrintAllByVBN(FLAG);
+}
+
+UINT32 DFTL_GLOBAL::GetClusterID(UINT32 LPN)
+{
+    UINT64 num   = (UINT64)LPN * (UINT64)USER_CLUSTERS;
+    UINT32 cid   = (UINT32)(num / (UINT64)m_nLPNCount);
+
+    if (cid >= USER_CLUSTERS)
+    {
+    	xil_printf("Wrong CID\r\n");
+    	assert(0);
+    }
+    return cid;
+}
+
+VOID DFTL_GLOBAL::SB_INIT()
+{
+    SBINFO_MGR* sbm = GetSBInfoMgr();
+    INT32 c = DFTL_GLOBAL::GetVNandMgr()->GetVBlockCount();
+
+    INIT_LIST_HEAD(&sbm->m_dlFreeList);
+    sbm->m_nFreeCount = 0;
+
+    for (INT32 vbn = 0; vbn < c; vbn++)
+    {
+        SBINFO* sb = &sbm->m_pastSBInfo[vbn];
+        INIT_LIST_HEAD(&sb->m_dlList);
+
+        if (sb->m_bBad != 0)  	continue;
+        if (sb->m_bMeta)		continue;
+        if (sb->m_nUSED != 0) continue;
+
+        list_add_tail(&sb->m_dlList, &sbm->m_dlFreeList);
+        sbm->m_nFreeCount++;
+    }
+    SB_INIT_FLAG = TRUE;
+}
+
+VIRTUAL VOID DFTL_GLOBAL::Initialize(VOID)
+{
+	m_nHostReqCount = 0;
+	m_nLastHostHit = 0;
+	m_nLastHostMiss = 0;
+
+	DS_CNT = 0;
+	DS_Length = 0;
+	m_nTotalPendingTrimCount = 0;
+	SB_INIT_FLAG = FALSE;
+    SB_PRINT_FLAG = FALSE;
+	META_CNT = 0;
+
+	nand_write_cnt = 0;
+	host_write_cnt = 0;
+
+	for (int i=0; i<USER_CLUSTERS; i++)
+	{
+		m_util_pages[i] = 0;
+		m_util_blks[i] = 0;
+		m_nTrimSize[i] = 0;
+
+		m_wp_ch[i] = 0;
+		m_wp_wy[i] = 0;
+		m_page_cnt[i] = 0;
+
+		m_gc_wp_ch[i] = 0;
+		m_gc_wp_wy[i] = 0;
+		m_gc_page_cnt[i] = 0;
+	}
+
+	m_pstInstance = this;
+	_Initialize();
+	GetVNandMgr()->Initialize();
+	GetMetaMgr()->Initialize();
+	GetMetaL2VMgr()->Initialize();
+
+	TrimBitmap_Init();
+	TrimPending_Clear();
+
+	for (int channel = 0; channel < USER_CHANNELS; channel++) {
+		for (int way = 0; way < USER_WAYS; way++) {
+			GetVBInfoMgr(channel, way)->Initialize();
+		}
+	}
+	GetUserBlockMgr()->Initialize(USER_BLOCK_MGR);
+#if (SUPPORT_META_DEMAND_LOADING == 1)
+	GetMetaBlockMgr()->Initialize(META_BLOCK_MGR);
+#endif
+	GetRequestMgr()->Initialize();
+	GetBufferMgr()->Initialize();
+	for (int channel = 0; channel < USER_CHANNELS; channel++) {
+		for (int way = 0; way < USER_WAYS; way++) {
+			for (int cluster = 0; cluster < USER_CLUSTERS; cluster++)
+			{
+				GetActiveBlockMgr(cluster, channel, way)->Initialize(cluster, channel, way);
+			}
+			GetGCMgr(channel, way)->Initialize(GetGCTh(), IOTYPE_GC, channel, way);
+#if (SUPPORT_META_DEMAND_LOADING == 1)
+			GetMetaGCMgr(channel, way)->Initialize(META_GC_THRESHOLD, IOTYPE_META, channel, way);
+#endif
+		}
+	}
+	_PrintInfo();
+	m_MetaGCing = FALSE;
+
+	GetReadCacheMgr()->Initialize();
+	GetSBInfoMgr()->Initialize();
+}
+
+VIRTUAL BOOL
+DFTL_GLOBAL::Format(VOID)
+{
+	BOOL	bRet;
+
+	GetUserBlockMgr()->Format();
+
+#if (SUPPORT_META_DEMAND_LOADING == 1)
+	GetMetaBlockMgr()->Format();
+	bRet = GetMetaL2VMgr()->Format();
+#endif
+
+	bRet = GetMetaMgr()->Format();
+
+	return bRet;
+}
+
+VIRTUAL VOID
+DFTL_GLOBAL::Run(VOID)
+{
+	FIL_Run();
+	GetRequestMgr()->Run();
+
+#if (SUPPORT_META_DEMAND_LOADING == 1)
+	for (UINT32 channel = 0; channel < USER_CHANNELS; channel++) {
+		for (UINT32 way = 0; way < USER_WAYS; way++) {
+			GetMetaGCMgr(channel, way)->CheckAndStartGC();
+		}
+	}
+#endif
+	if (GetSuperGCMgr()->CheckAndStartGC())
+	{
+		for (UINT32 channel = 0; channel < USER_CHANNELS; channel++) {
+			for (UINT32 way = 0; way < USER_WAYS; way++) {
+				GetGCMgr(channel, way)->CheckAndStartGC();
+			}
+		}
+	}
+
+#if (SUPPORT_META_DEMAND_LOADING == 1)
+	for (UINT32 channel = 0; channel < USER_CHANNELS; channel++) {
+		for (UINT32 way = 0; way < USER_WAYS; way++) {
+			GetMetaGCMgr(channel, way)->Run();
+		}
+	}
+#endif
+	for (UINT32 channel = 0; channel < USER_CHANNELS; channel++) {
+		for (UINT32 way = 0; way < USER_WAYS; way++) {
+			GetGCMgr(channel, way)->Run();
+		}
+	}
+}
+
+VIRTUAL VOID
+DFTL_GLOBAL::ReadPage(UINT32 nCmdSlotTag, UINT32 nLPN, UINT32 nCount)
+{
+	HIL_REQUEST*	pstRequest;
+
+	if (nLPN == 77)
+	{
+		if ((nCount == 77) || (nCount == 78))
+			DFTL_PrintProfile(0);
+		else
+			DFTL_PrintProfile(1);
+		m_bEnable += 1;
+	}
+
+	do
+	{
+		// allocate request
+		pstRequest = m_stRequestMgr.AllocateHILRequest();
+		if (pstRequest == NULL)
+		{
+			Run();
+		}
+	} while (pstRequest == NULL);
+
+	pstRequest->Initialize(HIL_REQUEST_READ_WAIT, NVME_CMD_OPCODE_READ,
+						nLPN, nCmdSlotTag, nCount);
+#ifndef WIN32
+	//xil_printf("1	%u	%u \r\n", nLPN, nCount);
+#endif
+	m_stRequestMgr.AddToHILRequestWaitQ(pstRequest);
+
+	DFTL_IncreaseProfile(Prof_Host_read, pstRequest->GetLPNCount());
+	DFTL_GLOBAL::GetInstance()->IncreaseProfileCount(PROFILE_HOST_READ, pstRequest->GetLPNCount());
+	DFTL_GLOBAL::GetInstance()->IncreaseProfileCount(PROFILE_HOST_READ_REQ);
+}
+
+VIRTUAL VOID
+DFTL_GLOBAL::WritePage(UINT32 nCmdSlotTag, UINT32 nLPN, UINT32 nCount)
+{
+	HIL_REQUEST*	pstRequest;
+	do
+	{
+		// allocate request
+		pstRequest = m_stRequestMgr.AllocateHILRequest();
+		if (pstRequest == NULL)
+		{
+			Run();
+		}
+	} while (pstRequest == NULL);
+
+	pstRequest->Initialize(HIL_REQUEST_WRITE_WAIT, NVME_CMD_OPCODE_WRITE,
+		nLPN, nCmdSlotTag, nCount);
+
+#ifndef WIN32
+	//xil_printf("7	%u	%u \r\n", nLPN, nCount);
+#endif
+	m_stRequestMgr.AddToHILRequestWaitQ(pstRequest);
+
+	DFTL_IncreaseProfile(Prof_Host_write, pstRequest->GetLPNCount());
+	DFTL_GLOBAL::GetInstance()->IncreaseProfileCount(PROFILE_HOST_WRITE, pstRequest->GetLPNCount());
+	DFTL_GLOBAL::GetInstance()->IncreaseProfileCount(PROFILE_HOST_WRITE_REQ);
+}
+
+VIRTUAL VOID
+DFTL_GLOBAL::DatasetManagement(UINT32 nCmdSlotTag, UINT32 nr, UINT32 ad)
+{
+	HIL_REQUEST*	pstRequest;
+
+	do
+	{
+		// allocate request
+		pstRequest = m_stRequestMgr.AllocateHILRequest();
+		if (pstRequest == NULL)
+		{
+			Run();
+		}
+	} while (pstRequest == NULL);
+
+	pstRequest->Initialize(HIL_REQUEST_DSM_WAIT, NVME_CMD_OPCODE_DSM,
+		ad, nCmdSlotTag, nr);
+
+	m_stRequestMgr.AddToHILRequestWaitQ(pstRequest);
+
+	DFTL_IncreaseProfile(Prof_Host_Discard);
+	DFTL_GLOBAL::GetInstance()->IncreaseProfileCount(PROFILE_HOST_DSM, pstRequest->GetLPNCount());
+	DFTL_GLOBAL::GetInstance()->IncreaseProfileCount(PROFILE_HOST_DSM_REQ);
+}
+
+VIRTUAL VOID
+DFTL_GLOBAL::CallBack(FTL_REQUEST_ID stReqID)
+{
+#if (UNIT_TEST_FIL_PERF == 1)
+	return;
+#endif
+
+	switch (stReqID.stCommon.nType)
+	{
+	case FTL_REQUEST_ID_TYPE_HIL_READ:
+	{
+		REQUEST_MGR*	pstRequestMgr = DFTL_GLOBAL::GetRequestMgr();
+		HIL_REQUEST_INFO*	pstRequestInfo = pstRequestMgr->GetHILRequestInfo();
+		HIL_REQUEST_PER_WAY * pstRequest = pstRequestInfo->GetRequest_per_way(stReqID.stHIL.nRequestIndex);
+
+		pstRequest->IncreaseDoneCount();
+		pstRequest->pBufEntry[stReqID.stHIL.bufOffset]->readDone = 1;
+
+		if (pstRequest->GetDoneCount() == pstRequest->GetLPNCount())
+		{
+			pstRequestInfo->RemoveFromIssuedQ_per_way(pstRequest);
+			pstRequest->HDMAIssue();
+			pstRequestInfo->AddToDoneQ_per_way(pstRequest);
+			pstRequest->GoToNextStatus();
+		}
+		break;
+	}
+	case FTL_REQUEST_ID_TYPE_WRITE:
+	{
+		INT32	nIndex = stReqID.stProgram.nActiveBlockIndex;
+		IOTYPE	eIOType = static_cast<IOTYPE>(stReqID.stProgram.nIOType);
+
+		ACTIVE_BLOCK* pstActiveBlock = DFTL_GLOBAL::GetActiveBlockMgr(stReqID.cluster, stReqID.channel, stReqID.way)->GetActiveBlock(nIndex, eIOType);
+		pstActiveBlock->ProgramDone(stReqID.stProgram.nBufferingIndex);
+		break;
+	}
+	case FTL_REQUEST_ID_TYPE_GC_READ:
+	{
+		REQUEST_MGR*	pstRequestMgr = DFTL_GLOBAL::GetRequestMgr();
+		GC_REQUEST_INFO*	pstRequestInfo = pstRequestMgr->GetGCRequestInfo();
+		GC_REQUEST * pstRequest = pstRequestInfo->GetRequest(stReqID.stGC.nRequestIndex);
+		pstRequest->GCReadDone();
+		break;
+	}
+#if (SUPPORT_META_DEMAND_LOADING == 1)
+	case FTL_REQUEST_ID_TYPE_META_READ:
+	{
+		REQUEST_MGR*	pstRequestMgr = DFTL_GLOBAL::GetRequestMgr();
+		META_REQUEST_INFO*	pstRequestInfo = pstRequestMgr->GetMetaRequestInfo();
+		META_REQUEST * pstRequest = pstRequestInfo->GetRequest(stReqID.stMeta.nRequestIndex);
+
+		pstRequestInfo->RemoveFromIssuedQ(pstRequest);
+		pstRequestInfo->AddToDoneQ(pstRequest);
+		pstRequest->GoToNextStatus();
+
+		break;
+	}
+#endif
+	default:
+		ASSERT(0);
+		break;
+	}
+}
+
+VIRTUAL VOID
+DFTL_GLOBAL::IOCtl(IOCTL_TYPE eType)
+{
+	switch (eType)
+	{
+	case IOCTL_INIT_PROFILE_COUNT:
+		m_stProfile.Initialize();
+		break;
+
+	case IOCTL_PRINT_PROFILE_COUNT:
+		m_stProfile.Print();
+		break;
+
+	default:
+		ASSERT(0);
+		break;
+	}
+}
+
+VOID
+DFTL_GLOBAL::SetStatus(DFTL_STATUS eStatus)
+{
+	m_eStatus = static_cast<DFTL_STATUS>(m_eStatus | eStatus);
+}
+
+BOOL
+DFTL_GLOBAL::CheckStatus(DFTL_STATUS eStatus)
+{
+	return (m_eStatus & eStatus) ? TRUE : FALSE;
+}
+
+VOID
+DFTL_GLOBAL::_Initialize(VOID)
+{
+	UINT32 nPPagesPerVBlock = m_stVNand.GetPPagesPerVBlock();
+	m_nPhysicalFlashSizeKB = USER_CHANNELS * USER_WAYS * m_stVNand.GetVBlockCount() * nPPagesPerVBlock * (PHYSICAL_PAGE_SIZE / KB);
+
+	m_nVBlockSizeKB			= nPPagesPerVBlock * PHYSICAL_PAGE_SIZE;
+	m_nVPagesPerVBlock		= m_stVNand.GetVPagesPerVBlock();
+	m_nLPagesPerVBlockBits	= UTIL_GetBitCount(m_nVPagesPerVBlock);
+	m_nLPagesPerVBlockMask	= (1 << m_nLPagesPerVBlockBits) - 1;
+
+	m_fOverProvisionRatio = (float)OVERPROVISION_RATIO_DEFAULT;
+	m_nOverprovisionSizeKB = (INT64)(m_nPhysicalFlashSizeKB * m_fOverProvisionRatio);
+	m_nLogicalFlashSizeKB = m_nPhysicalFlashSizeKB - m_nOverprovisionSizeKB;
+
+#if (SUPPORT_STATIC_DENSITY != 0)
+	UINT32 nLogicalFlashSizeKB = SUPPORT_STATIC_DENSITY * (GB / KB);
+	ASSERT(m_nLogicalFlashSizeKB >= nLogicalFlashSizeKB);
+	m_nLogicalFlashSizeKB = nLogicalFlashSizeKB;
+	ASSERT(m_nLogicalFlashSizeKB >= nLogicalFlashSizeKB);
+#endif
+
+	m_nLPNCount			= m_nLogicalFlashSizeKB / LOGICAL_PAGE_SIZE_KB;
+	m_nVBlockCount		= m_stVNand.GetVBlockCount();
+
+#if (SUPPORT_META_BLOCK == 1)
+	m_bEnableMetaBlock = TRUE;
+#else
+	m_bEnableMetaBlock = FALSE;
+#endif
+
+	m_nGCTh = FREE_BLOCK_GC_THRESHOLD_DEFAULT;
+
+	HIL_SetStorageBlocks(m_nLPNCount);
+	m_stProfile.Initialize();
+}
+
+VOID
+DFTL_GLOBAL::_PrintInfo(VOID)
+{
+#if defined(FPM_FTL)
+	char	psFTL[] = "FPMFTL";
+#elif defined(DFTL)
+	char	psFTL[] = "DFTL";
+#else
+#error check config
+#endif
+	PRINTF("[%s] Physical Density: %d MB \n\r", psFTL, m_nPhysicalFlashSizeKB / KB);
+	PRINTF("[%s] Logical Density: %d MB \n\r", psFTL, m_nLogicalFlashSizeKB / KB);
+}
+
+VOID SBINFO_MGR::Initialize()
+{
+	INT32 nSize = sizeof(SBINFO) * DFTL_GLOBAL::GetVNandMgr()->GetVBlockCount();
+	m_pastSBInfo = (SBINFO *)OSAL_MemAlloc(MEM_TYPE_FW_DATA, nSize, OSAL_MEMALLOC_FW_ALIGNMENT);
+	m_nFreeCount = 0;
+
+	int c = DFTL_GLOBAL::GetVNandMgr()->GetVBlockCount();
+	for (int i=0; i<c; i++)
+	{
+		m_pastSBInfo[i].SetFree();
+		m_pastSBInfo[i].m_nVBN = i;
+		m_pastSBInfo[i].m_nUSED = 0;
+		m_pastSBInfo[i].m_bBad = 0;
+		m_pastSBInfo[i].m_bCID = USER_CLUSTERS;
+		if (i<20)
+		{
+			m_pastSBInfo[i].m_bMeta = 1;
+		}
+		else
+		{
+			m_pastSBInfo[i].m_bMeta = 0;
+		}
+	}
+}
+
+VOID Read_Cache::Initialize()
+{
+	for (int i = 0; i < MAX_READ_CACHE_ENTRY; i++)
+	{
+		source_lpn[i] = 0xffffffff;
+		nVPPN[i] = 0xffffffff;
+		Buf[i] = DFTL_GLOBAL::GetBufferMgr()->Allocate();
+		if (Buf[i] == NULL)
+			ASSERT(0);
+		Buf[i]->readDone = 1;
+	}
+}
+
+BUFFER_ENTRY * Read_Cache::change_next_buffer(UINT32 src_lpn, BUFFER_ENTRY * input_buf, UINT32 channel, UINT32 way)
+{
+	BUFFER_ENTRY * ret;
+	UINT32 iter;
+	UINT32 start_offset, end_offset;
+	way += channel << NUM_BIT_WAY;
+	start_offset = way << READ_CAHCE_PER_WAY_BIT;
+	end_offset = (way + 1) << READ_CAHCE_PER_WAY_BIT;
+
+	for (iter = start_offset; iter < end_offset; iter++)
+	{
+		if (Buf[iter]->refCount == 0)
+		{
+			break;
+		}
+	}
+	if (iter == end_offset)
+		return NULL;
+
+	ret = Buf[iter];
+	source_lpn[iter] = src_lpn;
+	Buf[iter] = input_buf;
+	nVPPN[iter] = input_buf->nVPPN >> NUM_BIT_LPN_PER_PAGE;
+	return ret;
+}
+
+BUFFER_ENTRY * Read_Cache::get_buffer_by_VPPN(UINT32 nVPPN_input)
+{
+	UINT32 channel, way;
+	channel = CHANNEL_FROM_VPPN(nVPPN_input << NUM_BIT_LPN_PER_PAGE);
+	way = WAY_FROM_VPPN(nVPPN_input << NUM_BIT_LPN_PER_PAGE);
+	UINT32 start_offset, end_offset;
+	way += channel << NUM_BIT_WAY;
+	start_offset = way << READ_CAHCE_PER_WAY_BIT;
+	end_offset = (way + 1) << READ_CAHCE_PER_WAY_BIT;
+	for (int iter = start_offset; iter < end_offset; iter++)
+	{
+		if (nVPPN_input == nVPPN[iter])
+			return Buf[iter];
+	}
+	return NULL;
+}
+
+VOID Read_Cache::free_buffer_by_VPPN(UINT32 nVPPN_input)
+{
+	UINT32 channel, way;
+	channel = CHANNEL_FROM_VPPN(nVPPN_input << NUM_BIT_LPN_PER_PAGE);
+	way = WAY_FROM_VPPN(nVPPN_input << NUM_BIT_LPN_PER_PAGE);
+	UINT32 start_offset, end_offset;
+	way += channel << NUM_BIT_WAY;
+	start_offset = way << READ_CAHCE_PER_WAY_BIT;
+	end_offset = (way + 1) << READ_CAHCE_PER_WAY_BIT;
+	for (int iter = start_offset; iter < end_offset; iter++)
+	{
+		if (nVPPN_input == nVPPN[iter])
+		{
+			Buf[iter]->nVPPN = 0xffffffff;
+			nVPPN[iter] = 0xffffffff;
+			return;
+		}
+	}
+}
+
+// [Helper] 비트맵 상태를 시각적으로 출력 (검증용)
+void Debug_Print_Bitmap(UINT32 start, UINT32 end) {
+    xil_printf("    [Bitmap View LPN %u~%u]: ", start, end);
+    for (UINT32 i = start; i <= end; ++i) {
+        xil_printf("%u", (g_trim_bitmap[i/8] >> (i%8)) & 1);
+        if ((i - start + 1) % 8 == 0) xil_printf(" ");
+    }
+    xil_printf("\r\n");
+}
+
+void Verify_Trim_Logic_Verbose(void)
+{
+    xil_printf("\r\n======================================================\r\n");
+    xil_printf("          TRIM Logic Verification (Verbose)           \r\n");
+    xil_printf("======================================================\r\n");
+
+    // 초기화
+    memset((void*)g_trim_bitmap, 0, TRIM_BITMAP_BYTES);
+    memset((void*)g_trim_seg_count, 0, SEGMENT_COUNT * sizeof(UINT16));
+    for(int i=0; i<USER_CLUSTERS; i++) {
+        DFTL_GLOBAL::GetInstance()->m_nTrimSize[i] = 0;
+    }
+    DFTL_GLOBAL::GetInstance()->m_nTotalPendingTrimCount = 0;
+    xil_printf("[Init] All Bitmap/Counts Cleared.\r\n");
+
+    // 간단한 Set 테스트
+    UINT32 start1 = 100, end1 = 109;
+    SetTrimRange(start1, end1);
+
+    UINT32 cid1 = DFTL_GLOBAL::GetInstance()->GetClusterID(start1);
+    UINT32 val1 = DFTL_GLOBAL::GetInstance()->m_nTrimSize[cid1];
+
+    xil_printf("[Test] Set 100~109. Cluster[%u] TrimSize: %u (Expected 10)\r\n", cid1, val1);
+    if(val1 == 10) xil_printf("  -> [PASS]\r\n");
+    else           xil_printf("  -> [FAIL]\r\n");
+
+    xil_printf("======================================================\r\n");
+}

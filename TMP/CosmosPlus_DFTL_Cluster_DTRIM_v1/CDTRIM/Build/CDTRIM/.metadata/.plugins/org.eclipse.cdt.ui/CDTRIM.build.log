@@ -1,0 +1,69 @@
+15:24:57 **** Auto Build of configuration Debug for project CDTRIM ****
+make pre-build main-build 
+a9-linaro-pre-build-step
+' '
+'Building file: C:/COSMOS_KJH/CosmosPlus_DFTL_Cluster_DTRIM_v1/CDTRIM/hil/nvme/nvme_admin_cmd.c'
+'Invoking: ARM v7 g++ compiler'
+arm-none-eabi-g++ -DDFTL=1 -DCOSMOS_PLUS=1 -Wall -O0 -g3 -I../../CDTRIM_bsp/ps7_cortexa9_0/include -I../../../../common -I../../../../fil -I../../../../ftl -I../../../../ftl/dftl -I../../../../hil -I../../../../hil/nvme -I../../../../target -I../../../../target/cosmos_plus -c -fmessage-length=0 -MT"src/hil/nvme/nvme_admin_cmd.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -MMD -MP -MF"src/hil/nvme/nvme_admin_cmd.d" -MT"src/hil/nvme/nvme_admin_cmd.o" -o "src/hil/nvme/nvme_admin_cmd.o" "C:/COSMOS_KJH/CosmosPlus_DFTL_Cluster_DTRIM_v1/CDTRIM/hil/nvme/nvme_admin_cmd.c"
+In file included from ../../../../ftl/dftl/dftl_internal.h:53,
+                 from C:/COSMOS_KJH/CosmosPlus_DFTL_Cluster_DTRIM_v1/CDTRIM/hil/nvme/nvme_admin_cmd.c:58:
+../../../../ftl/dftl/dftl_garbagecollector.h:23: warning: "TRIM_FLUSH_THRESHOLD" redefined
+ #define TRIM_FLUSH_THRESHOLD (16384)
+ 
+In file included from ../../../../ftl/dftl/dftl_internal.h:45,
+                 from C:/COSMOS_KJH/CosmosPlus_DFTL_Cluster_DTRIM_v1/CDTRIM/hil/nvme/nvme_admin_cmd.c:58:
+../../../../ftl/dftl/dftl_config.h:39: note: this is the location of the previous definition
+ #define TRIM_FLUSH_THRESHOLD    (262144)
+ 
+In file included from ../../../../ftl/dftl/dftl_internal.h:61,
+                 from C:/COSMOS_KJH/CosmosPlus_DFTL_Cluster_DTRIM_v1/CDTRIM/hil/nvme/nvme_admin_cmd.c:58:
+../../../../ftl/dftl/dftl_profile.h:74:15: warning: 'DFTL_profile' defined but not used [-Wunused-variable]
+ static UINT32 DFTL_profile[Prof_Total_Num];
+               ^~~~~~~~~~~~
+'Finished building: C:/COSMOS_KJH/CosmosPlus_DFTL_Cluster_DTRIM_v1/CDTRIM/hil/nvme/nvme_admin_cmd.c'
+' '
+'Building file: C:/COSMOS_KJH/CosmosPlus_DFTL_Cluster_DTRIM_v1/CDTRIM/hil/nvme/nvme_main.c'
+'Invoking: ARM v7 g++ compiler'
+arm-none-eabi-g++ -DDFTL=1 -DCOSMOS_PLUS=1 -Wall -O0 -g3 -I../../CDTRIM_bsp/ps7_cortexa9_0/include -I../../../../common -I../../../../fil -I../../../../ftl -I../../../../ftl/dftl -I../../../../hil -I../../../../hil/nvme -I../../../../target -I../../../../target/cosmos_plus -c -fmessage-length=0 -MT"src/hil/nvme/nvme_main.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -MMD -MP -MF"src/hil/nvme/nvme_main.d" -MT"src/hil/nvme/nvme_main.o" -o "src/hil/nvme/nvme_main.o" "C:/COSMOS_KJH/CosmosPlus_DFTL_Cluster_DTRIM_v1/CDTRIM/hil/nvme/nvme_main.c"
+In file included from ../../../../ftl/dftl/dftl_internal.h:53,
+                 from C:/COSMOS_KJH/CosmosPlus_DFTL_Cluster_DTRIM_v1/CDTRIM/hil/nvme/nvme_main.c:68:
+../../../../ftl/dftl/dftl_garbagecollector.h:23: warning: "TRIM_FLUSH_THRESHOLD" redefined
+ #define TRIM_FLUSH_THRESHOLD (16384)
+ 
+In file included from ../../../../ftl/dftl/dftl_internal.h:45,
+                 from C:/COSMOS_KJH/CosmosPlus_DFTL_Cluster_DTRIM_v1/CDTRIM/hil/nvme/nvme_main.c:68:
+../../../../ftl/dftl/dftl_config.h:39: note: this is the location of the previous definition
+ #define TRIM_FLUSH_THRESHOLD    (262144)
+ 
+C:/COSMOS_KJH/CosmosPlus_DFTL_Cluster_DTRIM_v1/CDTRIM/hil/nvme/nvme_main.c: In function 'void nvme_run()':
+C:/COSMOS_KJH/CosmosPlus_DFTL_Cluster_DTRIM_v1/CDTRIM/hil/nvme/nvme_main.c:120:15: warning: variable 'exeLlr' set but not used [-Wunused-but-set-variable]
+  unsigned int exeLlr;   // dy, execute low level request
+               ^~~~~~
+C:/COSMOS_KJH/CosmosPlus_DFTL_Cluster_DTRIM_v1/CDTRIM/hil/nvme/nvme_main.c: At global scope:
+C:/COSMOS_KJH/CosmosPlus_DFTL_Cluster_DTRIM_v1/CDTRIM/hil/nvme/nvme_main.c:116:12: warning: 'bPrintProfileCount' defined but not used [-Wunused-variable]
+ static int bPrintProfileCount = 0;
+            ^~~~~~~~~~~~~~~~~~
+C:/COSMOS_KJH/CosmosPlus_DFTL_Cluster_DTRIM_v1/CDTRIM/hil/nvme/nvme_main.c:115:12: warning: 'bInitProfileCount' defined but not used [-Wunused-variable]
+ static int bInitProfileCount = 0;
+            ^~~~~~~~~~~~~~~~~
+In file included from ../../../../ftl/dftl/dftl_internal.h:61,
+                 from C:/COSMOS_KJH/CosmosPlus_DFTL_Cluster_DTRIM_v1/CDTRIM/hil/nvme/nvme_main.c:68:
+../../../../ftl/dftl/dftl_profile.h:74:15: warning: 'DFTL_profile' defined but not used [-Wunused-variable]
+ static UINT32 DFTL_profile[Prof_Total_Num];
+               ^~~~~~~~~~~~
+'Finished building: C:/COSMOS_KJH/CosmosPlus_DFTL_Cluster_DTRIM_v1/CDTRIM/hil/nvme/nvme_main.c'
+' '
+'Building target: CDTRIM.elf'
+'Invoking: ARM v7 g++ linker'
+arm-none-eabi-g++ -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -Wl,-build-id=none -specs=Xilinx.spec -Wl,-T -Wl,../src/lscript.ld -L../../CDTRIM_bsp/ps7_cortexa9_0/lib -o "CDTRIM.elf"  ./src/target/cosmos_plus/cosmos_plus_system.o  ./src/target/main.o ./src/target/osal.o  ./src/hil/nvme/host_lld.o ./src/hil/nvme/nvme_admin_cmd.o ./src/hil/nvme/nvme_identify.o ./src/hil/nvme/nvme_io_cmd.o ./src/hil/nvme/nvme_main.o  ./src/hil/hil.o  ./src/ftl/dftl/dftl_activeblock.o ./src/ftl/dftl/dftl_block.o ./src/ftl/dftl/dftl_bufferpool.o ./src/ftl/dftl/dftl_external_interface.o ./src/ftl/dftl/dftl_garbagecollector.o ./src/ftl/dftl/dftl_global.o ./src/ftl/dftl/dftl_hdma.o ./src/ftl/dftl/dftl_meta.o ./src/ftl/dftl/dftl_profile.o ./src/ftl/dftl/dftl_request.o ./src/ftl/dftl/dftl_request_gc.o ./src/ftl/dftl/dftl_request_hil.o ./src/ftl/dftl/dftl_request_meta.o ./src/ftl/dftl/dftl_vnand.o  ./src/ftl/template.o ./src/ftl/template_cpp.o  ./src/fil/fil.o ./src/fil/fil_nand.o ./src/fil/fil_request.o ./src/fil/nsc_driver.o  ./src/common/list.o ./src/common/random.o ./src/common/statistics.o ./src/common/util.o   -Wl,--start-group,-lxil,-lgcc,-lc,-lstdc++,--end-group
+'Finished building target: CDTRIM.elf'
+' '
+'Invoking: ARM v7 Print Size'
+arm-none-eabi-size CDTRIM.elf  |tee "CDTRIM.elf.size"
+   text	   data	    bss	    dec	    hex	filename
+ 245788	   5000	  28324	 279112	  44248	CDTRIM.elf
+'Finished building: CDTRIM.elf.size'
+' '
+
+15:24:59 Build Finished (took 2s.533ms)
+

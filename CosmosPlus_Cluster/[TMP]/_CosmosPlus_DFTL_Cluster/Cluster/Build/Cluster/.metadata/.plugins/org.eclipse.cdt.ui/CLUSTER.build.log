@@ -1,0 +1,68 @@
+00:16:59 **** Auto Build of configuration Debug for project CLUSTER ****
+make pre-build main-build 
+a9-linaro-pre-build-step
+' '
+'Building file: C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_garbagecollector.cpp'
+'Invoking: ARM v7 g++ compiler'
+arm-none-eabi-g++ -DDFTL=1 -DCOSMOS_PLUS=1 -Wall -O0 -g3 -I../../CLUSTER_bsp/ps7_cortexa9_0/include -I../../../../common -I../../../../ftl -I../../../../ftl/dftl -I../../../../hil -I../../../../hil/nvme -I../../../../target -I../../../../target/cosmos_plus -I../../../../fil -c -fmessage-length=0 -MT"src/ftl/dftl/dftl_garbagecollector.o" -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -MMD -MP -MF"src/ftl/dftl/dftl_garbagecollector.d" -MT"src/ftl/dftl/dftl_garbagecollector.o" -o "src/ftl/dftl/dftl_garbagecollector.o" "C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_garbagecollector.cpp"
+In file included from C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_internal.h:59,
+                 from C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_garbagecollector.cpp:17:
+../../CLUSTER_bsp/ps7_cortexa9_0/include/xtime_l.h:87:70: note: #pragma message: For the sleep routines, Global timer is being used
+ #pragma message ("For the sleep routines, Global timer is being used")
+                                                                      ^
+C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_garbagecollector.cpp: In member function 'BOOL SUPER_GC_MGR::IsGCRunning()':
+C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_garbagecollector.cpp:30:19: warning: comparison of integer expressions of different signedness: 'INT32' {aka 'int'} and 'unsigned int' [-Wsign-compare]
+  if (m_nVictimVBN == INVALID_VBN)
+C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_garbagecollector.cpp: In member function 'BOOL SUPER_GC_MGR::CheckAndStartGC()':
+C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_garbagecollector.cpp:110:10: warning: variable 'min_cid' set but not used [-Wunused-but-set-variable]
+   UINT32 min_cid = 0u;
+          ^~~~~~~
+C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_garbagecollector.cpp: In member function 'BOOL GC_MGR::IsGCRunning()':
+C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_garbagecollector.cpp:182:19: warning: comparison of integer expressions of different signedness: 'INT32' {aka 'int'} and 'unsigned int' [-Wsign-compare]
+  if (m_nVictimVBN == INVALID_VBN)
+C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_garbagecollector.cpp: In member function 'VOID GC_MGR::_Read()':
+C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_garbagecollector.cpp:320:21: warning: comparison of integer expressions of different signedness: 'UINT32' {aka 'unsigned int'} and 'INT32' {aka 'int'} [-Wsign-compare]
+  if (m_nIssuedCount != m_nWriteCount && m_nIssuedCount != m_nWriteCount + 1) {
+      ~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~
+C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_garbagecollector.cpp:320:56: warning: comparison of integer expressions of different signedness: 'UINT32' {aka 'unsigned int'} and 'INT32' {aka 'int'} [-Wsign-compare]
+  if (m_nIssuedCount != m_nWriteCount && m_nIssuedCount != m_nWriteCount + 1) {
+                                         ~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~
+C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_garbagecollector.cpp:329:23: warning: comparison of integer expressions of different signedness: 'INT32' {aka 'int'} and 'UINT32' {aka 'unsigned int'} [-Wsign-compare]
+     if (m_nWriteCount == m_nIssuedCount)
+         ~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~
+C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_garbagecollector.cpp:351:17: warning: comparison of integer expressions of different signedness: 'INT32' {aka 'int'} and 'UINT32' {aka 'unsigned int'} [-Wsign-compare]
+      if (m_nVPC != m_nIssuedCount)
+          ~~~~~~~^~~~~~~~~~~~~~~~~
+C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_garbagecollector.cpp: In member function 'VOID GC_DEBUG::SetFlag(UINT32, GC_DEBUG::GC_DEBUG_FLAG)':
+C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_garbagecollector.cpp:503:9: warning: enumeration value 'GC_DEBUG_FLAG_READ_DONE' not handled in switch [-Wswitch]
+  switch (eFlag)
+         ^
+C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_garbagecollector.cpp:503:9: warning: enumeration value 'GC_DEBUG_FLAG_MASK' not handled in switch [-Wswitch]
+C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_garbagecollector.cpp:496:9: warning: unused variable 'channel' [-Wunused-variable]
+  UINT32 channel = CHANNEL_FROM_VPPN(nVPPN);
+         ^~~~~~~
+C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_garbagecollector.cpp:497:9: warning: unused variable 'way' [-Wunused-variable]
+  UINT32 way = WAY_FROM_VPPN(nVPPN);
+         ^~~
+In file included from C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_internal.h:62,
+                 from C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_garbagecollector.cpp:17:
+C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_profile.h: At global scope:
+C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_profile.h:63:15: warning: 'DFTL_profile' defined but not used [-Wunused-variable]
+ static UINT32 DFTL_profile[Prof_Total_Num];
+               ^~~~~~~~~~~~
+'Finished building: C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster/Cluster/ftl/dftl/dftl_garbagecollector.cpp'
+' '
+'Building target: CLUSTER.elf'
+'Invoking: ARM v7 g++ linker'
+arm-none-eabi-g++ -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard -Wl,-build-id=none -specs=Xilinx.spec -Wl,-T -Wl,../src/lscript.ld -L../../CLUSTER_bsp/ps7_cortexa9_0/lib -o "CLUSTER.elf"  ./src/target/cosmos_plus/cosmos_plus_system.o  ./src/target/main.o ./src/target/osal.o  ./src/hil/nvme/host_lld.o ./src/hil/nvme/nvme_admin_cmd.o ./src/hil/nvme/nvme_identify.o ./src/hil/nvme/nvme_io_cmd.o ./src/hil/nvme/nvme_main.o  ./src/hil/hil.o  ./src/ftl/dftl/dftl_activeblock.o ./src/ftl/dftl/dftl_block.o ./src/ftl/dftl/dftl_bufferpool.o ./src/ftl/dftl/dftl_external_interface.o ./src/ftl/dftl/dftl_garbagecollector.o ./src/ftl/dftl/dftl_global.o ./src/ftl/dftl/dftl_hdma.o ./src/ftl/dftl/dftl_meta.o ./src/ftl/dftl/dftl_profile.o ./src/ftl/dftl/dftl_request.o ./src/ftl/dftl/dftl_request_gc.o ./src/ftl/dftl/dftl_request_hil.o ./src/ftl/dftl/dftl_request_meta.o ./src/ftl/dftl/dftl_vnand.o  ./src/ftl/template.o ./src/ftl/template_cpp.o  ./src/fil/fil.o ./src/fil/fil_nand.o ./src/fil/fil_request.o ./src/fil/nsc_driver.o  ./src/common/list.o ./src/common/random.o ./src/common/statistics.o ./src/common/util.o   -Wl,--start-group,-lxil,-lgcc,-lc,-lstdc++,--end-group
+'Finished building target: CLUSTER.elf'
+' '
+'Invoking: ARM v7 Print Size'
+arm-none-eabi-size CLUSTER.elf  |tee "CLUSTER.elf.size"
+   text	   data	    bss	    dec	    hex	filename
+ 237140	   5000	  27788	 269928	  41e68	CLUSTER.elf
+'Finished building: CLUSTER.elf.size'
+' '
+
+00:17:01 Build Finished (took 1s.772ms)
+

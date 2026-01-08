@@ -2,20 +2,20 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="ead_set" key="selection"/>
+		<item value="GC END" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
-			<item value="ead_set"/>
-			<item value="IncreaseW"/>
-			<item value="GC_MGR::_Rea"/>
-			<item value="read"/>
-			<item value="77"/>
-			<item value="1325"/>
-			<item value="Logical"/>
-			<item value="MAX_NUM_OF_NLB"/>
+			<item value="GC END"/>
+			<item value="1 GC End"/>
+			<item value="1 End"/>
+			<item value="End"/>
+			<item value="Done"/>
+			<item value="Start"/>
+			<item value="GC_MGR::_Read(VOID)"/>
+			<item value="GC_MGR::IncreaseWriteC"/>
 		</list>
 		<list key="replacehistory">
 		</list>

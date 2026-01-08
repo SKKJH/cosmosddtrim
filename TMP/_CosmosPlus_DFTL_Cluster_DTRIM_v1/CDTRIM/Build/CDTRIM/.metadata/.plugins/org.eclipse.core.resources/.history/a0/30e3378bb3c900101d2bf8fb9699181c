@@ -1,0 +1,202 @@
+/*******************************************************
+*
+* Copyright (C) 2018-2019
+* Embedded Software Laboratory(ESLab), SUNG KYUN KWAN UNIVERSITY
+*
+* This file is part of ESLab's Flash memory firmware
+*
+* This source can not be copied and/or distributed without the express
+* permission of ESLab
+*
+* Author: Kyuhwa Han (hgh6877@gmail.com)
+* ESLab: http://nyx.skku.ac.kr
+*
+*******************************************************/
+
+#include "dftl_internal.h"
+
+
+VOID DFTL_Profile_Initialize() {
+	for (int iter = 0; iter < Prof_Total_Num; iter++) {
+		DFTL_profile[iter] = 0;
+	}
+}
+
+VOID DFTL_IncreaseProfile(DFTL_PROFILE offset) {
+	DFTL_profile[(UINT32)offset]++;
+}
+
+VOID DFTL_IncreaseProfile(DFTL_PROFILE offset, UINT32 count) {
+	DFTL_profile[(UINT32)offset] += count;
+}
+
+UINT32 DFTL_GetProfile(DFTL_PROFILE offset) {
+	return DFTL_profile[(UINT32)offset];
+}
+
+#include "dftl_profile.h"
+#include "xil_printf.h"
+
+VOID DFTL_PrintProfile(UINT32 FLAG)
+{
+	const char* profile_names[] = {
+			"Prof_Host_read",
+			"Prof_Host_write",
+			"Prof_Host_Discard",
+
+			"Prof_CMT_read_host",
+			"Prof_CMT_read_meta",
+			"Prof_CMT_read_gc",
+			"Prof_CMT_write",
+
+			"Prof_CMTGC_read",
+			"Prof_CMTGC_write",
+			"Prof_CMTGC_count",
+
+			"Prof_GC_read",
+			"Prof_GC_write",
+			"Prof_GC_count",	//2MB block
+
+			"Prof_NAND_read",	//16KB
+			"Prof_NAND_write",	//16KB
+
+			"Prof_NAND_HOST_write",
+			"Prof_NAND_META_write",
+			"Prof_NAND_GC_write",
+
+			"Prof_NAND_CMT_write",
+			"Prof_NAND_HG_write",
+			"Prof_NAND_erase",
+
+			"Prof_Discard_Request_Num",
+			"Prof_Discard_Range_Num",
+			"Prof_Discard_Total_Page_Num",
+
+			"Prof_Discard_Page_Num",
+			"Prof_Discard_CMT_Num",
+			"Prof_Discard_Load_Num",
+
+			"Prof_Discard_Page_Miss",
+			"Prof_Discard_Page_Hit",
+
+			"Prof_GC_UTIL_Miss",
+			"Prof_GC_UTIL_Hit",
+
+			"Prof_DS_UTIL_Miss",
+			"Prof_DS_UTIL_Hit",
+
+			"Prof_DS_Cluster_Miss",
+			"Prof_DS_Cluster_Hit",
+
+			"Prof_DS_GC_Times",
+			"Prof_DS_Reduced_Pages",
+	};
+
+	for (UINT32 i = 0; i < Prof_Total_Num; i++) {
+		xil_printf("[%-35s] %u\r\n", profile_names[i], DFTL_profile[i]);
+		DFTL_profile[i] = 0;
+	}
+	DFTL_GLOBAL::GetInstance()->DebugBlockPrint(0);
+
+	UINT32 _0_all = 0;
+	UINT32 _1_all = 0;
+	UINT32 _2_all = 0;
+	UINT32 _0_blk = 0;
+	UINT32 _1_blk = 0;
+	UINT32 _2_blk = 0;
+
+////	if ((FLAG == 1) && (DFTL_GLOBAL::GetInstance()->SB_PRINT_FLAG == FALSE))
+//	{
+////		DFTL_GLOBAL::GetInstance()->SB_PRINT_FLAG = TRUE;
+//		SBINFO* sb = DFTL_GLOBAL::GetSBInfoMgr()->m_pastSBInfo;
+//		int c = DFTL_GLOBAL::GetVNandMgr()->GetVBlockCount();
+//		for (int i=0; i<c; i++)
+//		{
+//			if (!sb[i].IsBad())
+//			{
+//				if (sb[i].m_bFree == TRUE)
+//				{
+//					xil_printf("	F [VBN:%d] [%u, %u] [%u, %u] [%u, %u] [%u, %u]\r\n", i,
+//						DFTL_GLOBAL::GetVBInfoMgr(0,0)->GetVBInfo(i)->CID, 512 - DFTL_GLOBAL::GetVBInfoMgr(0,0)->GetVBInfo(i)->GetInvalidLPNCount(),
+//						DFTL_GLOBAL::GetVBInfoMgr(0,1)->GetVBInfo(i)->CID, 512 - DFTL_GLOBAL::GetVBInfoMgr(0,0)->GetVBInfo(i)->GetInvalidLPNCount(),
+//						DFTL_GLOBAL::GetVBInfoMgr(1,0)->GetVBInfo(i)->CID, 512 - DFTL_GLOBAL::GetVBInfoMgr(0,0)->GetVBInfo(i)->GetInvalidLPNCount(),
+//						DFTL_GLOBAL::GetVBInfoMgr(1,1)->GetVBInfo(i)->CID, 512 - DFTL_GLOBAL::GetVBInfoMgr(0,0)->GetVBInfo(i)->GetInvalidLPNCount());
+//				}
+//				else
+//				{
+//					xil_printf("	A [VBN:%d] [%u, %u] [%u, %u] [%u, %u] [%u, %u]\r\n", i,
+//						DFTL_GLOBAL::GetVBInfoMgr(0,0)->GetVBInfo(i)->CID, 512 - DFTL_GLOBAL::GetVBInfoMgr(0,0)->GetVBInfo(i)->GetInvalidLPNCount(),
+//						DFTL_GLOBAL::GetVBInfoMgr(0,1)->GetVBInfo(i)->CID, 512 - DFTL_GLOBAL::GetVBInfoMgr(0,0)->GetVBInfo(i)->GetInvalidLPNCount(),
+//						DFTL_GLOBAL::GetVBInfoMgr(1,0)->GetVBInfo(i)->CID, 512 - DFTL_GLOBAL::GetVBInfoMgr(0,0)->GetVBInfo(i)->GetInvalidLPNCount(),
+//						DFTL_GLOBAL::GetVBInfoMgr(1,1)->GetVBInfo(i)->CID, 512 - DFTL_GLOBAL::GetVBInfoMgr(0,0)->GetVBInfo(i)->GetInvalidLPNCount());
+//
+//					UINT32 flag_0 = DFTL_GLOBAL::GetVBInfoMgr(0,0)->GetVBInfo(i)->CID;
+//					UINT32 flag_1 = DFTL_GLOBAL::GetVBInfoMgr(0,1)->GetVBInfo(i)->CID;
+//					UINT32 flag_2 = DFTL_GLOBAL::GetVBInfoMgr(1,0)->GetVBInfo(i)->CID;
+//					UINT32 flag_3 = DFTL_GLOBAL::GetVBInfoMgr(1,1)->GetVBInfo(i)->CID;
+//
+//					if ((flag_0 == flag_1) && (flag_1 == flag_2) && (flag_2 == flag_3))
+//					{
+//						if (flag_0 == 0)
+//						{
+//							_0_blk += 1;
+//							_0_all += 512 - DFTL_GLOBAL::GetVBInfoMgr(0,0)->GetVBInfo(i)->GetInvalidLPNCount();
+//							_0_all += 512 - DFTL_GLOBAL::GetVBInfoMgr(0,1)->GetVBInfo(i)->GetInvalidLPNCount();
+//							_0_all += 512 - DFTL_GLOBAL::GetVBInfoMgr(1,0)->GetVBInfo(i)->GetInvalidLPNCount();
+//							_0_all += 512 - DFTL_GLOBAL::GetVBInfoMgr(1,1)->GetVBInfo(i)->GetInvalidLPNCount();
+//						}
+//						else if (flag_0 == 1)
+//						{
+//							_1_blk += 1;
+//							_1_all += 512 - DFTL_GLOBAL::GetVBInfoMgr(0,0)->GetVBInfo(i)->GetInvalidLPNCount();
+//							_1_all += 512 - DFTL_GLOBAL::GetVBInfoMgr(0,1)->GetVBInfo(i)->GetInvalidLPNCount();
+//							_1_all += 512 - DFTL_GLOBAL::GetVBInfoMgr(1,0)->GetVBInfo(i)->GetInvalidLPNCount();
+//							_1_all += 512 - DFTL_GLOBAL::GetVBInfoMgr(1,1)->GetVBInfo(i)->GetInvalidLPNCount();
+//						}
+//						else
+//						{
+//							_2_blk += 1;
+//							_2_all += 512 - DFTL_GLOBAL::GetVBInfoMgr(0,0)->GetVBInfo(i)->GetInvalidLPNCount();
+//							_2_all += 512 - DFTL_GLOBAL::GetVBInfoMgr(0,1)->GetVBInfo(i)->GetInvalidLPNCount();
+//							_2_all += 512 - DFTL_GLOBAL::GetVBInfoMgr(1,0)->GetVBInfo(i)->GetInvalidLPNCount();
+//							_2_all += 512 - DFTL_GLOBAL::GetVBInfoMgr(1,1)->GetVBInfo(i)->GetInvalidLPNCount();
+//						}
+//
+//					}
+//					else
+//					{
+//						xil_printf("	A SOMETHING WRONG\r\n");
+//					}
+//				}
+//			}
+//		}
+//	}
+	{
+		SBINFO_MGR* sbm = DFTL_GLOBAL::GetSBInfoMgr();
+		UINT32 freeWalk = 0, badInFree = 0, metaInFree = 0, notFreeFlag = 0, usedInFree = 0;
+
+		xil_printf("[SB][FREE-LIST] ===== START =====\r\n");
+		if (list_empty(&sbm->m_dlFreeList)) {
+			xil_printf("[SB][FREE-LIST] (empty)\r\n");
+		} else {
+			SBINFO* pos;
+			list_for_each_entry(SBINFO, pos, &sbm->m_dlFreeList, m_dlList) {
+				freeWalk++;
+				if (pos->IsBad())      badInFree++;
+				if (pos->IsMeta())     metaInFree++;   // SB_INIT에서 meta는 FREE에 안 올려서 비정상
+				if (!pos->m_bFree)     notFreeFlag++;  // FREE 리스트인데 m_bFree=0이면 비정상
+				if (pos->m_nUSED != 0) usedInFree++;   // FREE인데 USED>0이면 비정상(정책에 따라 경고)
+			}
+		}
+		xil_printf("[SB][FREE-LIST] COUNT(walked): %u, COUNT(tracked): %u\r\n",
+				freeWalk, sbm->m_nFreeCount);
+		if (badInFree || metaInFree || notFreeFlag || usedInFree) {
+			xil_printf("[SB][FREE-LIST][WARN] bad:%u meta:%u notFree:%u used:%u\r\n",
+					badInFree, metaInFree, notFreeFlag, usedInFree);
+		}
+//		xil_printf("[CLUSTER 0] BLK USED: %u, VALID PAGE :%u\r\n", _0_blk, _0_all);
+//		xil_printf("[CLUSTER 1] BLK USED: %u, VALID PAGE :%u\r\n", _1_blk, _1_all);
+//		xil_printf("[CLUSTER 2] BLK USED: %u, VALID PAGE :%u\r\n", _2_blk, _2_all);
+		xil_printf("[SB][FREE-LIST] ===== END =====\r\n");
+	}
+}

@@ -86,6 +86,9 @@ GC_MGR::CheckAndStartGC(VOID)
 	m_nWriteCount = 0;
 	m_nIssuedCount = 0;
 
+	if (m_eIOType != IOTYPE_META)
+		xil_printf("GC START VBN:%u, CH:%u, WY:%u\r\n", m_nVictimVBN, m_channel, m_way);
+
 	if (m_eIOType == IOTYPE_META) {
 		DFTL_GLOBAL::GetInstance()->SetMetaGCing();
 		DFTL_IncreaseProfile(Prof_CMTGC_count);
@@ -123,6 +126,9 @@ GC_MGR::IncreaseWriteCount(VOID)
 			DFTL_IncreaseProfile(Prof_GC_write_set, DFTL_GLOBAL::GetGCMgr(m_channel, m_way)->m_nWriteCount);
 
 		// GC Done for current victim
+		if (m_eIOType != IOTYPE_META) {
+			xil_printf("1 GC END VBN:%u, CH:%u, WY:%u\r\n", m_nVictimVBN, m_channel, m_way);
+		}
 		m_nVictimVBN = INVALID_VBN;
 #if (SUPPORT_META_DEMAND_LOADING == 1)
 		if (m_eIOType == IOTYPE_META) {
@@ -161,14 +167,16 @@ GC_MGR::_Read(VOID)
 	{
 		if (m_nCurReadVPageOffset == pstGlobal->GetVPagePerVBlock())
 		{
-			if (m_eIOType != IOTYPE_META) {
-				DFTL_IncreaseProfile(Prof_GC_read_set, DFTL_GLOBAL::GetGCMgr(m_channel, m_way)->m_nIssuedCount);
+			if (m_nWriteCount == m_nIssuedCount)
+			{
+				xil_printf("2 GC END VBN:%u, CH:%u, WY:%u\r\n", m_nVictimVBN, m_channel, m_way);
+				m_nVictimVBN = INVALID_VBN;
 			}
-		}
 
-		if (m_nCurReadVPageOffset >= pstGlobal->GetVPagePerVBlock())
-		{
-			// end of block, GC Read Done
+			if (m_nVPC != m_nIssuedCount)
+			{
+				m_nVPC = m_nIssuedCount;
+			}
 			return;
 		}
 
