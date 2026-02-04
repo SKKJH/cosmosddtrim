@@ -97,7 +97,11 @@ void CheckPendingTrim()
         }
     }
     TrimPending_Clear();
-	xil_printf("TRIM DONE\r\n");
+
+    if (DFTL_GLOBAL::GetInstance()->m_bEnable == 2)
+    {
+    	xil_printf("TRIM DONE\r\n");
+    }
 }
 
 // [SetTrimRange] Cluster 경계 처리를 포함한 최적화 로직
@@ -451,7 +455,6 @@ UINT32 ApplyTrimBySegScan(VOID)
         DFTL_GLOBAL::GetSuperGCMgr()->loadCNT += 1;
         processedTotal += 1;
     }
-
     return processedTotal;
 }
 
@@ -532,8 +535,48 @@ VOID DFTL_GLOBAL::SB_INIT()
     SB_INIT_FLAG = TRUE;
 }
 
+VIRTUAL VOID DFTL_GLOBAL::StartGCMonitor(UINT32 nTotalReq, UINT32 nWindowSize) {
+    m_bMonitorOn = TRUE;
+    m_nMonitorTotalReq = nTotalReq;
+    m_nWindowSize = nWindowSize;
+    m_nMonitorCurReq = 0;
+    m_nWindowHit = 0;
+    xil_printf("[MON] GC Done. Start Monitoring (Total: %d, Window: %d)\r\n", nTotalReq, nWindowSize);
+}
+
+VOID DFTL_GLOBAL::RecordHostAccess(BOOL bHit) {
+    if (m_bMonitorOn == FALSE) return;
+
+    m_nMonitorCurReq++;
+    if (bHit) m_nWindowHit++;
+
+    // 윈도우 단위(예: 100개)가 찰 때마다 로그 출력
+    if (m_nMonitorCurReq % m_nWindowSize == 0) {
+        float rate = (float)m_nWindowHit / (float)m_nWindowSize * 100.0f;
+        xil_printf("[MON] Req %4d ~ %4d | HitRate: %3d%% (%d/%d)\r\n",
+            m_nMonitorCurReq - m_nWindowSize + 1,
+            m_nMonitorCurReq,
+            (int)rate, m_nWindowHit, m_nWindowSize);
+
+        // 윈도우 초기화
+        m_nWindowHit = 0;
+    }
+
+    // 설정한 횟수만큼 다 찍었으면 모니터링 종료
+    if (m_nMonitorCurReq >= m_nMonitorTotalReq) {
+        m_bMonitorOn = FALSE;
+        xil_printf("[MON] Monitoring End.\r\n");
+    }
+}
+
 VIRTUAL VOID DFTL_GLOBAL::Initialize(VOID)
 {
+	m_bMonitorOn = FALSE;
+	m_nMonitorTotalReq = 0;
+	m_nMonitorCurReq = 0;
+	m_nWindowSize = 100; // 100개 단위로 로그 출력
+	m_nWindowHit = 0;
+
 	m_nHostReqCount = 0;
 	m_nLastHostHit = 0;
 	m_nLastHostMiss = 0;

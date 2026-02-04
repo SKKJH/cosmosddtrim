@@ -913,8 +913,13 @@ HIL_REQUEST_PER_WAY::_ProcessRead_Wait(VOID)
                   {
                      BUFFERING_LPN* pstBufferingLPN = DFTL_GLOBAL::GetActiveBlockBufferingLPN(cID, channel, way);
                      nBufferingVPPN = pstBufferingLPN->ReadLPN(nLPN, ReadCacheBuf, cID, channel, way);
-                     ASSERT(nVPPN == nBufferingVPPN);
-                     return false;
+                     if (nBufferingVPPN != INVALID_VPPN)
+                     {
+                    	 ASSERT(nVPPN == nBufferingVPPN);
+                    	 return false; // 활성 블록에 있다면 BufferingLPN을 통해 읽어야 하므로 false 리턴
+                     }
+//                     ASSERT(nVPPN == nBufferingVPPN);
+//                     return false;
                   }
                }
             }
@@ -1233,7 +1238,7 @@ HIL_REQUEST::_ProcessDSM_Wait(VOID)
     UINT32* pDSMData = (UINT32*)pBufferingAddr;
     META_MGR* pstMetaMgr = DFTL_GLOBAL::GetMetaMgr();
 
-    if (DFTL_GLOBAL::GetInstance()->m_bEnable > 1)
+    if (DFTL_GLOBAL::GetInstance()->m_bEnable > 10)
     {
     	for (UINT32 i = 0; i < m_nLPNCount; i++)
     	{

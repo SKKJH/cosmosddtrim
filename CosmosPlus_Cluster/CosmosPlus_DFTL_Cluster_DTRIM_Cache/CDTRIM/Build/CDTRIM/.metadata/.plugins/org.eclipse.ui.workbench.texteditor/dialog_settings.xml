@@ -2,20 +2,20 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="CheckAndStart" key="selection"/>
+		<item value="GCMonitor(1000," key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
-			<item value="CheckandStart"/>
-			<item value="PASS"/>
-			<item value="Checkand"/>
-			<item value="META_MGR::SetL2V(UINT32 nLPN,"/>
-			<item value="im_bitmap[nByteIdx] &amp; (1 &lt;&lt; nBit"/>
-			<item value="C_MGR::_Rea"/>
-			<item value="SetL2V"/>
-			<item value="Invalidate"/>
+			<item value="GCMonitor(1000,"/>
+			<item value="monit"/>
+			<item value="if (m_nIssuedCount != m_nWriteCount &amp;&amp; m_nIssuedCount != m_nWriteCount + 1) {"/>
+			<item value="Moni"/>
+			<item value="moni"/>
+			<item value="GLOBAL::GetInstance()-&gt;StartGCMonitor"/>
+			<item value="taMgr-&gt;SetL2V(nCur"/>
+			<item value="stMetaMgr-&gt;IsMetaAvailable(nC"/>
 		</list>
 		<list key="replacehistory">
 		</list>
@@ -24,7 +24,7 @@
 		<item value="288" key="DIALOG_WIDTH"/>
 		<item value="1|맑은 고딕|9.0|0|WINDOWS|1|-12|0|0|0|400|0|0|0|1|0|0|0|0|맑은 고딕" key="DIALOG_FONT_NAME"/>
 		<item value="391" key="DIALOG_HEIGHT"/>
-		<item value="824" key="DIALOG_X_ORIGIN"/>
-		<item value="264" key="DIALOG_Y_ORIGIN"/>
+		<item value="1319" key="DIALOG_X_ORIGIN"/>
+		<item value="208" key="DIALOG_Y_ORIGIN"/>
 	</section>
 </section>

@@ -2,20 +2,20 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="Read(" key="selection"/>
+		<item value="StartGCMonitor" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
-			<item value="read("/>
-			<item value="write_wai"/>
-			<item value="write"/>
-			<item value="DSM_Wait"/>
-			<item value="read_wait"/>
-			<item value="777"/>
-			<item value="GC_MGR::_Read(VOID)"/>
-			<item value="GC][WRITABLE] FA"/>
+			<item value="StartGCMonitor"/>
+			<item value="start"/>
+			<item value="if (DFTL_GLOBAL::GetInstance()-&gt;m_bEnable == 2)"/>
+			<item value="Incre"/>
+			<item value="GLOBAL::GetInstance()-&gt;StartGCMonitor"/>
+			<item value="META_CACHE::GetMetaEntry(UINT32 nLPN"/>
+			<item value="Read("/>
+			<item value="*8"/>
 		</list>
 		<list key="replacehistory">
 		</list>

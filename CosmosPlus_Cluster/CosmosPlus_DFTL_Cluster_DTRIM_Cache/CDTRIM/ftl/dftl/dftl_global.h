@@ -202,6 +202,17 @@ typedef enum
 class DFTL_GLOBAL : public FTL_INTERFACE
 {
 public:
+
+	BOOL   m_bMonitorOn;        // 모니터링 활성화 여부
+	UINT32 m_nMonitorTotalReq;  // 모니터링할 총 Host 요청 수 (예: 1000개)
+	UINT32 m_nMonitorCurReq;    // 현재 처리한 Host 요청 수
+	UINT32 m_nWindowSize;       // 구간별 집계 단위 (예: 100개마다 로그 출력)
+	UINT32 m_nWindowHit;        // 현재 윈도우 내 Hit 횟수
+
+	// [신규 추가] 모니터링 함수
+	VOID StartGCMonitor(UINT32 nTotalReq, UINT32 nWindowSize);
+	VOID RecordHostAccess(BOOL bHit);
+
 	//DFTL_GLOBAL() {};
 	UINT32 nand_write_cnt;
 	UINT32 host_write_cnt;

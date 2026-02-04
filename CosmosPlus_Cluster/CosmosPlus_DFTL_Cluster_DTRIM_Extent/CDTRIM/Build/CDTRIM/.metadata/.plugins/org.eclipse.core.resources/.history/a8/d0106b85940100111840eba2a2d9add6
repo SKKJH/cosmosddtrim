@@ -1,0 +1,952 @@
+/*******************************************************
+*
+* Copyright (C) 2018-2019 
+* Embedded Software Laboratory(ESLab), SUNG KYUN KWAN UNIVERSITY
+* * This file is part of ESLab's Flash memory firmware
+* * This source can not be copied and/or distributed without the express
+* permission of ESLab
+*
+* Author: DongYoung Seo (dongyoung.seo@gmail.com)
+		  Kyuhwa Han (hgh6877@gmail.com)
+* ESLab: http://nyx.skku.ac.kr
+*
+*******************************************************/
+
+#include "hil.h"
+#include "dftl_internal.h"
+
+// [Helper] 메모리 초기화 및 주소 계산 헬퍼
+static inline void memset_volatile_u8(volatile UINT8* dst, UINT8 value, size_t len)
+{
+    for (size_t i = 0; i < len; ++i) dst[i] = value;
+}
+
+static inline UINT32 seg_base_lpn(UINT32 seg_idx) { return seg_idx * 1024; }
+static inline UINT32 seg_end_lpn (UINT32 seg_idx) { return seg_base_lpn(seg_idx) + 1024 - 1; }
+static inline UINT32 byte_idx_from_lpn(UINT32 lpn) { return lpn / 8; }
+static inline UINT32 bit_off_from_lpn (UINT32 lpn) { return lpn % 8; }
+
+#define GET_TRIM_BIT(lpn) ((g_trim_bitmap[(lpn)/8] >> ((lpn)%8)) & 0x1)
+
+// 전역 TRIM 변수 정의
+volatile UINT8* g_trim_bitmap     	= NULL;
+volatile UINT16* g_trim_seg_count	= NULL;
+volatile UINT32 g_trim_pending    	= 0;
+volatile UINT32 g_trim_going    	= 0;
+
+#define TRIM_BITMAP_BYTES ((TOTAL_LPN_COUNT + 7ull) / 8ull)
+#define SEGMENT_COUNT     (TOTAL_LPN_COUNT / LPNS_PER_SEGMENT)
+#define LPNS_PER_SEGMENT  (1024)
+
+// 비교 함수에서 참조하기 위해 static 전역으로 선언
+static UINT32 g_clusterUtils[USER_CLUSTERS];
+// ----------------------------------------------------------------------------
+// TRIM_MGR Implementation (Added for Trim Range Management)
+// ----------------------------------------------------------------------------
+
+TRIM_MGR::TRIM_MGR()
+{
+	// 생성자: 멤버 변수 초기화
+	m_pFreeListHead = NULL;
+	m_nUsedNodeCount = 0;
+
+	// Hash Table 포인터 초기화
+	for (int i = 0; i < TRIM_HASH_SIZE; i++)
+	{
+		m_LPNHashTable[i] = NULL;
+		m_RangeHashTable[i] = NULL;
+	}
+}
+
+// ----------------------------------------------------------------------------
+// TRIM_MGR::PrintInfo - 클러스터별 초기화 상태 출력
+// ----------------------------------------------------------------------------
+VOID TRIM_MGR::PrintInfo()
+{
+	UINT32 nClusterID = m_nClusterID;
+    xil_printf("============================================================\r\n");
+    xil_printf("[TRIM_MGR] Cluster %u Initialization Info\r\n", nClusterID);
+    xil_printf("------------------------------------------------------------\r\n");
+
+    if (m_NodePool == NULL) {
+        xil_printf(" [ERROR] NodePool is NULL (Not Allocated)\r\n");
+        return;
+    }
+
+    xil_printf(" 1. Memory Pool Info (Dynamic Alloc)\r\n");
+    xil_printf("    - Node Size     : %d bytes\r\n", sizeof(TRIM_NODE));
+    // 배열 주소(&) 대신 포인터 값 그대로 출력
+    xil_printf("    - Pool Start    : 0x%08X\r\n", (UINT32)m_NodePool);
+    xil_printf("    - Pool End      : 0x%08X\r\n", (UINT32)&m_NodePool[MAX_TRIM_POOL_SIZE - 1]);
+    xil_printf("    - Total Capacity: %d nodes\r\n", MAX_TRIM_POOL_SIZE);
+
+    xil_printf(" 2. List Status\r\n");
+    xil_printf("    - Free List Head: 0x%08X\r\n", (UINT32)m_pFreeListHead);
+    xil_printf("    - Used Node Cnt : %d\r\n", m_nUsedNodeCount);
+
+    xil_printf(" 3. Link Verification (Scanning All %d Nodes...)\r\n", MAX_TRIM_POOL_SIZE);
+
+    TRIM_NODE* pNode = m_pFreeListHead;
+    BOOL bError = FALSE;
+    UINT32 i = 0;
+
+    for (i = 0; i < MAX_TRIM_POOL_SIZE; i++)
+    {
+        if (pNode == NULL)
+        {
+            xil_printf("    [ERROR] List ended prematurely at index %d\r\n", i);
+            bError = TRUE;
+            break;
+        }
+
+        TRIM_NODE* pNext = pNode->m_pNextLPN;
+
+        if (i < MAX_TRIM_POOL_SIZE - 1)
+        {
+            if (pNext != (pNode + 1))
+            {
+                xil_printf("    [ERROR] Broken Link at [%d]! Curr: 0x%08X, Next: 0x%08X\r\n",
+                    i, (UINT32)pNode, (UINT32)pNext);
+                bError = TRUE;
+                break;
+            }
+        }
+        else
+        {
+            if (pNext != NULL)
+            {
+                xil_printf("    [ERROR] Last node [%d] next pointer is NOT NULL!\r\n", i);
+                bError = TRUE;
+            }
+        }
+        pNode = pNext;
+    }
+
+    if (bError == FALSE)
+    {
+        xil_printf("    -> [SUCCESS] All %d nodes are linked correctly.\r\n", i);
+    }
+    else
+    {
+        xil_printf("    -> [FAIL] Verification failed.\r\n");
+    }
+
+    xil_printf("============================================================\r\n\r\n");
+}
+
+VOID TRIM_MGR::Initialize(UINT32 clusterID)
+{
+    m_nUsedNodeCount = 0;
+    m_nClusterID = clusterID;
+
+    if (m_NodePool == NULL)
+    {
+        UINT32 nTotalSize = sizeof(TRIM_NODE) * MAX_TRIM_POOL_SIZE;
+        m_NodePool = (TRIM_NODE*)OSAL_MemAlloc(MEM_TYPE_FW_DATA, nTotalSize, OSAL_MEMALLOC_FW_ALIGNMENT);
+        if (m_NodePool == NULL)
+        {
+            xil_printf("[TRIM_MGR] Memory Allocation Failed!\r\n");
+            return;
+        }
+        memset_volatile_u8((volatile UINT8*)m_NodePool, 0, nTotalSize);
+    }
+
+    for (int i = 0; i < TRIM_HASH_SIZE; i++)
+    {
+        m_LPNHashTable[i] = NULL;
+        m_RangeHashTable[i] = NULL;
+        m_RangeHashTableTail[i] = NULL;
+    }
+
+    for (int i = 0; i < MAX_TRIM_POOL_SIZE; i++)
+    {
+        m_NodePool[i].Reset();
+        if (i < MAX_TRIM_POOL_SIZE - 1)
+        {
+            m_NodePool[i].m_pNextLPN = &m_NodePool[i + 1];
+        }
+        else
+        {
+            m_NodePool[i].m_pNextLPN = NULL;
+        }
+    }
+
+    m_pFreeListHead = &m_NodePool[0];
+    PrintInfo();
+}
+
+TRIM_NODE* TRIM_MGR::AllocNode(UINT32 nLength)
+{
+    if (m_pFreeListHead == NULL) {
+        // 노드 풀이 가득 참
+    	xil_printf("	NO FREE NODE HERE %u CLUSTER\r\n", m_nClusterID);
+        return NULL;
+    }
+
+    TRIM_NODE* pNode = m_pFreeListHead;
+    m_pFreeListHead = pNode->m_pNextLPN; // Free List에서 제거
+
+    pNode->Reset();
+    m_nUsedNodeCount++;
+
+    return pNode;
+}
+
+void TRIM_MGR::FreeNode(TRIM_NODE* pNode)
+{
+    if (pNode == NULL) {
+    	xil_printf("	NO NODE FOR FREE %u CLUSTER\r\n", m_nClusterID);
+    	return;
+    }
+
+    pNode->Reset();
+    // Free List의 맨 앞에 삽입
+    pNode->m_pNextLPN = m_pFreeListHead;
+    m_pFreeListHead = pNode;
+
+    m_nUsedNodeCount--;
+}
+
+UINT32 TRIM_MGR::_GetLPNHash(UINT32 nLPN)
+{
+    DFTL_GLOBAL* pGlobal = DFTL_GLOBAL::GetInstance();
+    UINT32 nTotalLPN = pGlobal->GetLPNCount();
+    UINT32 nLPNsPerCluster = nTotalLPN / USER_CLUSTERS;
+    UINT32 nClusterBaseLPN = m_nClusterID * nLPNsPerCluster;
+    UINT32 nLPNsPerBucket = nLPNsPerCluster / TRIM_HASH_SIZE;
+
+    if (nLPNsPerBucket == 0) return 0;
+
+    UINT32 nRelativeLPN = (nLPN >= nClusterBaseLPN) ? (nLPN - nClusterBaseLPN) : 0;
+    UINT32 nHashIdx = nRelativeLPN / nLPNsPerBucket;
+
+    return (nHashIdx >= TRIM_HASH_SIZE) ? (TRIM_HASH_SIZE - 1) : nHashIdx;
+}
+
+// 모든 해시 리스트에서 노드 연결 해제
+void TRIM_MGR::_RemoveFromLists(TRIM_NODE* pNode)
+{
+    // 1. LPN Hash List에서 제거
+    UINT32 nLPNHash = _GetLPNHash(pNode->m_nStartLPN);
+    if (pNode->m_pPrevLPN) pNode->m_pPrevLPN->m_pNextLPN = pNode->m_pNextLPN;
+    else m_LPNHashTable[nLPNHash] = pNode->m_pNextLPN;
+
+    if (pNode->m_pNextLPN) pNode->m_pNextLPN->m_pPrevLPN = pNode->m_pPrevLPN;
+
+    // 2. Range Hash List에서 제거
+    UINT32 nRangeHash = _GetRangeHash(pNode->m_nLength);
+    if (pNode->m_pPrevRange) pNode->m_pPrevRange->m_pNextRange = pNode->m_pNextRange;
+    else m_RangeHashTable[nRangeHash] = pNode->m_pNextRange;
+
+    if (pNode->m_pNextRange) pNode->m_pNextRange->m_pPrevRange = pNode->m_pPrevRange;
+    else m_RangeHashTableTail[nRangeHash] = pNode->m_pPrevRange; // [추가] 꼬리 노드면 이전 노드를 새 꼬리로 설정
+
+    // 포인터 초기화
+    pNode->m_pPrevLPN = pNode->m_pNextLPN = NULL;
+    pNode->m_pPrevRange = pNode->m_pNextRange = NULL;
+}
+
+// LPN Hash List 정렬 삽입 (오름차순)
+void TRIM_MGR::_AddToLPNList(UINT32 nHashIdx, TRIM_NODE* pNew)
+{
+    TRIM_NODE* pPrev = NULL;
+    TRIM_NODE* pCurr = m_LPNHashTable[nHashIdx];
+
+    while (pCurr != NULL && pCurr->m_nStartLPN < pNew->m_nStartLPN) {
+        pPrev = pCurr;
+        pCurr = pCurr->m_pNextLPN;
+    }
+
+    pNew->m_pNextLPN = pCurr;
+    pNew->m_pPrevLPN = pPrev;
+
+    if (pPrev) pPrev->m_pNextLPN = pNew;
+    else m_LPNHashTable[nHashIdx] = pNew;
+
+    if (pCurr) pCurr->m_pPrevLPN = pNew;
+}
+
+// Range Hash List 정렬 삽입 (내림차순: 큰 순서)
+void TRIM_MGR::_AddToRangeList(TRIM_NODE* pNew)
+{
+    UINT32 nRangeHash = _GetRangeHash(pNew->m_nLength);
+    TRIM_NODE* pPrev = NULL;
+    TRIM_NODE* pCurr = m_RangeHashTable[nRangeHash];
+
+    // 큰 순서대로 탐색 (같거나 작으면 정지)
+    while (pCurr != NULL && pCurr->m_nLength > pNew->m_nLength) {
+        pPrev = pCurr;
+        pCurr = pCurr->m_pNextRange;
+    }
+
+    pNew->m_pNextRange = pCurr;
+    pNew->m_pPrevRange = pPrev;
+
+    if (pPrev) pPrev->m_pNextRange = pNew;
+    else m_RangeHashTable[nRangeHash] = pNew;
+
+    if (pCurr) pCurr->m_pPrevRange = pNew;else m_RangeHashTableTail[nRangeHash] = pNew;
+}
+
+void TRIM_MGR::InsertTrim(UINT32 nStartLPN, UINT32 nLength)
+{
+    UINT32 nHashIdx = _GetLPNHash(nStartLPN);
+    TRIM_NODE* pCurr = m_LPNHashTable[nHashIdx];
+    TRIM_NODE* pPrev = NULL;
+
+    // 삽입 위치 탐색
+    while (pCurr != NULL && pCurr->m_nStartLPN < nStartLPN) {
+        pPrev = pCurr;
+        pCurr = pCurr->m_pNextLPN;
+    }
+
+    TRIM_NODE* pNext = pCurr;
+    BOOL bMerged = FALSE;
+
+    // [Case 1] Prev 노드와 병합 (Overlap/Adjacent)
+    if (pPrev != NULL && (pPrev->m_nStartLPN + pPrev->m_nLength) >= nStartLPN) {
+        _RemoveFromLists(pPrev);
+
+        UINT32 nNewEnd = (nStartLPN + nLength > pPrev->m_nStartLPN + pPrev->m_nLength)
+                         ? (nStartLPN + nLength) : (pPrev->m_nStartLPN + pPrev->m_nLength);
+        pPrev->m_nLength = nNewEnd - pPrev->m_nStartLPN;
+
+        _AddToLPNList(nHashIdx, pPrev);
+        _AddToRangeList(pPrev);
+        bMerged = TRUE;
+
+        // 연쇄 병합: 확장된 Prev가 Next와도 닿는 경우
+        if (pNext != NULL && (pPrev->m_nStartLPN + pPrev->m_nLength) >= pNext->m_nStartLPN) {
+            _RemoveFromLists(pPrev);
+            _RemoveFromLists(pNext);
+
+            UINT32 nFinalEnd = (pNext->m_nStartLPN + pNext->m_nLength > pPrev->m_nStartLPN + pPrev->m_nLength)
+                               ? (pNext->m_nStartLPN + pNext->m_nLength) : (pPrev->m_nStartLPN + pPrev->m_nLength);
+            pPrev->m_nLength = nFinalEnd - pPrev->m_nStartLPN;
+
+            _AddToLPNList(nHashIdx, pPrev);
+            _AddToRangeList(pPrev);
+            FreeNode(pNext);
+        }
+    }
+    // [Case 2] Next 노드와 병합
+    else if (pNext != NULL && (nStartLPN + nLength) >= pNext->m_nStartLPN) {
+        _RemoveFromLists(pNext);
+
+        UINT32 nNewEnd = (pNext->m_nStartLPN + pNext->m_nLength > nStartLPN + nLength)
+                         ? (pNext->m_nStartLPN + pNext->m_nLength) : (nStartLPN + nLength);
+        pNext->m_nStartLPN = nStartLPN;
+        pNext->m_nLength = nNewEnd - nStartLPN;
+
+        _AddToLPNList(nHashIdx, pNext);
+        _AddToRangeList(pNext);
+        bMerged = TRUE;
+    }
+
+    // [Case 3] 병합되지 않은 경우 신규 삽입
+    if (!bMerged) {
+        TRIM_NODE* pNew = AllocNode();
+        if (pNew) {
+            pNew->m_nStartLPN = nStartLPN;
+            pNew->m_nLength = nLength;
+            _AddToLPNList(nHashIdx, pNew);
+            _AddToRangeList(pNew);
+        }
+    }
+
+    xil_printf("[TRIM_MGR] Cluster %u Bucket %u Nodes: ", m_nClusterID, nHashIdx);
+    TRIM_NODE* pPrint = m_LPNHashTable[nHashIdx];
+
+    if (pPrint == NULL) {
+    	xil_printf("Empty");
+    } else {
+    	while (pPrint != NULL) {
+    		xil_printf("[%u, %u] ", pPrint->m_nStartLPN, pPrint->m_nLength);
+    		pPrint = pPrint->m_pNextLPN;
+    	}
+    }
+    xil_printf("\r\n");
+}
+
+DFTL_GLOBAL* DFTL_GLOBAL::m_pstInstance;
+
+// ----------------------------------------------------------------------------
+//  DFTL_GLOBAL Member Functions
+// ----------------------------------------------------------------------------
+
+VOID DFTL_GLOBAL::WritePtr_GetAndAdvance(UINT32 clusterID)
+{
+    m_page_cnt[clusterID]++;
+    if (m_page_cnt[clusterID] >= LPN_PER_PHYSICAL_PAGE) {
+        m_page_cnt[clusterID] = 0;
+        m_wp_ch[clusterID]++;
+        if (m_wp_ch[clusterID] >= USER_CHANNELS) {
+            m_wp_ch[clusterID] = 0;
+            m_wp_wy[clusterID]++;
+            if (m_wp_wy[clusterID] >= USER_WAYS) {
+                m_wp_wy[clusterID] = 0;
+            }
+        }
+    }
+}
+
+VOID DFTL_GLOBAL::GC_WritePtr_GetAndAdvance(UINT32 clusterID)
+{
+    m_gc_page_cnt[clusterID]++;
+    if (m_gc_page_cnt[clusterID] >= LPN_PER_PHYSICAL_PAGE) {
+        m_gc_page_cnt[clusterID] = 0;
+        m_gc_wp_ch[clusterID]++;
+        if (m_gc_wp_ch[clusterID] >= USER_CHANNELS) {
+            m_gc_wp_ch[clusterID] = 0;
+            m_gc_wp_wy[clusterID]++;
+            if (m_gc_wp_wy[clusterID] >= USER_WAYS) {
+                m_gc_wp_wy[clusterID] = 0;
+            }
+        }
+    }
+}
+
+VOID DFTL_GLOBAL::DebugBlockPrint(UINT32 FLAG)
+{
+    GetUserBlockMgr()->DebugPrintAllByVBN(FLAG);
+}
+
+UINT32 DFTL_GLOBAL::GetClusterID(UINT32 LPN)
+{
+    UINT64 num   = (UINT64)LPN * (UINT64)USER_CLUSTERS;
+    UINT32 cid   = (UINT32)(num / (UINT64)m_nLPNCount);
+
+    if (cid >= USER_CLUSTERS)
+    {
+    	xil_printf("Wrong CID\r\n");
+    	assert(0);
+    }
+    return cid;
+}
+
+VOID DFTL_GLOBAL::SB_INIT()
+{
+    SBINFO_MGR* sbm = GetSBInfoMgr();
+    INT32 c = DFTL_GLOBAL::GetVNandMgr()->GetVBlockCount();
+
+    INIT_LIST_HEAD(&sbm->m_dlFreeList);
+    sbm->m_nFreeCount = 0;
+
+    for (INT32 vbn = 0; vbn < c; vbn++)
+    {
+        SBINFO* sb = &sbm->m_pastSBInfo[vbn];
+        INIT_LIST_HEAD(&sb->m_dlList);
+
+        if (sb->m_bBad != 0)  	continue;
+        if (sb->m_bMeta)		continue;
+        if (sb->m_nUSED != 0) continue;
+
+        list_add_tail(&sb->m_dlList, &sbm->m_dlFreeList);
+        sbm->m_nFreeCount++;
+    }
+    SB_INIT_FLAG = TRUE;
+}
+
+VIRTUAL VOID DFTL_GLOBAL::StartGCMonitor(UINT32 nTotalReq, UINT32 nWindowSize) {
+    m_bMonitorOn = TRUE;
+    m_nMonitorTotalReq = nTotalReq;
+    m_nWindowSize = nWindowSize;
+    m_nMonitorCurReq = 0;
+    m_nWindowHit = 0;
+    xil_printf("[MON] GC Done. Start Monitoring (Total: %d, Window: %d)\r\n", nTotalReq, nWindowSize);
+}
+
+VOID DFTL_GLOBAL::RecordHostAccess(BOOL bHit) {
+    if (m_bMonitorOn == FALSE) return;
+
+    m_nMonitorCurReq++;
+    if (bHit) m_nWindowHit++;
+
+    // 윈도우 단위(예: 100개)가 찰 때마다 로그 출력
+    if (m_nMonitorCurReq % m_nWindowSize == 0) {
+        float rate = (float)m_nWindowHit / (float)m_nWindowSize * 100.0f;
+        xil_printf("[MON] Req %4d ~ %4d | HitRate: %3d%% (%d/%d)\r\n",
+            m_nMonitorCurReq - m_nWindowSize + 1,
+            m_nMonitorCurReq,
+            (int)rate, m_nWindowHit, m_nWindowSize);
+
+        // 윈도우 초기화
+        m_nWindowHit = 0;
+    }
+
+    // 설정한 횟수만큼 다 찍었으면 모니터링 종료
+    if (m_nMonitorCurReq >= m_nMonitorTotalReq) {
+        m_bMonitorOn = FALSE;
+        xil_printf("[MON] Monitoring End.\r\n");
+    }
+}
+
+VIRTUAL VOID DFTL_GLOBAL::Initialize(VOID)
+{
+	m_bFormatCheck = TRUE;
+	m_bMonitorOn = FALSE;
+	m_nMonitorTotalReq = 0;
+	m_nMonitorCurReq = 0;
+	m_nWindowSize = 100; // 100개 단위로 로그 출력
+	m_nWindowHit = 0;
+
+	m_nHostReqCount = 0;
+	m_nLastHostHit = 0;
+	m_nLastHostMiss = 0;
+
+	DS_CNT = 0;
+	DS_Length = 0;
+	m_nTotalPendingTrimCount = 0;
+	SB_INIT_FLAG = FALSE;
+    SB_PRINT_FLAG = FALSE;
+	META_CNT = 0;
+
+	nand_write_cnt = 0;
+	host_write_cnt = 0;
+
+	for (int i=0; i<USER_CLUSTERS; i++)
+	{
+		m_util_pages[i] = 0;
+		m_util_blks[i] = 0;
+		m_nTrimSize[i] = 0;
+
+		m_wp_ch[i] = 0;
+		m_wp_wy[i] = 0;
+		m_page_cnt[i] = 0;
+
+		m_gc_wp_ch[i] = 0;
+		m_gc_wp_wy[i] = 0;
+		m_gc_page_cnt[i] = 0;
+	}
+
+	m_pstInstance = this;
+	_Initialize();
+	GetVNandMgr()->Initialize();
+	GetMetaMgr()->Initialize();
+	GetMetaL2VMgr()->Initialize();
+
+	TrimPending_Clear();
+
+	for (int channel = 0; channel < USER_CHANNELS; channel++) {
+		for (int way = 0; way < USER_WAYS; way++) {
+			GetVBInfoMgr(channel, way)->Initialize();
+		}
+	}
+	GetUserBlockMgr()->Initialize(USER_BLOCK_MGR);
+#if (SUPPORT_META_DEMAND_LOADING == 1)
+	GetMetaBlockMgr()->Initialize(META_BLOCK_MGR);
+#endif
+
+	for (int cluster = 0; cluster < USER_CLUSTERS; cluster++)
+	{
+		m_stTrimMgr[cluster].Initialize(cluster);
+	}
+
+	GetRequestMgr()->Initialize();
+	GetBufferMgr()->Initialize();
+	for (int channel = 0; channel < USER_CHANNELS; channel++) {
+		for (int way = 0; way < USER_WAYS; way++) {
+			for (int cluster = 0; cluster < USER_CLUSTERS; cluster++)
+			{
+				GetActiveBlockMgr(cluster, channel, way)->Initialize(cluster, channel, way);
+			}
+			GetGCMgr(channel, way)->Initialize(GetGCTh(), IOTYPE_GC, channel, way);
+#if (SUPPORT_META_DEMAND_LOADING == 1)
+			GetMetaGCMgr(channel, way)->Initialize(META_GC_THRESHOLD, IOTYPE_META, channel, way);
+#endif
+		}
+	}
+	_PrintInfo();
+	m_MetaGCing = FALSE;
+
+	GetReadCacheMgr()->Initialize();
+	GetSBInfoMgr()->Initialize();
+}
+
+VIRTUAL BOOL
+DFTL_GLOBAL::Format(VOID)
+{
+	BOOL	bRet;
+
+	GetUserBlockMgr()->Format();
+
+#if (SUPPORT_META_DEMAND_LOADING == 1)
+	GetMetaBlockMgr()->Format();
+	bRet = GetMetaL2VMgr()->Format();
+#endif
+
+	bRet = GetMetaMgr()->Format();
+
+	return bRet;
+}
+
+VIRTUAL VOID
+DFTL_GLOBAL::Run(VOID)
+{
+	FIL_Run();
+	GetRequestMgr()->Run();
+
+#if (SUPPORT_META_DEMAND_LOADING == 1)
+	for (UINT32 channel = 0; channel < USER_CHANNELS; channel++) {
+		for (UINT32 way = 0; way < USER_WAYS; way++) {
+			GetMetaGCMgr(channel, way)->CheckAndStartGC();
+		}
+	}
+#endif
+	if (GetSuperGCMgr()->CheckAndStartGC())
+	{
+		for (UINT32 channel = 0; channel < USER_CHANNELS; channel++) {
+			for (UINT32 way = 0; way < USER_WAYS; way++) {
+				GetGCMgr(channel, way)->CheckAndStartGC();
+			}
+		}
+	}
+
+#if (SUPPORT_META_DEMAND_LOADING == 1)
+	for (UINT32 channel = 0; channel < USER_CHANNELS; channel++) {
+		for (UINT32 way = 0; way < USER_WAYS; way++) {
+			GetMetaGCMgr(channel, way)->Run();
+		}
+	}
+#endif
+	for (UINT32 channel = 0; channel < USER_CHANNELS; channel++) {
+		for (UINT32 way = 0; way < USER_WAYS; way++) {
+			GetGCMgr(channel, way)->Run();
+		}
+	}
+}
+
+VIRTUAL VOID
+DFTL_GLOBAL::ReadPage(UINT32 nCmdSlotTag, UINT32 nLPN, UINT32 nCount)
+{
+	HIL_REQUEST*	pstRequest;
+
+	if (nLPN == 77)
+	{
+		if ((nCount == 77) || (nCount == 78))
+			DFTL_PrintProfile(0);
+		else
+			DFTL_PrintProfile(1);
+		m_bEnable += 1;
+	}
+
+	do
+	{
+		// allocate request
+		pstRequest = m_stRequestMgr.AllocateHILRequest();
+		if (pstRequest == NULL)
+		{
+			Run();
+		}
+	} while (pstRequest == NULL);
+
+	pstRequest->Initialize(HIL_REQUEST_READ_WAIT, NVME_CMD_OPCODE_READ,
+						nLPN, nCmdSlotTag, nCount);
+#ifndef WIN32
+	//xil_printf("1	%u	%u \r\n", nLPN, nCount);
+#endif
+	m_stRequestMgr.AddToHILRequestWaitQ(pstRequest);
+
+	DFTL_IncreaseProfile(Prof_Host_read, pstRequest->GetLPNCount());
+	DFTL_GLOBAL::GetInstance()->IncreaseProfileCount(PROFILE_HOST_READ, pstRequest->GetLPNCount());
+	DFTL_GLOBAL::GetInstance()->IncreaseProfileCount(PROFILE_HOST_READ_REQ);
+}
+
+VIRTUAL VOID
+DFTL_GLOBAL::WritePage(UINT32 nCmdSlotTag, UINT32 nLPN, UINT32 nCount)
+{
+	HIL_REQUEST*	pstRequest;
+	do
+	{
+		// allocate request
+		pstRequest = m_stRequestMgr.AllocateHILRequest();
+		if (pstRequest == NULL)
+		{
+			Run();
+		}
+	} while (pstRequest == NULL);
+
+	pstRequest->Initialize(HIL_REQUEST_WRITE_WAIT, NVME_CMD_OPCODE_WRITE,
+		nLPN, nCmdSlotTag, nCount);
+
+#ifndef WIN32
+	//xil_printf("7	%u	%u \r\n", nLPN, nCount);
+#endif
+	m_stRequestMgr.AddToHILRequestWaitQ(pstRequest);
+
+	DFTL_IncreaseProfile(Prof_Host_write, pstRequest->GetLPNCount());
+	DFTL_GLOBAL::GetInstance()->IncreaseProfileCount(PROFILE_HOST_WRITE, pstRequest->GetLPNCount());
+	DFTL_GLOBAL::GetInstance()->IncreaseProfileCount(PROFILE_HOST_WRITE_REQ);
+}
+
+VIRTUAL VOID
+DFTL_GLOBAL::DatasetManagement(UINT32 nCmdSlotTag, UINT32 nr, UINT32 ad)
+{
+	HIL_REQUEST*	pstRequest;
+
+	do
+	{
+		// allocate request
+		pstRequest = m_stRequestMgr.AllocateHILRequest();
+		if (pstRequest == NULL)
+		{
+			Run();
+		}
+	} while (pstRequest == NULL);
+
+	pstRequest->Initialize(HIL_REQUEST_DSM_WAIT, NVME_CMD_OPCODE_DSM,
+		ad, nCmdSlotTag, nr);
+
+	m_stRequestMgr.AddToHILRequestWaitQ(pstRequest);
+
+	DFTL_IncreaseProfile(Prof_Host_Discard);
+	DFTL_GLOBAL::GetInstance()->IncreaseProfileCount(PROFILE_HOST_DSM, pstRequest->GetLPNCount());
+	DFTL_GLOBAL::GetInstance()->IncreaseProfileCount(PROFILE_HOST_DSM_REQ);
+}
+
+VIRTUAL VOID
+DFTL_GLOBAL::CallBack(FTL_REQUEST_ID stReqID)
+{
+#if (UNIT_TEST_FIL_PERF == 1)
+	return;
+#endif
+
+	switch (stReqID.stCommon.nType)
+	{
+	case FTL_REQUEST_ID_TYPE_HIL_READ:
+	{
+		REQUEST_MGR*	pstRequestMgr = DFTL_GLOBAL::GetRequestMgr();
+		HIL_REQUEST_INFO*	pstRequestInfo = pstRequestMgr->GetHILRequestInfo();
+		HIL_REQUEST_PER_WAY * pstRequest = pstRequestInfo->GetRequest_per_way(stReqID.stHIL.nRequestIndex);
+
+		pstRequest->IncreaseDoneCount();
+		pstRequest->pBufEntry[stReqID.stHIL.bufOffset]->readDone = 1;
+
+		if (pstRequest->GetDoneCount() == pstRequest->GetLPNCount())
+		{
+			pstRequestInfo->RemoveFromIssuedQ_per_way(pstRequest);
+			pstRequest->HDMAIssue();
+			pstRequestInfo->AddToDoneQ_per_way(pstRequest);
+			pstRequest->GoToNextStatus();
+		}
+		break;
+	}
+	case FTL_REQUEST_ID_TYPE_WRITE:
+	{
+		INT32	nIndex = stReqID.stProgram.nActiveBlockIndex;
+		IOTYPE	eIOType = static_cast<IOTYPE>(stReqID.stProgram.nIOType);
+
+		ACTIVE_BLOCK* pstActiveBlock = DFTL_GLOBAL::GetActiveBlockMgr(stReqID.cluster, stReqID.channel, stReqID.way)->GetActiveBlock(nIndex, eIOType);
+		pstActiveBlock->ProgramDone(stReqID.stProgram.nBufferingIndex);
+		break;
+	}
+	case FTL_REQUEST_ID_TYPE_GC_READ:
+	{
+		REQUEST_MGR*	pstRequestMgr = DFTL_GLOBAL::GetRequestMgr();
+		GC_REQUEST_INFO*	pstRequestInfo = pstRequestMgr->GetGCRequestInfo();
+		GC_REQUEST * pstRequest = pstRequestInfo->GetRequest(stReqID.stGC.nRequestIndex);
+		pstRequest->GCReadDone();
+		break;
+	}
+#if (SUPPORT_META_DEMAND_LOADING == 1)
+	case FTL_REQUEST_ID_TYPE_META_READ:
+	{
+		REQUEST_MGR*	pstRequestMgr = DFTL_GLOBAL::GetRequestMgr();
+		META_REQUEST_INFO*	pstRequestInfo = pstRequestMgr->GetMetaRequestInfo();
+		META_REQUEST * pstRequest = pstRequestInfo->GetRequest(stReqID.stMeta.nRequestIndex);
+
+		pstRequestInfo->RemoveFromIssuedQ(pstRequest);
+		pstRequestInfo->AddToDoneQ(pstRequest);
+		pstRequest->GoToNextStatus();
+
+		break;
+	}
+#endif
+	default:
+		ASSERT(0);
+		break;
+	}
+}
+
+VIRTUAL VOID
+DFTL_GLOBAL::IOCtl(IOCTL_TYPE eType)
+{
+	switch (eType)
+	{
+	case IOCTL_INIT_PROFILE_COUNT:
+		m_stProfile.Initialize();
+		break;
+
+	case IOCTL_PRINT_PROFILE_COUNT:
+		m_stProfile.Print();
+		break;
+
+	default:
+		ASSERT(0);
+		break;
+	}
+}
+
+VOID
+DFTL_GLOBAL::SetStatus(DFTL_STATUS eStatus)
+{
+	m_eStatus = static_cast<DFTL_STATUS>(m_eStatus | eStatus);
+}
+
+BOOL
+DFTL_GLOBAL::CheckStatus(DFTL_STATUS eStatus)
+{
+	return (m_eStatus & eStatus) ? TRUE : FALSE;
+}
+
+VOID
+DFTL_GLOBAL::_Initialize(VOID)
+{
+	UINT32 nPPagesPerVBlock = m_stVNand.GetPPagesPerVBlock();
+	m_nPhysicalFlashSizeKB = USER_CHANNELS * USER_WAYS * m_stVNand.GetVBlockCount() * nPPagesPerVBlock * (PHYSICAL_PAGE_SIZE / KB);
+
+	m_nVBlockSizeKB			= nPPagesPerVBlock * PHYSICAL_PAGE_SIZE;
+	m_nVPagesPerVBlock		= m_stVNand.GetVPagesPerVBlock();
+	m_nLPagesPerVBlockBits	= UTIL_GetBitCount(m_nVPagesPerVBlock);
+	m_nLPagesPerVBlockMask	= (1 << m_nLPagesPerVBlockBits) - 1;
+
+	m_fOverProvisionRatio = (float)OVERPROVISION_RATIO_DEFAULT;
+	m_nOverprovisionSizeKB = (INT64)(m_nPhysicalFlashSizeKB * m_fOverProvisionRatio);
+	m_nLogicalFlashSizeKB = m_nPhysicalFlashSizeKB - m_nOverprovisionSizeKB;
+
+#if (SUPPORT_STATIC_DENSITY != 0)
+	UINT32 nLogicalFlashSizeKB = SUPPORT_STATIC_DENSITY * (GB / KB);
+	ASSERT(m_nLogicalFlashSizeKB >= nLogicalFlashSizeKB);
+	m_nLogicalFlashSizeKB = nLogicalFlashSizeKB;
+	ASSERT(m_nLogicalFlashSizeKB >= nLogicalFlashSizeKB);
+#endif
+
+	m_nLPNCount			= m_nLogicalFlashSizeKB / LOGICAL_PAGE_SIZE_KB;
+	m_nVBlockCount		= m_stVNand.GetVBlockCount();
+
+#if (SUPPORT_META_BLOCK == 1)
+	m_bEnableMetaBlock = TRUE;
+#else
+	m_bEnableMetaBlock = FALSE;
+#endif
+
+	m_nGCTh = FREE_BLOCK_GC_THRESHOLD_DEFAULT;
+
+	HIL_SetStorageBlocks(m_nLPNCount);
+	m_stProfile.Initialize();
+}
+
+VOID
+DFTL_GLOBAL::_PrintInfo(VOID)
+{
+#if defined(FPM_FTL)
+	char	psFTL[] = "FPMFTL";
+#elif defined(DFTL)
+	char	psFTL[] = "DFTL";
+#else
+#error check config
+#endif
+	PRINTF("[%s] Physical Density: %d MB \n\r", psFTL, m_nPhysicalFlashSizeKB / KB);
+	PRINTF("[%s] Logical Density: %d MB \n\r", psFTL, m_nLogicalFlashSizeKB / KB);
+}
+
+VOID SBINFO_MGR::Initialize()
+{
+	INT32 nSize = sizeof(SBINFO) * DFTL_GLOBAL::GetVNandMgr()->GetVBlockCount();
+	m_pastSBInfo = (SBINFO *)OSAL_MemAlloc(MEM_TYPE_FW_DATA, nSize, OSAL_MEMALLOC_FW_ALIGNMENT);
+	m_nFreeCount = 0;
+
+	int c = DFTL_GLOBAL::GetVNandMgr()->GetVBlockCount();
+	for (int i=0; i<c; i++)
+	{
+		m_pastSBInfo[i].SetFree();
+		m_pastSBInfo[i].m_nVBN = i;
+		m_pastSBInfo[i].m_nUSED = 0;
+		m_pastSBInfo[i].m_bBad = 0;
+		m_pastSBInfo[i].m_bCID = USER_CLUSTERS;
+		if (i<20)
+		{
+			m_pastSBInfo[i].m_bMeta = 1;
+		}
+		else
+		{
+			m_pastSBInfo[i].m_bMeta = 0;
+		}
+	}
+}
+
+VOID Read_Cache::Initialize()
+{
+	for (int i = 0; i < MAX_READ_CACHE_ENTRY; i++)
+	{
+		source_lpn[i] = 0xffffffff;
+		nVPPN[i] = 0xffffffff;
+		Buf[i] = DFTL_GLOBAL::GetBufferMgr()->Allocate();
+		if (Buf[i] == NULL)
+			ASSERT(0);
+		Buf[i]->readDone = 1;
+	}
+}
+
+BUFFER_ENTRY * Read_Cache::change_next_buffer(UINT32 src_lpn, BUFFER_ENTRY * input_buf, UINT32 channel, UINT32 way)
+{
+	BUFFER_ENTRY * ret;
+	UINT32 iter;
+	UINT32 start_offset, end_offset;
+	way += channel << NUM_BIT_WAY;
+	start_offset = way << READ_CAHCE_PER_WAY_BIT;
+	end_offset = (way + 1) << READ_CAHCE_PER_WAY_BIT;
+
+	for (iter = start_offset; iter < end_offset; iter++)
+	{
+		if (Buf[iter]->refCount == 0)
+		{
+			break;
+		}
+	}
+	if (iter == end_offset)
+		return NULL;
+
+	ret = Buf[iter];
+	source_lpn[iter] = src_lpn;
+	Buf[iter] = input_buf;
+	nVPPN[iter] = input_buf->nVPPN >> NUM_BIT_LPN_PER_PAGE;
+	return ret;
+}
+
+BUFFER_ENTRY * Read_Cache::get_buffer_by_VPPN(UINT32 nVPPN_input)
+{
+	UINT32 channel, way;
+	channel = CHANNEL_FROM_VPPN(nVPPN_input << NUM_BIT_LPN_PER_PAGE);
+	way = WAY_FROM_VPPN(nVPPN_input << NUM_BIT_LPN_PER_PAGE);
+	UINT32 start_offset, end_offset;
+	way += channel << NUM_BIT_WAY;
+	start_offset = way << READ_CAHCE_PER_WAY_BIT;
+	end_offset = (way + 1) << READ_CAHCE_PER_WAY_BIT;
+	for (int iter = start_offset; iter < end_offset; iter++)
+	{
+		if (nVPPN_input == nVPPN[iter])
+			return Buf[iter];
+	}
+	return NULL;
+}
+
+VOID Read_Cache::free_buffer_by_VPPN(UINT32 nVPPN_input)
+{
+	UINT32 channel, way;
+	channel = CHANNEL_FROM_VPPN(nVPPN_input << NUM_BIT_LPN_PER_PAGE);
+	way = WAY_FROM_VPPN(nVPPN_input << NUM_BIT_LPN_PER_PAGE);
+	UINT32 start_offset, end_offset;
+	way += channel << NUM_BIT_WAY;
+	start_offset = way << READ_CAHCE_PER_WAY_BIT;
+	end_offset = (way + 1) << READ_CAHCE_PER_WAY_BIT;
+	for (int iter = start_offset; iter < end_offset; iter++)
+	{
+		if (nVPPN_input == nVPPN[iter])
+		{
+			Buf[iter]->nVPPN = 0xffffffff;
+			nVPPN[iter] = 0xffffffff;
+			return;
+		}
+	}
+}

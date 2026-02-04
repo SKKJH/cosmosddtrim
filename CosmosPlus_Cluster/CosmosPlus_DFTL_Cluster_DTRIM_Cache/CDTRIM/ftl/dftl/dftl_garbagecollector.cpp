@@ -112,40 +112,49 @@ SUPER_GC_MGR::CheckAndStartGC()
     UINT32 processed = 0;
     UINT32 CandVBN;
 
-//    bTrimTrigger = 0;
-	if (bTrimTrigger)
+//	if (bTrimTrigger)
+//	{
+//		ClusterSortObj candidates[USER_CLUSTERS];
+//		UINT32 candCount = 0;
+//		for (UINT32 i = 0; i < USER_CLUSTERS; i++)
+//		{
+//			if (pstGlobal->m_nTrimSize[i] > 0)
+//			{
+//				candidates[candCount].cid = i;
+//				candidates[candCount].futureUtil = pstGlobal->m_util_pages[i] - (INT32)pstGlobal->m_nTrimSize[i];
+//				candCount++;
+//			}
+//		}
+//
+//		for (UINT32 i = 0; i < candCount; ++i) {
+//			for (UINT32 j = 0; j < candCount - 1 - i; ++j) {
+//				if (candidates[j].futureUtil > candidates[j+1].futureUtil) {
+//					ClusterSortObj temp = candidates[j];
+//					candidates[j] = candidates[j+1];
+//					candidates[j+1] = temp;
+//				}
+//			}
+//		}
+//
+//		UINT32 targetCIDs[USER_CLUSTERS] = {0,};
+//		for(UINT32 i=0; i<candCount; i++) {
+//			targetCIDs[i] = candidates[i].cid;
+//		}
+//
+//		if (candCount > 0)
+//		{
+//			processed = ApplyTrimByPriority(25, targetCIDs, candCount);
+//		}
+//		if (processed > 0)
+//    	{
+//			DFTL_IncreaseProfile(Prof_DS_GC_Times);
+//        DFTL_IncreaseProfile(Prof_DS_Discared_Pages, processed);
+//    	}
+//	}
+
+    if (bTrimTrigger)
 	{
-		ClusterSortObj candidates[USER_CLUSTERS];
-		UINT32 candCount = 0;
-		for (UINT32 i = 0; i < USER_CLUSTERS; i++)
-		{
-			if (pstGlobal->m_nTrimSize[i] > 0)
-			{
-				candidates[candCount].cid = i;
-				candidates[candCount].futureUtil = pstGlobal->m_util_pages[i] - (INT32)pstGlobal->m_nTrimSize[i];
-				candCount++;
-			}
-		}
-
-		for (UINT32 i = 0; i < candCount; ++i) {
-			for (UINT32 j = 0; j < candCount - 1 - i; ++j) {
-				if (candidates[j].futureUtil > candidates[j+1].futureUtil) {
-					ClusterSortObj temp = candidates[j];
-					candidates[j] = candidates[j+1];
-					candidates[j+1] = temp;
-				}
-			}
-		}
-
-		UINT32 targetCIDs[USER_CLUSTERS] = {0,};
-		for(UINT32 i=0; i<candCount; i++) {
-			targetCIDs[i] = candidates[i].cid;
-		}
-
-		if (candCount > 0)
-		{
-			processed = ApplyTrimByPriority(25, targetCIDs, candCount);
-		}
+		processed = ApplyTrimBySegScan();
 		CheckPendingTrim();
 
 		if (processed > 0)
@@ -161,6 +170,7 @@ SUPER_GC_MGR::CheckAndStartGC()
 		DFTL_IncreaseProfile(Prof_GC_UTIL_Hit);
 		DFTL_GLOBAL::GetSuperGCMgr()->loadCNT = 0;
     	DFTL_GLOBAL::GetMetaMgr()->ReleaseConfinedEntries();
+    	xil_printf("GC PASS Loads:[%u] \r\n", processed);
 		return 0;
 	}
 	CandVBN = GetVictimVBN();
@@ -174,7 +184,10 @@ SUPER_GC_MGR::CheckAndStartGC()
 			}
 		}
 		m_nVictimVBN = CandVBN;
-		xil_printf("GC START [%u] %u\r\n", m_nVictimVBN, nFreeBlock);
+	    if (DFTL_GLOBAL::GetInstance()->m_bEnable == 2)
+	    {
+	    	xil_printf("GC START [%u] %u Loads:[%u] \r\n", m_nVictimVBN, nFreeBlock, processed);
+	    }
 		return 1;
 	}
 	xil_printf("GC NO VICTIM WRONG [%u]\r\n", nFreeBlock);
@@ -277,8 +290,12 @@ GC_MGR::CheckAndStartGC(VOID)
 	m_nIssuedCount = 0;
 
 	if (m_eIOType != IOTYPE_META)
-		xil_printf("GC START VBN[%u] CH[%u] WY[%u] PageCnt[%u]\r\n", m_nVictimVBN, m_channel, m_way, m_nVPC);
-
+	{
+	    if (DFTL_GLOBAL::GetInstance()->m_bEnable == 2)
+	    {
+	    	xil_printf("GC START VBN[%u] CH[%u] WY[%u] PageCnt[%u]\r\n", m_nVictimVBN, m_channel, m_way, m_nVPC);
+	    }
+	}
 	if (m_eIOType == IOTYPE_META) {
 		DFTL_GLOBAL::GetInstance()->SetMetaGCing();
 		DFTL_IncreaseProfile(Prof_CMTGC_count);
@@ -336,15 +353,22 @@ GC_MGR::IncreaseWriteCount(VOID)
 			if (DFTL_GLOBAL::GetVBInfoMgr(m_channel, m_way)->GetVBInfo(pastVBN)->IsFree() != TRUE)
 			{
 				DFTL_GLOBAL::GetInstance()->GetUserBlockMgr()->Release(m_channel, m_way, pastVBN, 1);
-				xil_printf("[GC END'2] VBN:%u, CH%u, WY:%u(%d USED), FREE:%u\r\n", pastVBN, m_channel, m_way,
-						DFTL_GLOBAL::GetSBInfoMgr()->m_pastSBInfo[pastVBN].m_nUSED,
-						DFTL_GLOBAL::GetSBInfoMgr()->m_nFreeCount);
+
+			    if (DFTL_GLOBAL::GetInstance()->m_bEnable == 2)
+			    {
+			    	xil_printf("[GC END'2] VBN:%u, CH%u, WY:%u(%d USED), FREE:%u\r\n", pastVBN, m_channel, m_way,
+			    			DFTL_GLOBAL::GetSBInfoMgr()->m_pastSBInfo[pastVBN].m_nUSED,
+							DFTL_GLOBAL::GetSBInfoMgr()->m_nFreeCount);
+			    }
 			}
 			else
 			{
-				xil_printf("[GC END'3] VBN:%u, CH%u, WY:%u(%d USED), FREE:%u\r\n", pastVBN, m_channel, m_way,
-						DFTL_GLOBAL::GetSBInfoMgr()->m_pastSBInfo[pastVBN].m_nUSED,
-						DFTL_GLOBAL::GetSBInfoMgr()->m_nFreeCount);
+			    if (DFTL_GLOBAL::GetInstance()->m_bEnable == 2)
+			    {
+			    	xil_printf("[GC END'3] VBN:%u, CH%u, WY:%u(%d USED), FREE:%u\r\n", pastVBN, m_channel, m_way,
+			    			DFTL_GLOBAL::GetSBInfoMgr()->m_pastSBInfo[pastVBN].m_nUSED,
+							DFTL_GLOBAL::GetSBInfoMgr()->m_nFreeCount);
+			    }
 			}
 
 			DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt -= 1;
@@ -357,6 +381,10 @@ GC_MGR::IncreaseWriteCount(VOID)
 					DFTL_GLOBAL::GetSuperGCMgr()->loadCNT = 0;
 				}
 			}
+//			if (DFTL_GLOBAL::GetInstance()->m_bEnable == 2)
+//			{
+//				DFTL_GLOBAL::GetInstance()->StartGCMonitor(1000, 100);
+//			}
 		}
 #endif
 	}
@@ -392,10 +420,14 @@ GC_MGR::_Read(VOID)
 					}
 
 					DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt -= 1;
-				    xil_printf("[GC END'1] VBN:%u, CH%u, WY:%u(%d USED), FREE:%u\r\n", m_nVictimVBN, m_channel, m_way,
-							DFTL_GLOBAL::GetSBInfoMgr()->m_pastSBInfo[m_nVictimVBN].m_nUSED,
-							DFTL_GLOBAL::GetSBInfoMgr()->m_nFreeCount);
-					if (DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt == 0)
+
+				    if (DFTL_GLOBAL::GetInstance()->m_bEnable == 2)
+				    {
+				    	xil_printf("[GC END'1] VBN:%u, CH%u, WY:%u(%d USED), FREE:%u\r\n", m_nVictimVBN, m_channel, m_way,
+				    			DFTL_GLOBAL::GetSBInfoMgr()->m_pastSBInfo[m_nVictimVBN].m_nUSED,
+								DFTL_GLOBAL::GetSBInfoMgr()->m_nFreeCount);
+				    }
+				    if (DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt == 0)
 					{
 						DFTL_GLOBAL::GetSuperGCMgr()->m_nVictimVBN = INVALID_VBN;
 						if (DFTL_GLOBAL::GetSuperGCMgr()->loadCNT != 0)
@@ -405,6 +437,10 @@ GC_MGR::_Read(VOID)
 						DFTL_GLOBAL::GetMetaMgr()->ReleaseConfinedEntries();
 					}
 					m_nVictimVBN = INVALID_VBN;
+//					if (DFTL_GLOBAL::GetInstance()->m_bEnable == 2)
+//					{
+//						DFTL_GLOBAL::GetInstance()->StartGCMonitor(1000, 100);
+//					}
 				}
 				else
 				{
@@ -417,7 +453,6 @@ GC_MGR::_Read(VOID)
 			return;
 		}
 
-		// 2. 유효 페이지 확인
 		BOOL bValid = pstVNand->IsValid(m_channel, m_way, m_nVictimVBN, m_nCurReadVPageOffset);
 		if (bValid == TRUE)
 		{
@@ -431,7 +466,6 @@ GC_MGR::_Read(VOID)
 
 				if (g_trim_bitmap[nByteIdx] & (1 << nBitIdx))
 				{
-//					xil_printf("	TRIM PASS LPN: %u\r\n", nLPN);
 					UINT32 cID = DFTL_GLOBAL::GetInstance()->GetClusterID(nLPN);
 					DFTL_GLOBAL::GetInstance()->m_util_pages[cID] -= 1;
 
@@ -463,7 +497,6 @@ GC_MGR::_Read(VOID)
 	pstRequest = pstReqMgr->AllocateGCRequest();
 	if (pstRequest == NULL)
 	{
-		// no more free request
 		return;
 	}
 

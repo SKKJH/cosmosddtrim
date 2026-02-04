@@ -50,9 +50,7 @@ VOID DFTL_PrintProfile(UINT32 FLAG)
 			"Prof_Host_write",
 			"Prof_Host_Discard",
 
-			"Prof_CMT_read_host",
-			"Prof_CMT_read_meta",
-			"Prof_CMT_read_gc",
+			"Prof_CMT_read",
 			"Prof_CMT_write",
 
 			"Prof_CMTGC_read",
@@ -96,6 +94,10 @@ VOID DFTL_PrintProfile(UINT32 FLAG)
 
 			"Prof_Host_CMT_Miss",
 			"Prof_Host_CMT_Hit",
+
+			"Prof_GC_CMT_Miss",
+			"Prof_GC_CMT_Hit",
+			"Prof_GC_CMT_Load",
 	};
 
 	for (UINT32 i = 0; i < Prof_Total_Num; i++) {
