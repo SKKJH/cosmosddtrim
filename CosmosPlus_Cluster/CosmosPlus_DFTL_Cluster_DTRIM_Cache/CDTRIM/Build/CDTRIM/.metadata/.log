@@ -4827,3 +4827,123 @@ Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.]. Thread: Worker-31
 
 !ENTRY com.xilinx.sdk.utils 0 0 2026-01-26 20:54:53.199
 !MESSAGE XSCT command with result: [disconnect tcfchan#5], Result: [null, ]. Thread: Thread-386
+!SESSION 2026-02-05 11:24:56.991 -----------------------------------------------
+eclipse.buildId=2019.1
+java.version=1.8.0_112
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=ko_KR
+Command-line arguments:  -os win32 -ws win32 -arch x86_64
+
+!ENTRY org.eclipse.ui 2 0 2026-02-05 11:25:09.462
+!MESSAGE Warnings while parsing the commands from the 'org.eclipse.ui.commands' and 'org.eclipse.ui.actionDefinitions' extension points.
+!SUBENTRY 1 org.eclipse.ui 2 0 2026-02-05 11:25:09.465
+!MESSAGE Commands should really have a category: plug-in='com.xilinx.sdk.appwiz', id='com.xilinx.sdk.app.commands.ChangeAtfBuiltReferences', categoryId='com.xilinx.sdk.app.commands.category'
+
+!ENTRY org.eclipse.ui 2 0 2026-02-05 11:25:10.065
+!MESSAGE Warnings while parsing the commands from the 'org.eclipse.ui.commands' and 'org.eclipse.ui.actionDefinitions' extension points.
+!SUBENTRY 1 org.eclipse.ui 2 0 2026-02-05 11:25:10.065
+!MESSAGE Commands should really have a category: plug-in='com.xilinx.sdk.appwiz', id='com.xilinx.sdk.app.commands.ChangeAtfBuiltReferences', categoryId='com.xilinx.sdk.app.commands.category'
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 11:25:17.835
+!MESSAGE XSCT Command: [::hsi::utils::init_repo], Thread: Worker-5
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 11:25:17.861
+!MESSAGE XSCT Command: [set sdk::sdk_chan tcfchan#0], Thread: Thread-17
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 11:25:18.231
+!MESSAGE XSCT command with result: [::hsi::utils::init_repo], Result: [null, ]. Thread: Worker-5
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 11:25:18.232
+!MESSAGE XSCT command with result: [set sdk::sdk_chan tcfchan#0], Result: [null, tcfchan#0]. Thread: Thread-17
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 11:25:18.233
+!MESSAGE XSCT Command: [setws C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster_DTRIM_Cache/CDTRIM/Build/CDTRIM], Thread: Thread-17
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 11:25:18.251
+!MESSAGE XSCT command with result: [setws C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster_DTRIM_Cache/CDTRIM/Build/CDTRIM], Result: [null, ]. Thread: Thread-17
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 11:25:18.286
+!MESSAGE XSCT Command: [::hsi::utils::openhw C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster_DTRIM_Cache/CDTRIM/Build/CDTRIM/system_hw_platform_0/system.hdf], Thread: Worker-2
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 11:25:26.154
+!MESSAGE XSCT command with result: [::hsi::utils::openhw C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster_DTRIM_Cache/CDTRIM/Build/CDTRIM/system_hw_platform_0/system.hdf], Result: [null, ]. Thread: Worker-2
+!SESSION 2026-02-05 13:07:51.946 -----------------------------------------------
+eclipse.buildId=2019.1
+java.version=1.8.0_112
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=ko_KR
+Command-line arguments:  -os win32 -ws win32 -arch x86_64
+
+!ENTRY org.eclipse.ui 2 0 2026-02-05 13:07:59.982
+!MESSAGE Warnings while parsing the commands from the 'org.eclipse.ui.commands' and 'org.eclipse.ui.actionDefinitions' extension points.
+!SUBENTRY 1 org.eclipse.ui 2 0 2026-02-05 13:07:59.982
+!MESSAGE Commands should really have a category: plug-in='com.xilinx.sdk.appwiz', id='com.xilinx.sdk.app.commands.ChangeAtfBuiltReferences', categoryId='com.xilinx.sdk.app.commands.category'
+
+!ENTRY org.eclipse.ui 2 0 2026-02-05 13:08:00.558
+!MESSAGE Warnings while parsing the commands from the 'org.eclipse.ui.commands' and 'org.eclipse.ui.actionDefinitions' extension points.
+!SUBENTRY 1 org.eclipse.ui 2 0 2026-02-05 13:08:00.558
+!MESSAGE Commands should really have a category: plug-in='com.xilinx.sdk.appwiz', id='com.xilinx.sdk.app.commands.ChangeAtfBuiltReferences', categoryId='com.xilinx.sdk.app.commands.category'
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 13:08:07.706
+!MESSAGE XSCT Command: [set sdk::sdk_chan tcfchan#0], Thread: Thread-20
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 13:08:07.706
+!MESSAGE XSCT Command: [::hsi::utils::init_repo], Thread: Worker-7
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 13:08:07.723
+!MESSAGE XSCT command with result: [set sdk::sdk_chan tcfchan#0], Result: [null, tcfchan#0]. Thread: Thread-20
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 13:08:07.734
+!MESSAGE XSCT Command: [setws C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster_DTRIM_Cache/CDTRIM/Build/CDTRIM], Thread: Thread-20
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 13:08:08.082
+!MESSAGE XSCT command with result: [::hsi::utils::init_repo], Result: [null, ]. Thread: Worker-7
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 13:08:08.083
+!MESSAGE XSCT command with result: [setws C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster_DTRIM_Cache/CDTRIM/Build/CDTRIM], Result: [null, ]. Thread: Thread-20
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 13:08:08.104
+!MESSAGE XSCT Command: [::hsi::utils::openhw C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster_DTRIM_Cache/CDTRIM/Build/CDTRIM/system_hw_platform_0/system.hdf], Thread: Worker-3
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 13:08:15.360
+!MESSAGE XSCT command with result: [::hsi::utils::openhw C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster_DTRIM_Cache/CDTRIM/Build/CDTRIM/system_hw_platform_0/system.hdf], Result: [null, ]. Thread: Worker-3
+!SESSION 2026-02-05 20:13:36.852 -----------------------------------------------
+eclipse.buildId=2019.1
+java.version=1.8.0_112
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86_64, WS=win32, NL=ko_KR
+Command-line arguments:  -os win32 -ws win32 -arch x86_64
+
+!ENTRY org.eclipse.ui 2 0 2026-02-05 20:14:01.410
+!MESSAGE Warnings while parsing the commands from the 'org.eclipse.ui.commands' and 'org.eclipse.ui.actionDefinitions' extension points.
+!SUBENTRY 1 org.eclipse.ui 2 0 2026-02-05 20:14:01.410
+!MESSAGE Commands should really have a category: plug-in='com.xilinx.sdk.appwiz', id='com.xilinx.sdk.app.commands.ChangeAtfBuiltReferences', categoryId='com.xilinx.sdk.app.commands.category'
+
+!ENTRY org.eclipse.ui 2 0 2026-02-05 20:14:01.969
+!MESSAGE Warnings while parsing the commands from the 'org.eclipse.ui.commands' and 'org.eclipse.ui.actionDefinitions' extension points.
+!SUBENTRY 1 org.eclipse.ui 2 0 2026-02-05 20:14:01.969
+!MESSAGE Commands should really have a category: plug-in='com.xilinx.sdk.appwiz', id='com.xilinx.sdk.app.commands.ChangeAtfBuiltReferences', categoryId='com.xilinx.sdk.app.commands.category'
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 20:14:12.553
+!MESSAGE XSCT Command: [set sdk::sdk_chan tcfchan#0], Thread: Thread-18
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 20:14:12.554
+!MESSAGE XSCT Command: [::hsi::utils::init_repo], Thread: Worker-4
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 20:14:12.568
+!MESSAGE XSCT command with result: [set sdk::sdk_chan tcfchan#0], Result: [null, tcfchan#0]. Thread: Thread-18
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 20:14:12.583
+!MESSAGE XSCT Command: [setws C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster_DTRIM_Cache/CDTRIM/Build/CDTRIM], Thread: Thread-18
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 20:14:17.479
+!MESSAGE XSCT command with result: [::hsi::utils::init_repo], Result: [null, ]. Thread: Worker-4
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 20:14:17.481
+!MESSAGE XSCT command with result: [setws C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster_DTRIM_Cache/CDTRIM/Build/CDTRIM], Result: [null, ]. Thread: Thread-18
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 20:14:17.512
+!MESSAGE XSCT Command: [::hsi::utils::openhw C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster_DTRIM_Cache/CDTRIM/Build/CDTRIM/system_hw_platform_0/system.hdf], Thread: Worker-0
+
+!ENTRY com.xilinx.sdk.utils 0 0 2026-02-05 20:14:26.530
+!MESSAGE XSCT command with result: [::hsi::utils::openhw C:/COSMOS_KJH/CosmosPlus_Cluster/CosmosPlus_DFTL_Cluster_DTRIM_Cache/CDTRIM/Build/CDTRIM/system_hw_platform_0/system.hdf], Result: [null, ]. Thread: Worker-0

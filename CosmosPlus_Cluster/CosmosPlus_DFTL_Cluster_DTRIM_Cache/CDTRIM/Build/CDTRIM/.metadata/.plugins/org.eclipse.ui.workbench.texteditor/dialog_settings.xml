@@ -2,20 +2,20 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="GCMonitor(1000," key="selection"/>
+		<item value="SetL2V" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
+			<item value="setl2v"/>
+			<item value="start"/>
 			<item value="GCMonitor(1000,"/>
 			<item value="monit"/>
 			<item value="if (m_nIssuedCount != m_nWriteCount &amp;&amp; m_nIssuedCount != m_nWriteCount + 1) {"/>
 			<item value="Moni"/>
 			<item value="moni"/>
 			<item value="GLOBAL::GetInstance()-&gt;StartGCMonitor"/>
-			<item value="taMgr-&gt;SetL2V(nCur"/>
-			<item value="stMetaMgr-&gt;IsMetaAvailable(nC"/>
 		</list>
 		<list key="replacehistory">
 		</list>

@@ -1283,7 +1283,6 @@ HIL_REQUEST::_ProcessDSM_Wait(VOID)
     			{
     				if (nTrimStartLPN != INVALID_LPN)
     				{
-//    					SetTrimRange(nTrimStartLPN, nCurLPN - 1);
     	    			UINT32 nPendingLen = nCurLPN - nTrimStartLPN;
     	                UINT32 clusterID = DFTL_GLOBAL::GetInstance()->GetClusterID(nTrimStartLPN);
     	                DFTL_GLOBAL::GetInstance()->GetTrimMgr(clusterID)->InsertTrim(nTrimStartLPN, nPendingLen);
@@ -1309,7 +1308,6 @@ HIL_REQUEST::_ProcessDSM_Wait(VOID)
 
     		if (nTrimStartLPN != INVALID_LPN)
     		{
-//    			SetTrimRange(nTrimStartLPN, nEndLPN);
     			UINT32 nPendingLen = nCurLPN - nTrimStartLPN;
                 UINT32 clusterID = DFTL_GLOBAL::GetInstance()->GetClusterID(nTrimStartLPN);
                 DFTL_GLOBAL::GetInstance()->GetTrimMgr(clusterID)->InsertTrim(nTrimStartLPN, nPendingLen);

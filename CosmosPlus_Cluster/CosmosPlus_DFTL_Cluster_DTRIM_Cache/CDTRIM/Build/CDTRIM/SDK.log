@@ -6322,3 +6322,18 @@ con
 
 14:10:18 INFO  : Launch script is exported to file 'C:\COSMOS_KJH\CosmosPlus_Cluster\CosmosPlus_DFTL_Cluster_DTRIM_Cache\CDTRIM\Build\CDTRIM\.sdk\launch_scripts\xilinx_c-c++_application_(system_debugger)\system_debugger_using_debug_cdtrim_cache.elf_on_local.tcl'
 20:54:53 INFO  : Disconnected from the channel tcfchan#5.
+11:25:15 INFO  : Registering command handlers for SDK TCF services
+11:25:15 INFO  : Launching XSCT server: xsct.bat -interactive C:\COSMOS_KJH\CosmosPlus_Cluster\CosmosPlus_DFTL_Cluster_DTRIM_Cache\CDTRIM\Build\CDTRIM\temp_xsdb_launch_script.tcl
+11:25:17 INFO  : XSCT server has started successfully.
+11:25:18 INFO  : Successfully done setting XSCT server connection channel  
+11:25:18 INFO  : Successfully done setting SDK workspace  
+13:08:05 INFO  : Registering command handlers for SDK TCF services
+13:08:05 INFO  : Launching XSCT server: xsct.bat -interactive C:\COSMOS_KJH\CosmosPlus_Cluster\CosmosPlus_DFTL_Cluster_DTRIM_Cache\CDTRIM\Build\CDTRIM\temp_xsdb_launch_script.tcl
+13:08:07 INFO  : XSCT server has started successfully.
+13:08:07 INFO  : Successfully done setting XSCT server connection channel  
+13:08:08 INFO  : Successfully done setting SDK workspace  
+20:14:07 INFO  : Registering command handlers for SDK TCF services
+20:14:08 INFO  : Launching XSCT server: xsct.bat -interactive C:\COSMOS_KJH\CosmosPlus_Cluster\CosmosPlus_DFTL_Cluster_DTRIM_Cache\CDTRIM\Build\CDTRIM\temp_xsdb_launch_script.tcl
+20:14:12 INFO  : XSCT server has started successfully.
+20:14:12 INFO  : Successfully done setting XSCT server connection channel  
+20:14:17 INFO  : Successfully done setting SDK workspace  

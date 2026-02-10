@@ -15,7 +15,9 @@
 #include "hil.h"
 #include "dftl_internal.h"
 
-// [Helper] ¸Ş¸ğ¸® ÃÊ±âÈ­ ¹× ÁÖ¼Ò °è»ê ÇïÆÛ
+// ----------------------------------------------------------------------------
+// [Helper] ë©”ëª¨ë¦¬ ì´ˆê¸°í™” ë° ì£¼ì†Œ ê³„ì‚°
+// ----------------------------------------------------------------------------
 static inline void memset_volatile_u8(volatile UINT8* dst, UINT8 value, size_t len)
 {
 	for (size_t i = 0; i < len; ++i) dst[i] = value;
@@ -28,7 +30,7 @@ static inline UINT32 bit_off_from_lpn (UINT32 lpn) { return lpn % 8; }
 
 #define GET_TRIM_BIT(lpn) ((g_trim_bitmap[(lpn)/8] >> ((lpn)%8)) & 0x1)
 
-// Àü¿ª TRIM º¯¼ö Á¤ÀÇ
+// ì „ì—­ ë³€ìˆ˜ ì •ì˜
 volatile UINT8* g_trim_bitmap 		= NULL;
 volatile UINT16* g_trim_seg_count	= NULL;
 volatile UINT32 g_trim_pending 		= 0;
@@ -38,16 +40,15 @@ volatile UINT32 g_trim_going 		= 0;
 #define SEGMENT_COUNT     (TOTAL_LPN_COUNT / LPNS_PER_SEGMENT)
 #define LPNS_PER_SEGMENT  (1024)
 
-// ºñ±³ ÇÔ¼ö¿¡¼­ ÂüÁ¶ÇÏ±â À§ÇØ static Àü¿ªÀ¸·Î ¼±¾ğ
 static UINT32 g_clusterUtils[USER_CLUSTERS];
 
 // ----------------------------------------------------------------------------
-// [DFTL_GLOBAL] ÅëÇÕ TRIM ³ëµå ÇÒ´ç/ÇØÁ¦ ¹× ±³Ã¼ Á¤Ã¥ ±¸Çö
+// [DFTL_GLOBAL] í†µí•© TRIM ë…¸ë“œ í• ë‹¹/í•´ì œ ë° êµì²´ ì •ì±…
 // ----------------------------------------------------------------------------
 
 TRIM_NODE* DFTL_GLOBAL::AllocTrimNode(UINT32 nLength, UINT32 nRequestClusterID)
 {
-	// 1. Àü¿ª ÇÁ¸® ¸®½ºÆ®¿¡ ¿©À¯°¡ ÀÖ´Â °æ¿ì (O(1))
+	// 1. ì „ì—­ í”„ë¦¬ ë¦¬ìŠ¤íŠ¸ ì‚¬ìš©
 	if (m_pGlobalFreeListHead != NULL) {
 		TRIM_NODE* pNode = m_pGlobalFreeListHead;
 		m_pGlobalFreeListHead = pNode->m_pNextLPN;
@@ -56,70 +57,57 @@ TRIM_NODE* DFTL_GLOBAL::AllocTrimNode(UINT32 nLength, UINT32 nRequestClusterID)
 		return pNode;
 	}
 
-	// 2. ³ëµå °í°¥ ½Ã ±³Ã¼ ´ë»ó(Victim) ¼±Á¤
+	// 2. ë…¸ë“œ ê³ ê°ˆ ì‹œ êµì²´ ëŒ€ìƒ(Victim) ì„ ì •
+    // Range Hashê°€ ì œê±°ë˜ì—ˆìœ¼ë¯€ë¡œ, LPN Listì—ì„œ Victimì„ ì°¾ìŠµë‹ˆë‹¤.
 	TRIM_NODE* pVictim = NULL;
 	UINT32 nVictimClusterID = 0xFFFFFFFF;
 
-	// [¿ì¼±¼øÀ§ 1] ÇöÀç ¿äÃ»ÇÑ Å¬·¯½ºÅÍ ³»¿¡ ÆÄÆíÈ­µÈ ³ëµå(Length 1)°¡ ÀÖ´ÂÁö ¿ì¼± È®ÀÎ
+	// [ìš°ì„ ìˆœìœ„ 1] í˜„ì¬ ìš”ì²­í•œ í´ëŸ¬ìŠ¤í„°ì˜ LPN Hash Bucket ìˆœíšŒ
 	for (int i = 0; i < TRIM_HASH_SIZE; i++) {
-		TRIM_NODE* pTail = m_stTrimMgr[nRequestClusterID].m_RangeHashTableTail[i];
-		if (pTail != NULL) {
-			if (pTail->m_nLength == 1) {
-				pVictim = pTail;
-				nVictimClusterID = nRequestClusterID;
-			}
-			break; // ÇØ´ç Å¬·¯½ºÅÍÀÇ °¡Àå ÀÛÀº ´ÜÀ§ È®ÀÎ ¿Ï·á
+		TRIM_NODE* pHead = m_stTrimMgr[nRequestClusterID].m_LPNHashTable[i];
+		if (pHead != NULL) {
+            // í•´ë‹¹ ë²„í‚·ì˜ ì²« ë²ˆì§¸ ë…¸ë“œë¥¼ Victimìœ¼ë¡œ ì„ ì • (ë¹ ë¥¸ í™•ë³´)
+			pVictim = pHead;
+			nVictimClusterID = nRequestClusterID;
+			break;
 		}
 	}
 
-	// [¿ì¼±¼øÀ§ 2] ÇöÀç Å¬·¯½ºÅÍ¿¡ Len 1ÀÌ ¾ø´Ù¸é, ÀüÃ¼ Å¬·¯½ºÅÍ¸¦ µÚÁ®¼­ Àü¿ª¿¡¼­ °¡Àå ÀÛÀº ³ëµå °Ë»ö
+	// [ìš°ì„ ìˆœìœ„ 2] ì „ì²´ í´ëŸ¬ìŠ¤í„° ëŒ€ìƒ ê²€ìƒ‰
 	if (pVictim == NULL) {
-		for (int i = 0; i < TRIM_HASH_SIZE; i++) {
-			TRIM_NODE* pBestInTier = NULL;
-			UINT32 nBestClusterInTier = 0;
+		for (int c = 0; c < USER_CLUSTERS; c++) {
+            if (c == nRequestClusterID) continue;
 
-			for (int c = 0; c < USER_CLUSTERS; c++) {
-				TRIM_NODE* pTail = m_stTrimMgr[c].m_RangeHashTableTail[i];
-				if (pTail != NULL) {
-					if (pBestInTier == NULL || pTail->m_nLength < pBestInTier->m_nLength) {
-						pBestInTier = pTail;
-						nBestClusterInTier = c;
-					}
-				}
-			}
-
-			if (pBestInTier != NULL) {
-				// [ÃÖÀûÈ­] ¹ß°ßµÈ ÃÖ¼Ò ³ëµå°¡ ÇöÀç ¿äÃ»º¸´Ù Å©°Å³ª °°À¸¸é, ±³Ã¼ ºÒ°¡ -> Áï½Ã Á¾·á
-				if (pBestInTier->m_nLength >= nLength) {
-					return NULL;
-				}
-
-				// ±³Ã¼ ´ë»ó ¼±Á¤ ¼º°ø
-				pVictim = pBestInTier;
-				nVictimClusterID = nBestClusterInTier;
-				break;
-			}
-		}
+            for (int i = 0; i < TRIM_HASH_SIZE; i++) {
+                TRIM_NODE* pHead = m_stTrimMgr[c].m_LPNHashTable[i];
+                if (pHead != NULL) {
+                    pVictim = pHead;
+                    nVictimClusterID = c;
+                    break;
+                }
+            }
+            if (pVictim != NULL) break;
+        }
 	}
 
-	// 3. ±³Ã¼ ½ÇÇà °áÁ¤
 	if (pVictim != NULL) {
-		// (ÃÖÀûÈ­ ·ÎÁ÷ ´öºĞ¿¡ ¿©±â¼­´Â ¹«Á¶°Ç nLength > pVictim->m_nLength ÀÓÀÌ º¸ÀåµÊ)
+        // [CRITICAL FIX] ë°˜ë“œì‹œ ê¸°ì¡´ ë¦¬ìŠ¤íŠ¸ì—ì„œ ë¨¼ì € ì—°ê²°ì„ ëŠì–´ì•¼ í•¨!!!
+        m_stTrimMgr[nVictimClusterID]._RemoveFromLists(pVictim);
 
-		// [1] Victim Å¬·¯½ºÅÍ ¸®½ºÆ®¿¡¼­ Á¦°Å
-		m_stTrimMgr[nVictimClusterID]._RemoveFromLists(pVictim);
+        // Victim ë…¸ë“œ í•´ì œ ë° ì •ë³´ ê°±ì‹  (ë©”íƒ€ ì •ë³´ ê°±ì‹  í¬í•¨)
+        m_stTrimMgr[nVictimClusterID].FreeNode(pVictim);
 
-		// [2] [¹ö±× ¼öÁ¤] Victim Å¬·¯½ºÅÍÀÇ »ç¿ë·® °¨¼Ò (»¯±â´Â ÂÊ)
-		if(m_stTrimMgr[nVictimClusterID].m_nUsedNodeCount > 0)
-			m_stTrimMgr[nVictimClusterID].m_nUsedNodeCount--;
-
-		pVictim->Reset();
-
-		// m_nGlobalUsedNodeCount´Â À¯ÁöµÊ (ÀüÃ¼ °³¼ö´Â -1 +1 = 0 º¯µ¿ ¾øÀ½)
-		return pVictim;
+        // ë‹¤ì‹œ í• ë‹¹ ì‹œë„ (FreeNode í˜¸ì¶œë¡œ Free Listì— ë°˜í™˜ë˜ì—ˆìœ¼ë¯€ë¡œ)
+        if (m_pGlobalFreeListHead != NULL) {
+            TRIM_NODE* pNode = m_pGlobalFreeListHead;
+            m_pGlobalFreeListHead = pNode->m_pNextLPN;
+            pNode->Reset();
+            m_nGlobalUsedNodeCount++;
+            return pNode;
+        }
 	}
 
-	return NULL; // ÇÒ´ç ½ÇÆĞ
+	return NULL;
 }
 
 void DFTL_GLOBAL::FreeTrimNode(TRIM_NODE* pNode)
@@ -127,14 +115,13 @@ void DFTL_GLOBAL::FreeTrimNode(TRIM_NODE* pNode)
 	if (pNode == NULL) return;
 
 	pNode->Reset();
-	// Àü¿ª ÇÁ¸® ¸®½ºÆ® ¹İ³³
 	pNode->m_pNextLPN = m_pGlobalFreeListHead;
 	m_pGlobalFreeListHead = pNode;
 	m_nGlobalUsedNodeCount--;
 }
 
 // ----------------------------------------------------------------------------
-// TRIM_MGR Implementation
+// [TRIM_MGR] Implementation
 // ----------------------------------------------------------------------------
 
 TRIM_MGR::TRIM_MGR()
@@ -142,121 +129,9 @@ TRIM_MGR::TRIM_MGR()
 	m_nUsedNodeCount = 0;
 	for (int i = 0; i < TRIM_HASH_SIZE; i++) {
 		m_LPNHashTable[i] = NULL;
-		m_RangeHashTable[i] = NULL;
-		m_RangeHashTableTail[i] = NULL;
 	}
-}
-
-void TRIM_MGR::InvalidateOverlap(UINT32 nWriteStart, UINT32 nWriteLength)
-{
-    UINT32 nWriteEnd = nWriteStart + nWriteLength;
-    UINT32 nEndBucketIdx = _GetLPNHash(nWriteEnd - 1);
-
-    // [ÃÖÀûÈ­ 1] °Ë»ö ½ÃÀÛ ¹öÅ¶ °è»ê
-    UINT32 nSafeStartLPN = (nWriteStart > m_nMaxTrimLength) ? (nWriteStart - m_nMaxTrimLength) : 0;
-    UINT32 nStartBucketIdx = _GetLPNHash(nSafeStartLPN);
-
-    // [DEBUG] ¿äÃ» Á¤º¸ Ãâ·Â (ÇÊ¿ä ½Ã ÁÖ¼® ÇØÁ¦)
-    // xil_printf("[TRIM_OP] Write Req: Start %u, Len %u (End %u)\r\n", nWriteStart, nWriteLength, nWriteEnd);
-
-    for (UINT32 i = nStartBucketIdx; i <= nEndBucketIdx; i++)
-    {
-        TRIM_NODE* pCurr = m_LPNHashTable[i];
-
-        while (pCurr != NULL)
-        {
-            // [ÃÖÀûÈ­ 2] Á¶±â Á¾·á (Early Exit)
-            if (pCurr->m_nStartLPN >= nWriteEnd)
-            {
-                break;
-            }
-
-            TRIM_NODE* pNext = pCurr->m_pNextLPN; // ³ëµå »èÁ¦/¼öÁ¤ ´ëºñ ¹Ì¸® ÀúÀå
-
-            UINT32 nTrimStart = pCurr->m_nStartLPN;
-            UINT32 nTrimEnd = nTrimStart + pCurr->m_nLength;
-
-            // °ãÄ¡Áö ¾Ê´Â °æ¿ì (´ÙÀ½ ³ëµå·Î ÀÌµ¿)
-            if (nTrimEnd <= nWriteStart)
-            {
-                pCurr = pNext;
-                continue;
-            }
-
-            // -------------------------------------------------------
-            // ·Î±× Ãâ·ÂÀ» À§ÇÑ ÀÌÀü »óÅÂ ÀúÀå (ÁÖ¼® ÇØÁ¦µÊ)
-            // -------------------------------------------------------
-            UINT32 nOldStart = nTrimStart;
-            UINT32 nOldLen = pCurr->m_nLength;
-
-            // Case 1: Write°¡ TRIM ³ëµå¸¦ ¿ÏÀüÈ÷ µ¤À½ -> »èÁ¦
-            if (nWriteStart <= nTrimStart && nWriteEnd >= nTrimEnd)
-            {
-//                xil_printf("[TRIM_LOG] DELETE : Node[%u, %u] covered by Write[%u, %u]\r\n",
-//                           nOldStart, nOldLen, nWriteStart, nWriteLength);
-
-                _RemoveFromLists(pCurr);
-                FreeNode(pCurr);
-            }
-            // Case 2: Split (Áß°£ ¶Õ¸²)
-            else if (nWriteStart > nTrimStart && nWriteEnd < nTrimEnd)
-            {
-                UINT32 nOldTrimEnd = nTrimEnd;
-
-                // 2-1. ±âÁ¸ ³ëµå´Â ¾ÕºÎºĞ¸¸ ³²±è
-                _RemoveFromLists(pCurr);
-                pCurr->m_nLength = nWriteStart - nTrimStart;
-                _AddToLPNList(_GetLPNHash(pCurr->m_nStartLPN), pCurr);
-                _AddToRangeList(pCurr);
-
-//                xil_printf("[TRIM_LOG] SPLIT(Front): Node[%u, %u] -> [%u, %u] by Write[%u, %u]\r\n",
-//                           nOldStart, nOldLen, pCurr->m_nStartLPN, pCurr->m_nLength, nWriteStart, nWriteLength);
-
-                // 2-2. µŞºÎºĞÀ» À§ÇÑ »õ ³ëµå ÇÒ´ç
-                TRIM_NODE* pSplitNode = AllocNode(nOldTrimEnd - nWriteEnd);
-                if (pSplitNode) {
-                    pSplitNode->m_nStartLPN = nWriteEnd;
-                    pSplitNode->m_nLength = nOldTrimEnd - nWriteEnd;
-                    _AddToLPNList(_GetLPNHash(pSplitNode->m_nStartLPN), pSplitNode);
-                    _AddToRangeList(pSplitNode);
-
-//                    xil_printf("[TRIM_LOG] SPLIT(Rear) : New Node[%u, %u] created\r\n",
-//                               pSplitNode->m_nStartLPN, pSplitNode->m_nLength);
-                }
-                else {
-                    // ÇÒ´ç ½ÇÆĞ ½Ã ·Î±×
-//                    xil_printf("[TRIM_LOG] SPLIT FAIL : Dropped rear region [%u, %u]\r\n",
-//                               nWriteEnd, nOldTrimEnd - nWriteEnd);
-                }
-            }
-            // Case 3: Shrink Tail (µŞºÎºĞ Àß¸²)
-            else if (nWriteStart > nTrimStart)
-            {
-                _RemoveFromLists(pCurr);
-                pCurr->m_nLength = nWriteStart - nTrimStart;
-                _AddToLPNList(_GetLPNHash(pCurr->m_nStartLPN), pCurr);
-                _AddToRangeList(pCurr);
-
-//                xil_printf("[TRIM_LOG] SHRINK(Tail): Node[%u, %u] -> [%u, %u] by Write[%u, %u]\r\n",
-//                           nOldStart, nOldLen, pCurr->m_nStartLPN, pCurr->m_nLength, nWriteStart, nWriteLength);
-            }
-            // Case 4: Shrink Head (¾ÕºÎºĞ Àß¸²)
-            else
-            {
-                _RemoveFromLists(pCurr);
-                // StartLPN º¯°æ ÈÄ Àç»ğÀÔ
-                pCurr->m_nStartLPN = nWriteEnd;
-                pCurr->m_nLength = nTrimEnd - nWriteEnd;
-                _AddToLPNList(_GetLPNHash(pCurr->m_nStartLPN), pCurr);
-                _AddToRangeList(pCurr);
-
-//                xil_printf("[TRIM_LOG] SHRINK(Head): Node[%u, %u] -> [%u, %u] by Write[%u, %u]\r\n",
-//                           nOldStart, nOldLen, pCurr->m_nStartLPN, pCurr->m_nLength, nWriteStart, nWriteLength);
-            }
-
-            pCurr = pNext;
-        }
-    }
+    m_pCMTNodeMap = NULL;
+    m_nCMTGroupCount = 0;
 }
 
 VOID TRIM_MGR::Initialize(UINT32 clusterID)
@@ -264,59 +139,598 @@ VOID TRIM_MGR::Initialize(UINT32 clusterID)
 	m_nUsedNodeCount = 0;
 	m_nClusterID = clusterID;
 	m_nMaxTrimLength = 0;
-
-	// °³º° ¸Ş¸ğ¸® ÇÒ´ç Á¦°Å (DFTL_GLOBAL ÅëÇÕ °ü¸®)
+	m_nPendingTrimPages = 0;
+	m_nCMTGroupCount = 0;
 
 	for (int i = 0; i < TRIM_HASH_SIZE; i++)
 	{
 		m_LPNHashTable[i] = NULL;
-		m_RangeHashTable[i] = NULL;
-		m_RangeHashTableTail[i] = NULL;
 	}
+
+    // [ìˆ˜ì •] Clusterë³„ LPN ê°œìˆ˜ë§Œí¼ë§Œ Map í• ë‹¹ (ë©”ëª¨ë¦¬ ìµœì í™”)
+    UINT32 nTotalLPN = DFTL_GLOBAL::GetInstance()->GetLPNCount();
+    UINT32 nLPNsPerCluster = nTotalLPN / USER_CLUSTERS;
+
+    // ì´ í´ëŸ¬ìŠ¤í„°ê°€ ë‹´ë‹¹í•˜ëŠ” Meta Page ê°œìˆ˜ (Local Size)
+    UINT32 nMetaPagesPerCluster = (nLPNsPerCluster + L2V_PER_META_PAGE - 1) / L2V_PER_META_PAGE;
+
+    // Map ë©”ëª¨ë¦¬ í• ë‹¹
+    if (m_pCMTNodeMap == NULL) {
+        m_pCMTNodeMap = (CMT_GROUP_NODE*)OSAL_MemAlloc(MEM_TYPE_FW_DATA, sizeof(CMT_GROUP_NODE) * nMetaPagesPerCluster, OSAL_MEMALLOC_FW_ALIGNMENT);
+    }
+
+    // Hash Bucket ì´ˆê¸°í™”
+    for (int i = 0; i < CMT_BUCKET_SIZE; i++) {
+        INIT_LIST_HEAD(&m_ahTrimHash[i]);
+    }
+
+    // [ì¤‘ìš”] ê° ë…¸ë“œ ì´ˆê¸°í™”: m_nMetaLPNì—ëŠ” Global Meta Indexë¥¼ ì €ì¥
+    UINT32 nBaseGlobalLPN = m_nClusterID * nLPNsPerCluster;
+    UINT32 nBaseGlobalMetaLPN = nBaseGlobalLPN / L2V_PER_META_PAGE;
+
+    if (m_pCMTNodeMap != NULL) {
+        for (UINT32 i = 0; i < nMetaPagesPerCluster; i++) {
+            m_pCMTNodeMap[i].Reset();
+            // GCê°€ Popí–ˆì„ ë•Œ LoadMetaì— ë°”ë¡œ ì“¸ ìˆ˜ ìˆë„ë¡ Global Index ì €ì¥
+            m_pCMTNodeMap[i].m_nMetaLPN = nBaseGlobalMetaLPN + i;
+
+            // ì´ˆê¸° ìƒíƒœ: Trim 0 -> 0ë²ˆ ë²„í‚·
+            list_add_tail(&m_pCMTNodeMap[i].m_dlHash, &m_ahTrimHash[0]);
+        }
+    }
 
 	PrintInfo();
 }
 
+#ifndef GET_META_LPN
+#define GET_META_LPN(lpn) ((lpn) / L2V_PER_META_PAGE)
+#endif
+
+// [Helper] Hash Bucket ì´ë™ í•¨ìˆ˜
+void TRIM_MGR::_UpdateCMTTrimCount(CMT_GROUP_NODE* pNode, INT32 nDelta)
+{
+    // [FIX] PopBestCMTGroupì—ì„œ ì´ë¯¸ ë¦¬ìŠ¤íŠ¸ë¥¼ ëŠì—ˆì„ ìˆ˜ ìˆìœ¼ë¯€ë¡œ í™•ì¸ í›„ ì œê±°
+    // list_emptyê°€ FALSE(ì¦‰, ì—°ê²°ë¨)ì¼ ë•Œë§Œ del ìˆ˜í–‰
+    if (!list_empty(&pNode->m_dlHash)) {
+        list_del(&pNode->m_dlHash);
+    }
+    // list_del_initì´ ë˜ì–´ìˆë‹¤ë©´(Empty ìƒíƒœ), list_delì„ ìŠ¤í‚µí•˜ê³  ë°”ë¡œ ê°’ë§Œ ê°±ì‹  í›„ ì¬ì§„ì…
+
+    INT32 nNewCount = (INT32)pNode->m_nTotalTrim + nDelta;
+    if (nNewCount < 0) nNewCount = 0;
+    if (nNewCount >= CMT_BUCKET_SIZE) nNewCount = CMT_BUCKET_SIZE - 1;
+
+    pNode->m_nTotalTrim = (UINT32)nNewCount;
+
+    // ë³€ê²½ëœ Countì— ë§ëŠ” Bucketìœ¼ë¡œ ì´ë™
+    list_add_tail(&pNode->m_dlHash, &m_ahTrimHash[nNewCount]);
+}
+
+// [ìˆ˜ì •] Global LPN -> Cluster Relative LPN -> Local Index ë³€í™˜ ë° Span ì²˜ë¦¬
+void TRIM_MGR::IncreaseCMTCount(UINT32 nStartLPN, UINT32 nLength)
+{
+    UINT32 nTotalLPN = DFTL_GLOBAL::GetInstance()->GetLPNCount();
+    UINT32 nLPNsPerCluster = nTotalLPN / USER_CLUSTERS;
+    UINT32 nBaseLPN = m_nClusterID * nLPNsPerCluster;
+
+    // [ì•ˆì „ì¥ì¹˜] í´ëŸ¬ìŠ¤í„° ë²”ìœ„ë¥¼ ë²—ì–´ë‚˜ëŠ” ìš”ì²­ì€ Clamp (ë§¤ìš° ì¤‘ìš”)
+    if (nStartLPN < nBaseLPN) return;
+    if (nStartLPN >= nBaseLPN + nLPNsPerCluster) return;
+
+    UINT32 nLimitLPN = nBaseLPN + nLPNsPerCluster;
+    if (nStartLPN + nLength > nLimitLPN) {
+        nLength = nLimitLPN - nStartLPN;
+    }
+
+    // Cluster ë²”ìœ„ ë‚´ì˜ ìƒëŒ€ ì£¼ì†Œ (Relative LPN)
+    UINT32 nCurrRelativeLPN = nStartLPN - nBaseLPN;
+    UINT32 nRemain = nLength;
+
+    if (m_pCMTNodeMap == NULL) return;
+
+    while (nRemain > 0)
+    {
+        // Local Meta Index (0 ~ nMetaPagesPerCluster-1)
+        UINT32 nLocalMetaLPN = nCurrRelativeLPN / L2V_PER_META_PAGE;
+        UINT32 nOffset = nCurrRelativeLPN % L2V_PER_META_PAGE;
+        UINT32 nSpace = L2V_PER_META_PAGE - nOffset;
+        UINT32 nOpLen = (nRemain < nSpace) ? nRemain : nSpace;
+
+        CMT_GROUP_NODE* pNode = &m_pCMTNodeMap[nLocalMetaLPN];
+
+        // 0 -> 1 ë³€í™” ì‹œì—ë§Œ ê·¸ë£¹ ì¹´ìš´íŠ¸ ì¦ê°€
+        BOOL bWasZero = (pNode->m_nTotalTrim == 0);
+
+        _UpdateCMTTrimCount(pNode, (INT32)nOpLen);
+
+        if (bWasZero && pNode->m_nTotalTrim > 0) {
+            m_nCMTGroupCount++;
+        }
+
+        nCurrRelativeLPN += nOpLen;
+        nRemain -= nOpLen;
+    }
+}
+
+// [ìˆ˜ì •] Global LPN -> Cluster Relative LPN -> Local Index ë³€í™˜ ë° Span ì²˜ë¦¬
+void TRIM_MGR::DecreaseCMTCount(UINT32 nStartLPN, UINT32 nLength)
+{
+    UINT32 nTotalLPN = DFTL_GLOBAL::GetInstance()->GetLPNCount();
+    UINT32 nLPNsPerCluster = nTotalLPN / USER_CLUSTERS;
+    UINT32 nBaseLPN = m_nClusterID * nLPNsPerCluster;
+
+    // [ì•ˆì „ì¥ì¹˜] í´ëŸ¬ìŠ¤í„° ë²”ìœ„ë¥¼ ë²—ì–´ë‚˜ëŠ” ìš”ì²­ Clamp
+    if (nStartLPN < nBaseLPN) return;
+    if (nStartLPN >= nBaseLPN + nLPNsPerCluster) return;
+
+    UINT32 nLimitLPN = nBaseLPN + nLPNsPerCluster;
+    if (nStartLPN + nLength > nLimitLPN) {
+        nLength = nLimitLPN - nStartLPN;
+    }
+
+    UINT32 nCurrRelativeLPN = nStartLPN - nBaseLPN;
+    UINT32 nRemain = nLength;
+
+    if (m_pCMTNodeMap == NULL) return;
+
+    while (nRemain > 0)
+    {
+        UINT32 nLocalMetaLPN = nCurrRelativeLPN / L2V_PER_META_PAGE;
+        UINT32 nOffset = nCurrRelativeLPN % L2V_PER_META_PAGE;
+        UINT32 nSpace = L2V_PER_META_PAGE - nOffset;
+        UINT32 nOpLen = (nRemain < nSpace) ? nRemain : nSpace;
+
+        CMT_GROUP_NODE* pNode = &m_pCMTNodeMap[nLocalMetaLPN];
+
+        // 0ë³´ë‹¤ í´ ë•Œë§Œ ê°ì†Œ (0ì´ë©´ ì´ë¯¸ GC ì²˜ë¦¬ ì™„ë£Œë˜ì–´ ì´ˆê¸°í™”ëœ ìƒíƒœì¼ ìˆ˜ ìˆìŒ)
+        if (pNode->m_nTotalTrim > 0) {
+            BOOL bBecomeZero = (pNode->m_nTotalTrim <= nOpLen);
+            _UpdateCMTTrimCount(pNode, -((INT32)nOpLen));
+
+            if (bBecomeZero) {
+                if (m_nCMTGroupCount > 0) m_nCMTGroupCount--;
+            }
+        }
+
+        nCurrRelativeLPN += nOpLen;
+        nRemain -= nOpLen;
+    }
+}
+
+CMT_GROUP_NODE* TRIM_MGR::PopBestCMTGroup()
+{
+    // ê°€ì¥ ë§ì´ Trimëœ (1024) ë²„í‚·ë¶€í„° íƒìƒ‰
+    for (int i = CMT_BUCKET_SIZE - 1; i > 0; i--)
+    {
+        if (!list_empty(&m_ahTrimHash[i]))
+        {
+            CMT_GROUP_NODE* pBest = list_first_entry(&m_ahTrimHash[i], CMT_GROUP_NODE, m_dlHash);
+
+            // [FIX] Countë¥¼ 0ìœ¼ë¡œ ì´ˆê¸°í™”í•˜ì§€ ì•ŠìŒ!
+            // ApplyPendingTrimì—ì„œ Fast Check(TotalTrim == 0)ë¥¼ í†µê³¼í•´ì•¼ í•˜ê¸° ë•Œë¬¸.
+            // ëŒ€ì‹  ë¦¬ìŠ¤íŠ¸ì—ì„œë§Œ ì•ˆì „í•˜ê²Œ ì œê±°(list_del_init)í•˜ì—¬ ì¤‘ë³µ ì„ íƒ ë°©ì§€.
+            // _UpdateCMTTrimCount(pBest, -((INT32)pBest->m_nTotalTrim)); <--- ì‚­ì œ
+
+            list_del_init(&pBest->m_dlHash);
+
+            // ëŒ€ê¸°ì—´ì—ì„œ ë¹ ì¡Œìœ¼ë¯€ë¡œ í™œì„± ê·¸ë£¹ ìˆ˜ ëª…ì‹œì  ê°ì†Œ
+            if (m_nCMTGroupCount > 0) m_nCMTGroupCount--;
+
+            return pBest;
+        }
+    }
+    return NULL;
+}
+
 // ----------------------------------------------------------------------------
-// TRIM_MGR::PrintInfo
+// List Helper Functions
 // ----------------------------------------------------------------------------
+
+void TRIM_MGR::_RemoveFromLists(TRIM_NODE* pNode)
+{
+	UINT32 nLPNHash = _GetLPNHash(pNode->m_nStartLPN);
+	if (pNode->m_pPrevLPN) pNode->m_pPrevLPN->m_pNextLPN = pNode->m_pNextLPN;
+	else m_LPNHashTable[nLPNHash] = pNode->m_pNextLPN;
+
+	if (pNode->m_pNextLPN) pNode->m_pNextLPN->m_pPrevLPN = pNode->m_pPrevLPN;
+
+	pNode->m_pPrevLPN = pNode->m_pNextLPN = NULL;
+}
+
+void TRIM_MGR::_AddToLPNList(UINT32 nHashIdx, TRIM_NODE* pNew)
+{
+	TRIM_NODE* pPrev = NULL;
+	TRIM_NODE* pCurr = m_LPNHashTable[nHashIdx];
+
+	while (pCurr != NULL && pCurr->m_nStartLPN < pNew->m_nStartLPN) {
+		pPrev = pCurr;
+		pCurr = pCurr->m_pNextLPN;
+	}
+
+	pNew->m_pNextLPN = pCurr;
+	pNew->m_pPrevLPN = pPrev;
+
+	if (pPrev) pPrev->m_pNextLPN = pNew;
+	else m_LPNHashTable[nHashIdx] = pNew;
+
+	if (pCurr) pCurr->m_pPrevLPN = pNew;
+}
+
+// [ìˆ˜ì •ì™„ë£Œ] ì•ˆì „í•œ ë³‘í•© ë¡œì§ ë° ì¹´ìš´íŠ¸ ê´€ë¦¬
+void TRIM_MGR::InsertTrim(UINT32 nStartLPN, UINT32 nLength)
+{
+    if (nLength == 0) return;
+
+    // xil_printf("InsertTrim START LPN:%u Len:%u\r\n", nStartLPN, nLength);
+
+    // 1. ë©”ëª¨ë¦¬ ë¶€ì¡± ì‹œ Fast Return (ë‹¨ì¼ ë…¸ë“œ í• ë‹¹ ë¶ˆê°€ ì‹œ)
+    if (nLength == 1 && DFTL_GLOBAL::GetInstance()->m_pGlobalFreeListHead == NULL) {
+        // xil_printf("1 InsertTrim DONE (No Memory)\r\n");
+        return;
+    }
+
+    if (nLength > m_nMaxTrimLength) {
+        m_nMaxTrimLength = nLength;
+    }
+
+    UINT32 nHashIdx = _GetLPNHash(nStartLPN);
+    TRIM_NODE* pCurr = m_LPNHashTable[nHashIdx];
+    TRIM_NODE* pPrev = NULL;
+
+    // ì •ë ¬ëœ ìœ„ì¹˜ ì°¾ê¸°
+    while (pCurr != NULL && pCurr->m_nStartLPN < nStartLPN) {
+        pPrev = pCurr;
+        pCurr = pCurr->m_pNextLPN;
+    }
+
+    TRIM_NODE* pActive = NULL;
+    UINT32 nReqEnd = nStartLPN + nLength;
+
+    // [Step 1] ê¸°ì¤€ ë…¸ë“œ(Active) ê²°ì •: Prev ë³‘í•© vs ì‹ ê·œ ìƒì„±
+    if (pPrev != NULL && (pPrev->m_nStartLPN + pPrev->m_nLength) >= nStartLPN) {
+        pActive = pPrev;
+
+        UINT32 nPrevEnd = pPrev->m_nStartLPN + pPrev->m_nLength;
+        // ê¸°ì¡´ ë²”ìœ„ë³´ë‹¤ ë” ê¸¸ì–´ì§€ëŠ” ê²½ìš°ì—ë§Œ í™•ì¥
+        if (nReqEnd > nPrevEnd) {
+            UINT32 nAddedLen = nReqEnd - nPrevEnd;
+            pActive->m_nLength += nAddedLen;
+
+            // *ì¤‘ìš”* ìˆœìˆ˜ ì¦ê°€ë¶„ë§Œ ì¹´ìš´íŠ¸ Increase (ì¤‘ë³µ ë°©ì§€)
+            IncreaseCMTCount(nPrevEnd, nAddedLen);
+            m_nPendingTrimPages += nAddedLen;
+        }
+    }
+    else {
+        pActive = AllocNode(nLength);
+        if (pActive == NULL) {
+            // xil_printf("2 InsertTrim DONE (Alloc Fail)\r\n");
+            return;
+        }
+
+        pActive->m_nStartLPN = nStartLPN;
+        pActive->m_nLength = nLength;
+        _AddToLPNList(nHashIdx, pActive);
+
+        IncreaseCMTCount(nStartLPN, nLength);
+        m_nPendingTrimPages += nLength;
+    }
+
+    // [Step 2] í›„ë°© ë³‘í•© (Swallow Next Nodes)
+    // pActiveê°€ í™•ì¥ë˜ë©´ì„œ ë’¤ìª½ ë…¸ë“œ(pNext)ë“¤ê³¼ ê²¹ì¹˜ë©´ í¡ìˆ˜
+    TRIM_NODE* pNext = pActive->m_pNextLPN;
+
+    while (pNext != NULL) {
+        UINT32 nActiveEnd = pActive->m_nStartLPN + pActive->m_nLength;
+
+        // ë” ì´ìƒ ê²¹ì¹˜ì§€ ì•Šìœ¼ë©´ ì¢…ë£Œ
+        if (nActiveEnd < pNext->m_nStartLPN) break;
+
+        // ê²¹ì¹˜ëŠ” êµ¬ê°„(Overlap) ê³„ì‚°
+        UINT32 nOverlapStart = pNext->m_nStartLPN;
+        UINT32 nOverlapEnd = (nActiveEnd < (pNext->m_nStartLPN + pNext->m_nLength)) ?
+                             nActiveEnd : (pNext->m_nStartLPN + pNext->m_nLength);
+
+        // *ì¤‘ìš”* ê²¹ì¹˜ëŠ” êµ¬ê°„ì€ pNextê°€ ì´ë¯¸ ì¹´ìš´íŠ¸í–ˆì—ˆìœ¼ë¯€ë¡œ, ì¤‘ë³µ ë°©ì§€ë¥¼ ìœ„í•´ ì°¨ê°(Decrease)
+        if (nOverlapEnd > nOverlapStart) {
+            UINT32 nOverlapLen = nOverlapEnd - nOverlapStart;
+            DecreaseCMTCount(nOverlapStart, nOverlapLen);
+            if(m_nPendingTrimPages >= nOverlapLen) m_nPendingTrimPages -= nOverlapLen;
+        }
+
+        // pNextê°€ pActiveë³´ë‹¤ ë” ê¸¸ê²Œ ë»—ì–´ìˆì—ˆë‹¤ë©´, pActiveë¥¼ ê·¸ë§Œí¼ ë” í™•ì¥
+        // (í™•ì¥ëœ ë¶€ë¶„ì— ëŒ€í•œ ì¹´ìš´íŠ¸ëŠ” pNextê°€ ê°€ì§€ê³  ìˆì—ˆìœ¼ë¯€ë¡œ ë³„ë„ Increase ë¶ˆí•„ìš”)
+        if ((pNext->m_nStartLPN + pNext->m_nLength) > nActiveEnd) {
+            pActive->m_nLength += ((pNext->m_nStartLPN + pNext->m_nLength) - nActiveEnd);
+        }
+
+        // pNext ë…¸ë“œ ì‚­ì œ (í¡ìˆ˜ë¨)
+        TRIM_NODE* pDel = pNext;
+        pNext = pNext->m_pNextLPN; // ë¯¸ë¦¬ í¬ì¸í„° ì´ë™
+
+        _RemoveFromLists(pDel);
+
+        // *ì¤‘ìš”* FreeNode() ëŒ€ì‹  Raw Free ì‚¬ìš© (ì¹´ìš´íŠ¸ ì¤‘ë³µ ì°¨ê° ë°©ì§€)
+        DFTL_GLOBAL::GetInstance()->FreeTrimNode(pDel);
+        if(m_nUsedNodeCount > 0) m_nUsedNodeCount--;
+    }
+    // xil_printf("3 InsertTrim DONE\r\n");
+}
+
+void TRIM_MGR::FreeNode(TRIM_NODE* pNode)
+{
+	if (pNode == NULL) {
+		return;
+	}
+    // ë…¸ë“œ í•´ì œ ì‹œ Span ê³ ë ¤í•œ Decrease í˜¸ì¶œ
+	DecreaseCMTCount(pNode->m_nStartLPN, pNode->m_nLength);
+
+	if (m_nPendingTrimPages >= pNode->m_nLength) {
+		m_nPendingTrimPages -= pNode->m_nLength;
+	} else {
+		m_nPendingTrimPages = 0; // Underflow ë°©ì§€
+	}
+
+	DFTL_GLOBAL::GetInstance()->FreeTrimNode(pNode);
+	if(m_nUsedNodeCount > 0)
+		m_nUsedNodeCount--;
+}
+
+UINT32 TRIM_MGR::_GetLPNHash(UINT32 nLPN)
+{
+	DFTL_GLOBAL* pGlobal = DFTL_GLOBAL::GetInstance();
+	UINT32 nTotalLPN = pGlobal->GetLPNCount();
+	UINT32 nLPNsPerCluster = nTotalLPN / USER_CLUSTERS;
+	UINT32 nClusterBaseLPN = m_nClusterID * nLPNsPerCluster;
+
+    // Cluster ë²”ìœ„ ë°– LPNì— ëŒ€í•œ ë°©ì–´ ì½”ë“œ
+    if (nLPN < nClusterBaseLPN) return 0;
+
+	UINT32 nRelativeLPN = nLPN - nClusterBaseLPN;
+
+    // Range Partitioning: ì—°ì†ëœ LPNë“¤ì´ ê°™ì€ Bucketì— ë“¤ì–´ê°€ë„ë¡ í•¨
+	UINT32 nLPNsPerBucket = nLPNsPerCluster / TRIM_HASH_SIZE;
+    if (nLPNsPerBucket == 0) return 0;
+
+	UINT32 nHashIdx = nRelativeLPN / nLPNsPerBucket;
+
+	return (nHashIdx >= TRIM_HASH_SIZE) ? (TRIM_HASH_SIZE - 1) : nHashIdx;
+}
+
+// [í•µì‹¬ ê¸°ëŠ¥] Meta Page ë¡œë“œ ì‹œ ì§€ì—°ëœ TRIM ì ìš© (Overlap ì²˜ë¦¬)
+BOOL TRIM_MGR::ApplyPendingTrim(UINT32 nMetaLPN, UINT32* pL2VBuffer)
+{
+    // 1. ì •ì  Map(CMTNodeMap)ì„ í†µí•´ Pending Trimì´ ìˆëŠ”ì§€ ë¹ ë¥´ê²Œ í™•ì¸
+    UINT32 nTotalLPN = DFTL_GLOBAL::GetInstance()->GetLPNCount();
+    UINT32 nLPNsPerCluster = nTotalLPN / USER_CLUSTERS;
+    UINT32 nBaseGlobalLPN = m_nClusterID * nLPNsPerCluster;
+    UINT32 nBaseGlobalMetaLPN = nBaseGlobalLPN / L2V_PER_META_PAGE;
+
+    if (nMetaLPN < nBaseGlobalMetaLPN) return FALSE;
+
+    UINT32 nLocalMetaIndex = nMetaLPN - nBaseGlobalMetaLPN;
+    CMT_GROUP_NODE* pCMTNode = &m_pCMTNodeMap[nLocalMetaIndex];
+
+    // ì§€ì—°ëœ TRIMì´ ì—†ìœ¼ë©´ ë°”ë¡œ ë¦¬í„´ (Fast Path)
+    // [ì¤‘ìš”] PopBestCMTGroupì—ì„œ 0ìœ¼ë¡œ ë§Œë“¤ì§€ ì•Šì•˜ìœ¼ë¯€ë¡œ ì—¬ê¸°ë¥¼ í†µê³¼ ê°€ëŠ¥í•¨
+    if (pCMTNode->m_nTotalTrim == 0) {
+        return FALSE;
+    }
+
+    // 2. í•´ë‹¹ Meta Pageê°€ ì»¤ë²„í•˜ëŠ” LPN ë²”ìœ„ ê³„ì‚°
+    UINT32 nMetaStartLPN = nMetaLPN * L2V_PER_META_PAGE;
+    UINT32 nMetaEndLPN = nMetaStartLPN + L2V_PER_META_PAGE; // Exclusive
+
+    // 3. í•´ë‹¹ ë²”ìœ„ì— ì†í•˜ëŠ” Extent Node ê²€ìƒ‰
+    UINT32 nStartHash = _GetLPNHash(nMetaStartLPN > nBaseGlobalLPN ? nMetaStartLPN - nBaseGlobalLPN : 0);
+    UINT32 nEndHash = _GetLPNHash(nMetaEndLPN > nBaseGlobalLPN ? nMetaEndLPN - nBaseGlobalLPN - 1 : 0);
+
+    BOOL bApplied = FALSE;
+
+    for (UINT32 h = nStartHash; h <= nEndHash; h++)
+    {
+        TRIM_NODE* pCurr = m_LPNHashTable[h];
+        while (pCurr != NULL)
+        {
+            TRIM_NODE* pNext = pCurr->m_pNextLPN; // ìˆœíšŒ ì¤‘ ì‚­ì œ/ë³€ê²½ ëŒ€ë¹„
+
+            // ë²”ìœ„ ì²´í¬
+            UINT32 nNodeStart = pCurr->m_nStartLPN;
+            UINT32 nNodeEnd = nNodeStart + pCurr->m_nLength;
+
+            // ë…¸ë“œê°€ Meta Page ë²”ìœ„ ë’¤ì— ìˆìœ¼ë©´ ì¤‘ë‹¨ (Sorted Listì´ë¯€ë¡œ)
+            if (nNodeStart >= nMetaEndLPN) break;
+
+            // ë…¸ë“œê°€ Meta Page ë²”ìœ„ ì•ì— ìˆìœ¼ë©´ ê³„ì†
+            if (nNodeEnd <= nMetaStartLPN) {
+                pCurr = pNext;
+                continue;
+            }
+
+            // 4. Overlap ë°œìƒ -> TRIM ì ìš©
+            UINT32 nOverlapStart = (nNodeStart > nMetaStartLPN) ? nNodeStart : nMetaStartLPN;
+            UINT32 nOverlapEnd = (nNodeEnd < nMetaEndLPN) ? nNodeEnd : nMetaEndLPN;
+            UINT32 nOverlapLen = nOverlapEnd - nOverlapStart;
+
+            // 4-1. ë²„í¼ ì—…ë°ì´íŠ¸ (INVALID ì²˜ë¦¬)
+            UINT32 nOffset = nOverlapStart % L2V_PER_META_PAGE;
+            for (UINT32 i = 0; i < nOverlapLen; i++) {
+                pL2VBuffer[nOffset + i] = INVALID_PPN;
+            }
+            bApplied = TRUE;
+
+            // 4-2. CMT Count ê°ì†Œ (ì²˜ë¦¬í–ˆìœ¼ë¯€ë¡œ)
+            // _UpdateCMTTrimCount ë‚´ë¶€ì—ì„œ !list_empty ì²´í¬í•˜ë¯€ë¡œ ì•ˆì „í•¨
+            DecreaseCMTCount(nOverlapStart, nOverlapLen);
+            if (m_nPendingTrimPages >= nOverlapLen) m_nPendingTrimPages -= nOverlapLen;
+
+            // 4-3. Extent Node ì¡°ì • (Split, Shrink, Remove)
+
+            // Case A: ë…¸ë“œê°€ Meta Page ë²”ìœ„ ì•ˆì— ì™„ì „íˆ í¬í•¨ë¨ -> ë…¸ë“œ ì‚­ì œ
+            if (nNodeStart >= nMetaStartLPN && nNodeEnd <= nMetaEndLPN) {
+                _RemoveFromLists(pCurr);
+                DFTL_GLOBAL::GetInstance()->FreeTrimNode(pCurr);
+                if(m_nUsedNodeCount > 0) m_nUsedNodeCount--;
+            }
+            // Case B: ë…¸ë“œì˜ ì•ë¶€ë¶„ì´ ê²¹ì¹¨ (ë’·ë¶€ë¶„ì€ ë‚¨ìŒ) -> Start ì´ë™
+            else if (nNodeStart >= nMetaStartLPN && nNodeEnd > nMetaEndLPN) {
+                _RemoveFromLists(pCurr);
+                pCurr->m_nStartLPN = nMetaEndLPN;
+                pCurr->m_nLength = nNodeEnd - nMetaEndLPN;
+                _AddToLPNList(_GetLPNHash(pCurr->m_nStartLPN), pCurr);
+            }
+            // Case C: ë…¸ë“œì˜ ë’·ë¶€ë¶„ì´ ê²¹ì¹¨ (ì•ë¶€ë¶„ì€ ë‚¨ìŒ) -> Length ì¶•ì†Œ
+            else if (nNodeStart < nMetaStartLPN && nNodeEnd <= nMetaEndLPN) {
+                pCurr->m_nLength = nMetaStartLPN - nNodeStart;
+            }
+            // Case D: ë…¸ë“œê°€ Meta Pageë¥¼ ì™„ì „íˆ ë®ìŒ (ì¤‘ê°„ë§Œ êµ¬ë©) -> Split
+            else if (nNodeStart < nMetaStartLPN && nNodeEnd > nMetaEndLPN) {
+                // ì•ë¶€ë¶„
+                UINT32 nOriginalEnd = nNodeEnd;
+                pCurr->m_nLength = nMetaStartLPN - nNodeStart;
+
+                // ë’·ë¶€ë¶„ (ìƒˆ ë…¸ë“œ í• ë‹¹)
+                TRIM_NODE* pNewNode = AllocNode(nOriginalEnd - nMetaEndLPN);
+                if (pNewNode) {
+                    pNewNode->m_nStartLPN = nMetaEndLPN;
+                    pNewNode->m_nLength = nOriginalEnd - nMetaEndLPN;
+                    _AddToLPNList(_GetLPNHash(pNewNode->m_nStartLPN), pNewNode);
+                }
+            }
+
+            pCurr = pNext;
+        }
+    }
+
+    return bApplied;
+}
+
+void TRIM_MGR::InvalidateOverlap(UINT32 nWriteStart, UINT32 nWriteLength)
+{
+    UINT32 nWriteEnd = nWriteStart + nWriteLength;
+    UINT32 nEndBucketIdx = _GetLPNHash(nWriteEnd - 1);
+
+    // ì‹œì‘ LPNì´ MaxTrimLengthë³´ë‹¤ ì‘ì„ ê²½ìš° Underflow ë°©ì§€
+    UINT32 nSafeStartLPN = (nWriteStart > m_nMaxTrimLength) ? (nWriteStart - m_nMaxTrimLength) : 0;
+    UINT32 nStartBucketIdx = _GetLPNHash(nSafeStartLPN);
+
+    for (UINT32 i = nStartBucketIdx; i <= nEndBucketIdx; i++)
+    {
+        TRIM_NODE* pCurr = m_LPNHashTable[i];
+
+        while (pCurr != NULL)
+        {
+            // ë¦¬ìŠ¤íŠ¸ëŠ” LPN ìˆœìœ¼ë¡œ ì •ë ¬ë˜ì–´ ìˆìœ¼ë¯€ë¡œ, í˜„ì¬ ë…¸ë“œì˜ ì‹œì‘ì ì´ ì“°ê¸° ëì§€ì ë³´ë‹¤ ë’¤ë©´ ë” ë³¼ í•„ìš” ì—†ìŒ
+            if (pCurr->m_nStartLPN >= nWriteEnd) break;
+
+            TRIM_NODE* pNext = pCurr->m_pNextLPN; // ë…¸ë“œ ì‚­ì œ/ë³€ê²½ ëŒ€ë¹„ ë¯¸ë¦¬ ì €ì¥
+            UINT32 nTrimStart = pCurr->m_nStartLPN;
+            UINT32 nTrimEnd = nTrimStart + pCurr->m_nLength;
+
+            // 1. ê²¹ì¹˜ì§€ ì•ŠëŠ” ê²½ìš° (ì“°ê¸° êµ¬ê°„ë³´ë‹¤ ë…¸ë“œê°€ ë’¤ì— ìˆìŒ - ìœ„ breakì—ì„œ ê±¸ëŸ¬ì§€ì§€ë§Œ ì•ˆì „ì¥ì¹˜)
+            //    ë˜ëŠ” ì“°ê¸° êµ¬ê°„ë³´ë‹¤ ë…¸ë“œê°€ ì™„ì „íˆ ì•ì— ìˆëŠ” ê²½ìš°
+            if (nTrimEnd <= nWriteStart) {
+                pCurr = pNext;
+                continue;
+            }
+
+            // ---------------------------------------------------------
+            // Case 1: Writeê°€ Trim ë…¸ë“œë¥¼ ì™„ì „íˆ ë®ì–´ì”€ (ë…¸ë“œ ì‚­ì œ)
+            // ---------------------------------------------------------
+            if (nWriteStart <= nTrimStart && nWriteEnd >= nTrimEnd)
+            {
+                _RemoveFromLists(pCurr);
+                FreeNode(pCurr); // FreeNode ë‚´ë¶€ì—ì„œ ì „ì²´ ê¸¸ì´ë§Œí¼ DecreaseCMTCount ìˆ˜í–‰í•¨
+            }
+            // ---------------------------------------------------------
+            // Case 2: Writeê°€ Trim ë…¸ë“œì˜ ì¤‘ê°„ì„ ëŠìŒ (Split)
+            // ---------------------------------------------------------
+            else if (nWriteStart > nTrimStart && nWriteEnd < nTrimEnd)
+            {
+                // [FIX] nWriteLength ë§Œí¼ ê°ì†Œì‹œí‚¤ë˜, ìœ„ì¹˜ëŠ” nWriteStartì—¬ì•¼ í•¨
+                // ê¸°ì¡´ ì˜¤ë¥˜: DecreaseCMTCount(pCurr->m_nStartLPN, nWriteLength);
+                DecreaseCMTCount(nWriteStart, nWriteLength);
+
+                if (m_nPendingTrimPages >= nWriteLength) m_nPendingTrimPages -= nWriteLength;
+                else m_nPendingTrimPages = 0;
+
+                UINT32 nOldTrimEnd = nTrimEnd;
+
+                // ì•ë¶€ë¶„ ë…¸ë“œ ìˆ˜ì • (ê¸¸ì´ ì¶•ì†Œ)
+                _RemoveFromLists(pCurr);
+                pCurr->m_nLength = nWriteStart - nTrimStart;
+                _AddToLPNList(_GetLPNHash(pCurr->m_nStartLPN), pCurr);
+
+                // ë’·ë¶€ë¶„ ë…¸ë“œ ì‹ ê·œ í• ë‹¹
+                TRIM_NODE* pSplitNode = AllocNode(nOldTrimEnd - nWriteEnd);
+                if (pSplitNode) {
+                    pSplitNode->m_nStartLPN = nWriteEnd;
+                    pSplitNode->m_nLength = nOldTrimEnd - nWriteEnd;
+                    _AddToLPNList(_GetLPNHash(pSplitNode->m_nStartLPN), pSplitNode);
+                }
+                else {
+                    // í• ë‹¹ ì‹¤íŒ¨ ì‹œ ë’·ë¶€ë¶„ ì •ë³´ ìœ ì‹¤ ì²˜ë¦¬ (ì¹´ìš´íŠ¸ ë° Pending ê°ì†Œ)
+                    UINT32 nLostLen = nOldTrimEnd - nWriteEnd;
+                    if (m_nPendingTrimPages >= nLostLen) m_nPendingTrimPages -= nLostLen;
+                    else m_nPendingTrimPages = 0;
+
+                    // [FIX] ìœ ì‹¤ëœ ë’·ë¶€ë¶„(nWriteEnd)ë¶€í„° ê°ì†Œì‹œì¼œì•¼ í•¨
+                    DecreaseCMTCount(nWriteEnd, nLostLen);
+                }
+            }
+            // ---------------------------------------------------------
+            // Case 3: Writeê°€ Trim ë…¸ë“œì˜ ë’·ë¶€ë¶„ì„ ë®ìŒ (Shrink Tail)
+            // ---------------------------------------------------------
+            else if (nWriteStart > nTrimStart)
+            {
+                UINT32 nRemovedLen = nTrimEnd - nWriteStart;
+
+                // [FIX] ê²¹ì¹˜ëŠ” ë’·ë¶€ë¶„(nWriteStart)ë¶€í„° ê°ì†Œì‹œì¼œì•¼ í•¨
+                // ê¸°ì¡´ ì˜¤ë¥˜: DecreaseCMTCount(pCurr->m_nStartLPN, nRemovedLen);
+                DecreaseCMTCount(nWriteStart, nRemovedLen);
+
+                if (m_nPendingTrimPages >= nRemovedLen) m_nPendingTrimPages -= nRemovedLen;
+                else m_nPendingTrimPages = 0;
+
+                _RemoveFromLists(pCurr);
+                pCurr->m_nLength = nWriteStart - nTrimStart;
+                _AddToLPNList(_GetLPNHash(pCurr->m_nStartLPN), pCurr);
+            }
+            // ---------------------------------------------------------
+            // Case 4: Writeê°€ Trim ë…¸ë“œì˜ ì•ë¶€ë¶„ì„ ë®ìŒ (Shrink Head)
+            // ---------------------------------------------------------
+            else
+            {
+                UINT32 nRemovedLen = nWriteEnd - nTrimStart;
+
+                // [FIX] ê²¹ì¹˜ëŠ” ì•ë¶€ë¶„(nTrimStart == pCurr->m_nStartLPN)ë¶€í„° ê°ì†Œ
+                DecreaseCMTCount(nTrimStart, nRemovedLen);
+
+                if (m_nPendingTrimPages >= nRemovedLen) m_nPendingTrimPages -= nRemovedLen;
+                else m_nPendingTrimPages = 0;
+
+                _RemoveFromLists(pCurr);
+                pCurr->m_nStartLPN = nWriteEnd;
+                pCurr->m_nLength = nTrimEnd - nWriteEnd;
+                _AddToLPNList(_GetLPNHash(pCurr->m_nStartLPN), pCurr);
+            }
+            pCurr = pNext;
+        }
+    }
+}
+
 VOID TRIM_MGR::PrintInfo()
 {
 	UINT32 nClusterID = m_nClusterID;
 	xil_printf("============================================================\r\n");
-	xil_printf("[TRIM_MGR] Cluster %u Configured (Using Global Pool)\r\n", nClusterID);
+	xil_printf("[TRIM_MGR] Cluster %u Configured (LPN Hash Only)\r\n", nClusterID);
 	xil_printf("------------------------------------------------------------\r\n");
 	xil_printf("============================================================\r\n\r\n");
 }
 
 VOID TRIM_MGR::VisualPrintBuckets()
 {
-	xil_printf("--- [Cluster %u] Trim Extent Visualization ---\r\n", m_nClusterID);
-	UINT32 nActiveBuckets = 0;
-
-	for (UINT32 i = 0; i < TRIM_HASH_SIZE; i++)
-	{
-		TRIM_NODE* pCurr = m_LPNHashTable[i];
-
-		if (pCurr != NULL)
-		{
-			nActiveBuckets++;
-			xil_printf(" [Bucket %4d]: ", i);
-
-			while (pCurr != NULL)
-			{
-				xil_printf("[%u, %u]%s", pCurr->m_nStartLPN, pCurr->m_nLength, (pCurr->m_pNextLPN ? " <-> " : ""));
-				pCurr = pCurr->m_pNextLPN;
-			}
-			xil_printf("\r\n");
-		}
-	}
-
-	if (nActiveBuckets == 0)
-	{
-		xil_printf(" (No pending Trim nodes in this cluster)\r\n");
-	}
-
+	xil_printf("--- [Cluster %u] Trim Extent Visualization (Groups: %u) ---\r\n", m_nClusterID, m_nCMTGroupCount);
 	UINT32 nGlobalUsed = DFTL_GLOBAL::GetInstance()->m_nGlobalUsedNodeCount;
 	UINT32 nGlobalFree = GLOBAL_TRIM_POOL_SIZE - nGlobalUsed;
 
@@ -329,7 +743,6 @@ VOID DFTL_GLOBAL::VisualPrintAllTrimNodes()
 {
 	xil_printf("\r\n############################################################\r\n");
 	xil_printf("   GLOBAL TRIM EXTENT STATE VISUALIZATION\r\n");
-	xil_printf("   (LPN Hash Bucket-wise Distribution)\r\n");
 	xil_printf("############################################################\r\n");
 
 	for (UINT32 i = 0; i < USER_CLUSTERS; i++)
@@ -353,179 +766,6 @@ TRIM_NODE* TRIM_MGR::AllocNode(UINT32 nLength)
 	return pNode;
 }
 
-void TRIM_MGR::FreeNode(TRIM_NODE* pNode)
-{
-	if (pNode == NULL) {
-		return;
-	}
-
-	DFTL_GLOBAL::GetInstance()->FreeTrimNode(pNode);
-	if(m_nUsedNodeCount > 0)
-		m_nUsedNodeCount--;
-}
-
-UINT32 TRIM_MGR::_GetLPNHash(UINT32 nLPN)
-{
-	DFTL_GLOBAL* pGlobal = DFTL_GLOBAL::GetInstance();
-	UINT32 nTotalLPN = pGlobal->GetLPNCount();
-	UINT32 nLPNsPerCluster = nTotalLPN / USER_CLUSTERS;
-	UINT32 nClusterBaseLPN = m_nClusterID * nLPNsPerCluster;
-	UINT32 nLPNsPerBucket = nLPNsPerCluster / TRIM_HASH_SIZE;
-
-	if (nLPNsPerBucket == 0) return 0;
-
-	UINT32 nRelativeLPN = (nLPN >= nClusterBaseLPN) ? (nLPN - nClusterBaseLPN) : 0;
-	UINT32 nHashIdx = nRelativeLPN / nLPNsPerBucket;
-
-	return (nHashIdx >= TRIM_HASH_SIZE) ? (TRIM_HASH_SIZE - 1) : nHashIdx;
-}
-
-// ¸ğµç ÇØ½Ã ¸®½ºÆ®¿¡¼­ ³ëµå ¿¬°á ÇØÁ¦
-void TRIM_MGR::_RemoveFromLists(TRIM_NODE* pNode)
-{
-	// 1. LPN Hash List¿¡¼­ Á¦°Å
-	UINT32 nLPNHash = _GetLPNHash(pNode->m_nStartLPN);
-	if (pNode->m_pPrevLPN) pNode->m_pPrevLPN->m_pNextLPN = pNode->m_pNextLPN;
-	else m_LPNHashTable[nLPNHash] = pNode->m_pNextLPN;
-
-	if (pNode->m_pNextLPN) pNode->m_pNextLPN->m_pPrevLPN = pNode->m_pPrevLPN;
-
-	// 2. Range Hash List¿¡¼­ Á¦°Å
-	UINT32 nRangeHash = _GetRangeHash(pNode->m_nLength);
-	if (pNode->m_pPrevRange) pNode->m_pPrevRange->m_pNextRange = pNode->m_pNextRange;
-	else m_RangeHashTable[nRangeHash] = pNode->m_pNextRange;
-
-	if (pNode->m_pNextRange) pNode->m_pNextRange->m_pPrevRange = pNode->m_pPrevRange;
-	else m_RangeHashTableTail[nRangeHash] = pNode->m_pPrevRange;
-
-	// Æ÷ÀÎÅÍ ÃÊ±âÈ­
-	pNode->m_pPrevLPN = pNode->m_pNextLPN = NULL;
-	pNode->m_pPrevRange = pNode->m_pNextRange = NULL;
-}
-
-// LPN Hash List Á¤·Ä »ğÀÔ (¿À¸§Â÷¼ø)
-void TRIM_MGR::_AddToLPNList(UINT32 nHashIdx, TRIM_NODE* pNew)
-{
-	TRIM_NODE* pPrev = NULL;
-	TRIM_NODE* pCurr = m_LPNHashTable[nHashIdx];
-
-	while (pCurr != NULL && pCurr->m_nStartLPN < pNew->m_nStartLPN) {
-		pPrev = pCurr;
-		pCurr = pCurr->m_pNextLPN;
-	}
-
-	pNew->m_pNextLPN = pCurr;
-	pNew->m_pPrevLPN = pPrev;
-
-	if (pPrev) pPrev->m_pNextLPN = pNew;
-	else m_LPNHashTable[nHashIdx] = pNew;
-
-	if (pCurr) pCurr->m_pPrevLPN = pNew;
-}
-
-// Range Hash List Á¤·Ä »ğÀÔ (³»¸²Â÷¼ø: Å« ¼ø¼­)
-void TRIM_MGR::_AddToRangeList(TRIM_NODE* pNew)
-{
-	UINT32 nRangeHash = _GetRangeHash(pNew->m_nLength);
-	TRIM_NODE* pPrev = NULL;
-	TRIM_NODE* pCurr = m_RangeHashTable[nRangeHash];
-
-	// Å« ¼ø¼­´ë·Î Å½»ö (°°°Å³ª ÀÛÀ¸¸é Á¤Áö)
-	while (pCurr != NULL && pCurr->m_nLength > pNew->m_nLength) {
-		pPrev = pCurr;
-		pCurr = pCurr->m_pNextRange;
-	}
-
-	pNew->m_pNextRange = pCurr;
-	pNew->m_pPrevRange = pPrev;
-
-	if (pPrev) pPrev->m_pNextRange = pNew;
-	else m_RangeHashTable[nRangeHash] = pNew;
-
-	if (pCurr) pCurr->m_pPrevRange = pNew;
-	else m_RangeHashTableTail[nRangeHash] = pNew;
-}
-
-void TRIM_MGR::InsertTrim(UINT32 nStartLPN, UINT32 nLength)
-{
-	// Fast Drop: 1°³Â¥¸® ¿äÃ»ÀÎµ¥ Ç®ÀÌ ²Ë Ã¡À¸¸é º´ÇÕ ½ÃµµÁ¶Â÷ ÇÏÁö ¾ÊÀ½
-	if (nLength == 1 && DFTL_GLOBAL::GetInstance()->m_pGlobalFreeListHead == NULL) {
-		return;
-	}
-
-	if (nLength > m_nMaxTrimLength) {
-		m_nMaxTrimLength = nLength;
-	}
-
-	UINT32 nHashIdx = _GetLPNHash(nStartLPN);
-	TRIM_NODE* pCurr = m_LPNHashTable[nHashIdx];
-	TRIM_NODE* pPrev = NULL;
-
-	// »ğÀÔ À§Ä¡ Å½»ö
-	while (pCurr != NULL && pCurr->m_nStartLPN < nStartLPN) {
-		pPrev = pCurr;
-		pCurr = pCurr->m_pNextLPN;
-	}
-
-	TRIM_NODE* pNext = pCurr;
-	BOOL bMerged = FALSE;
-
-	// [Case 1] Prev ³ëµå¿Í º´ÇÕ (Overlap/Adjacent)
-	if (pPrev != NULL && (pPrev->m_nStartLPN + pPrev->m_nLength) >= nStartLPN) {
-		_RemoveFromLists(pPrev);
-
-		UINT32 nNewEnd = (nStartLPN + nLength > pPrev->m_nStartLPN + pPrev->m_nLength)
-						 ? (nStartLPN + nLength) : (pPrev->m_nStartLPN + pPrev->m_nLength);
-		pPrev->m_nLength = nNewEnd - pPrev->m_nStartLPN;
-
-		_AddToLPNList(nHashIdx, pPrev);
-		_AddToRangeList(pPrev);
-		bMerged = TRUE;
-
-		// ¿¬¼â º´ÇÕ: È®ÀåµÈ Prev°¡ Next¿Íµµ ´ê´Â °æ¿ì
-		if (pNext != NULL && (pPrev->m_nStartLPN + pPrev->m_nLength) >= pNext->m_nStartLPN) {
-			_RemoveFromLists(pPrev);
-			_RemoveFromLists(pNext);
-
-			UINT32 nFinalEnd = (pNext->m_nStartLPN + pNext->m_nLength > pPrev->m_nStartLPN + pPrev->m_nLength)
-							   ? (pNext->m_nStartLPN + pNext->m_nLength) : (pPrev->m_nStartLPN + pPrev->m_nLength);
-			pPrev->m_nLength = nFinalEnd - pPrev->m_nStartLPN;
-
-			_AddToLPNList(nHashIdx, pPrev);
-			_AddToRangeList(pPrev);
-			FreeNode(pNext);
-		}
-	}
-	// [Case 2] Next ³ëµå¿Í º´ÇÕ
-	else if (pNext != NULL && (nStartLPN + nLength) >= pNext->m_nStartLPN) {
-		_RemoveFromLists(pNext);
-
-		UINT32 nNewEnd = (pNext->m_nStartLPN + pNext->m_nLength > nStartLPN + nLength)
-						 ? (pNext->m_nStartLPN + pNext->m_nLength) : (nStartLPN + nLength);
-		pNext->m_nStartLPN = nStartLPN;
-		pNext->m_nLength = nNewEnd - nStartLPN;
-
-		_AddToLPNList(nHashIdx, pNext);
-		_AddToRangeList(pNext);
-		bMerged = TRUE;
-	}
-
-	// [Case 3] º´ÇÕµÇÁö ¾ÊÀº °æ¿ì ½Å±Ô »ğÀÔ
-	if (!bMerged) {
-		TRIM_NODE* pNew = AllocNode(nLength);
-		if (pNew == NULL)
-		{
-			// ±³Ã¼(Replacement) ½ÇÆĞ ¶Ç´Â Drop
-			return;
-		}
-		if (pNew) {
-			pNew->m_nStartLPN = nStartLPN;
-			pNew->m_nLength = nLength;
-			_AddToLPNList(nHashIdx, pNew);
-			_AddToRangeList(pNew);
-		}
-	}
-}
 
 DFTL_GLOBAL* DFTL_GLOBAL::m_pstInstance;
 
@@ -621,7 +861,7 @@ VOID DFTL_GLOBAL::RecordHostAccess(BOOL bHit) {
 	m_nMonitorCurReq++;
 	if (bHit) m_nWindowHit++;
 
-	// À©µµ¿ì ´ÜÀ§(¿¹: 100°³)°¡ Âû ¶§¸¶´Ù ·Î±× Ãâ·Â
+	// ìœˆë„ìš° ë‹¨ìœ„(ì˜ˆ: 100ê°œ)ê°€ ì°° ë•Œë§ˆë‹¤ ë¡œê·¸ ì¶œë ¥
 	if (m_nMonitorCurReq % m_nWindowSize == 0) {
 		float rate = (float)m_nWindowHit / (float)m_nWindowSize * 100.0f;
 		xil_printf("[MON] Req %4d ~ %4d | HitRate: %3d%% (%d/%d)\r\n",
@@ -629,11 +869,11 @@ VOID DFTL_GLOBAL::RecordHostAccess(BOOL bHit) {
 			m_nMonitorCurReq,
 			(int)rate, m_nWindowHit, m_nWindowSize);
 
-		// À©µµ¿ì ÃÊ±âÈ­
+		// ìœˆë„ìš° ì´ˆê¸°í™”
 		m_nWindowHit = 0;
 	}
 
-	// ¼³Á¤ÇÑ È½¼ö¸¸Å­ ´Ù Âï¾úÀ¸¸é ¸ğ´ÏÅÍ¸µ Á¾·á
+	// ì„¤ì •í•œ íšŸìˆ˜ë§Œí¼ ë‹¤ ì°ì—ˆìœ¼ë©´ ëª¨ë‹ˆí„°ë§ ì¢…ë£Œ
 	if (m_nMonitorCurReq >= m_nMonitorTotalReq) {
 		m_bMonitorOn = FALSE;
 		xil_printf("[MON] Monitoring End.\r\n");
@@ -646,7 +886,7 @@ VIRTUAL VOID DFTL_GLOBAL::Initialize(VOID)
 	m_bMonitorOn = FALSE;
 	m_nMonitorTotalReq = 0;
 	m_nMonitorCurReq = 0;
-	m_nWindowSize = 100; // 100°³ ´ÜÀ§·Î ·Î±× Ãâ·Â
+	m_nWindowSize = 100; // 100ê°œ ë‹¨ìœ„ë¡œ ë¡œê·¸ ì¶œë ¥
 	m_nWindowHit = 0;
 
 	m_nHostReqCount = 0;
@@ -996,13 +1236,13 @@ DFTL_GLOBAL::_Initialize(VOID)
 
 	m_nGCTh = FREE_BLOCK_GC_THRESHOLD_DEFAULT;
 
-	// [¼öÁ¤] ÅëÇÕ TRIM ³ëµå Ç® ÇÒ´ç (10,000°³ °íÁ¤)
+	// [ìˆ˜ì •] í†µí•© TRIM ë…¸ë“œ í’€ í• ë‹¹ (10,000ê°œ ê³ ì •)
 	UINT32 nPoolSize = sizeof(TRIM_NODE) * GLOBAL_TRIM_POOL_SIZE;
 	m_pstTrimNodePool = (TRIM_NODE*)OSAL_MemAlloc(MEM_TYPE_FW_DATA, nPoolSize, OSAL_MEMALLOC_FW_ALIGNMENT);
 
 	if (m_pstTrimNodePool != NULL) {
 		memset((void*)m_pstTrimNodePool, 0, nPoolSize);
-		// Àü¿ª ÇÁ¸® ¸®½ºÆ® ¿¬°á
+		// ì „ì—­ í”„ë¦¬ ë¦¬ìŠ¤íŠ¸ ì—°ê²°
 		for (int i = 0; i < GLOBAL_TRIM_POOL_SIZE; i++) {
 			m_pstTrimNodePool[i].Reset();
 			m_pstTrimNodePool[i].m_pNextLPN = (i < GLOBAL_TRIM_POOL_SIZE - 1) ? &m_pstTrimNodePool[i+1] : NULL;
@@ -1013,6 +1253,17 @@ DFTL_GLOBAL::_Initialize(VOID)
 
 	HIL_SetStorageBlocks(m_nLPNCount);
 	m_stProfile.Initialize();
+}
+
+// [ìˆ˜ì •] 1:1 Map ë³€ê²½ìœ¼ë¡œ ì¸í•´ Pool í•¨ìˆ˜ ì œê±° ë˜ëŠ” ë”ë¯¸ ì²˜ë¦¬
+CMT_GROUP_NODE* DFTL_GLOBAL::AllocCMTGroupNode()
+{
+	return NULL;
+}
+
+void DFTL_GLOBAL::FreeCMTGroupNode(CMT_GROUP_NODE* pNode)
+{
+	return;
 }
 
 VOID

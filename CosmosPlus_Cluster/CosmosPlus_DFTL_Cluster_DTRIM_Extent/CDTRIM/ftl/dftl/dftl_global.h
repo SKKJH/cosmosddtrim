@@ -43,23 +43,38 @@ static inline void TrimPending_Clear(void) { g_trim_pending = 0; }
 static inline void TrimPending_Set(void) { g_trim_pending = 1; }
 static inline int TrimPending_IsOn(void) { return g_trim_pending; }
 
-#define TRIM_HASH_SIZE      (1024)  // 해시 테이블 크기 (모듈러 연산용)
+#define TRIM_HASH_SIZE      (1024)  // LPN 해시 테이블 크기
 #define GLOBAL_TRIM_POOL_SIZE (10000) // 통합 노드 풀 크기
-//#define MAX_TRIM_POOL_SIZE  (4096)
+
+// [추가] CMT(Meta Page) 관리를 위한 상수
+// Meta Page 내 Entry 개수(1024) + 0개인 경우 포함 = 1025개 Bucket
+#define CMT_BUCKET_SIZE     (1025)
+
+// [수정] 1:1 매핑을 위한 노드 구조체 (Linked List 포인터 대신 list_head 사용)
+struct CMT_GROUP_NODE
+{
+    UINT32 m_nMetaLPN;      // 메타 페이지 번호 (Key)
+    UINT32 m_nTotalTrim;    // 누적 TRIM 양 (Value, 0 ~ 1024)
+
+    struct list_head m_dlHash; // Trim Count별 Hash Bucket에 연결될 링크
+
+    void Reset() {
+        m_nMetaLPN = 0xFFFFFFFF;
+        m_nTotalTrim = 0;
+        INIT_LIST_HEAD(&m_dlHash);
+    }
+};
 
 struct TRIM_NODE
 {
     UINT32 m_nStartLPN;
     UINT32 m_nLength;   // Range
 
-    // 1) LPN 기준 정렬 링크 (오름차순: 작은 LPN -> 큰 LPN)
-    // Hash Bucket 내에서 연결되거나, 전체 리스트로 관리될 수 있음
+    // LPN 기준 정렬 링크 (오름차순: 작은 LPN -> 큰 LPN)
     TRIM_NODE* m_pPrevLPN;
     TRIM_NODE* m_pNextLPN;
 
-    // 2) Range 기준 정렬 링크 (내림차순: 큰 Range -> 작은 Range)
-    TRIM_NODE* m_pPrevRange;
-    TRIM_NODE* m_pNextRange;
+    // [삭제] Range Hash 관련 링크 제거됨 (m_pPrevRange, m_pNextRange)
 
     // 초기화 헬퍼
     void Reset() {
@@ -67,8 +82,6 @@ struct TRIM_NODE
         m_nLength = 0;
         m_pPrevLPN = NULL;
         m_pNextLPN = NULL;
-        m_pPrevRange = NULL;
-        m_pNextRange = NULL;
     }
 };
 
@@ -86,29 +99,47 @@ public:
 
     void InsertTrim(UINT32 nStartLPN, UINT32 nLength);
 
-    // [수정] 내부 풀이 아닌 DFTL_GLOBAL의 전역 풀을 사용하도록 래핑
+    // 내부 풀이 아닌 DFTL_GLOBAL의 전역 풀을 사용하도록 래핑
     TRIM_NODE* AllocNode(UINT32 nLength);
     void FreeNode(TRIM_NODE* pNode);
 
-    // [수정] 전역 교체 정책(Victim Selection)에서 접근할 수 있도록 public으로 이동
+    // 전역 교체 정책(Victim Selection)에서 접근할 수 있도록 public으로 이동
     void _RemoveFromLists(TRIM_NODE* pNode);
 
-private:
-    UINT32 _GetLPNHash(UINT32 nLPN);
-    UINT32 _GetRangeHash(UINT32 nLength) { return (nLength / 32) % TRIM_HASH_SIZE; }
-
-    void _AddToLPNList(UINT32 nHashIdx, TRIM_NODE* pNew);
-    void _AddToRangeList(TRIM_NODE* pNew);
+    // [신규] 메타 페이지 로드 시 지연된 TRIM 적용 함수
+    // 반환값: L2V 변경 발생 시 TRUE
+    BOOL ApplyPendingTrim(UINT32 nMetaLPN, UINT32* pL2VBuffer);
 
 public:
-    // [수정] m_NodePool, m_pFreeListHead 제거 (전역으로 이동)
-    TRIM_NODE* m_LPNHashTable[TRIM_HASH_SIZE];
-    TRIM_NODE* m_RangeHashTable[TRIM_HASH_SIZE];
-    TRIM_NODE* m_RangeHashTableTail[TRIM_HASH_SIZE];
+    UINT32 _GetLPNHash(UINT32 nLPN);
+    void _AddToLPNList(UINT32 nHashIdx, TRIM_NODE* pNew);
 
+    // [삭제] Range Hash 관련 함수 제거됨 (_GetRangeHash, _AddToRangeList)
+
+    // [수정] 1:1 매핑 구조에 맞게 변경 (정적 관리)
+    void IncreaseCMTCount(UINT32 nStartLPN, UINT32 nLength);
+    void DecreaseCMTCount(UINT32 nStartLPN, UINT32 nLength);
+    CMT_GROUP_NODE* PopBestCMTGroup();
+
+    // [추가] 내부 헬퍼: Trim Count 변경 시 Hash 이동
+    void _UpdateCMTTrimCount(CMT_GROUP_NODE* pNode, INT32 nDelta);
+
+public:
+    // TRIM Node 관리용 (LPN Hash만 유지)
+    TRIM_NODE* m_LPNHashTable[TRIM_HASH_SIZE];
+
+    // [삭제] Range Hash 테이블 제거됨
+
+    UINT32 m_nPendingTrimPages;
     UINT32 m_nUsedNodeCount;
     UINT32 m_nClusterID;
     UINT32 m_nMaxTrimLength;
+
+    // [수정] CMT Group 관리 (1:1 매핑 및 Hash Sort)
+    CMT_GROUP_NODE* m_pCMTNodeMap;    // 해당 Cluster의 Meta Page 개수만큼 할당 (1:1 Array)
+    struct list_head    m_ahTrimHash[CMT_BUCKET_SIZE]; // Trim Count(0~1024)별 버킷
+
+    UINT32 m_nCMTGroupCount;
 };
 
 // Forward Declarations
@@ -260,6 +291,12 @@ public:
 	UINT32 m_nMonitorCurReq;    // 현재 처리한 Host 요청 수
 	UINT32 m_nWindowSize;       // 구간별 집계 단위 (예: 100개마다 로그 출력)
 	UINT32 m_nWindowHit;        // 현재 윈도우 내 Hit 횟수
+
+    // [제거] CMT Group Node Pool (1:1 매핑으로 변경되어 불필요)
+	// CMT_GROUP_NODE* m_pstCMTGroupPool;       // 실제 메모리 (배열)
+	// CMT_GROUP_NODE* m_pCMTGroupFreeListHead; // 프리 리스트 헤드
+	CMT_GROUP_NODE* AllocCMTGroupNode();
+	void FreeCMTGroupNode(CMT_GROUP_NODE* pNode);
 
 	// [신규 추가] 모니터링 함수
 	VOID StartGCMonitor(UINT32 nTotalReq, UINT32 nWindowSize);

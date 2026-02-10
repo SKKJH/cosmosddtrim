@@ -2,9 +2,9 @@
 *
 * Copyright (C) 2018-2019 
 * Embedded Software Laboratory(ESLab), SUNG KYUN KWAN UNIVERSITY
-* 
+*
 * This file is part of ESLab's Flash memory firmware
-* 
+*
 * This source can not be copied and/or distributed without the express
 * permission of ESLab
 *
@@ -43,14 +43,331 @@ BOOL META_MGR::ApplyTrimIfCached(UINT32 nLPN)
 
 }
 
-VOID
-META_MGR::ApplyTrimOnLoadedEntry_OPT(META_CACHE_ENTRY* pEntry, UINT32 metaLPN)
-{
+/* ftl/dftl/dftl_meta.cpp */
 
+//VOID META_MGR::ApplyTrimOnLoadedEntry_OPT(META_CACHE_ENTRY* pEntry, UINT32 metaLPN, UINT32 FLAG)
+//{
+//    // [1] Meta Entry 범위 계산
+//    UINT32 nStartLPN = metaLPN * L2V_PER_META_PAGE;
+//    UINT32 nLength = L2V_PER_META_PAGE;
+//    UINT32 nEndLPN = nStartLPN + nLength;
+//
+//    // [LOG] Inspection Info (주석 해제됨)
+////    xil_printf("========================================================================\r\n");
+////    xil_printf("[META_TRIM] Inspecting MetaLPN: %u (LPN Range: %u ~ %u)\r\n",
+////               metaLPN, nStartLPN, nEndLPN - 1);
+//
+//    // [2] TRIM Manager 획득
+//    DFTL_GLOBAL* pGlobal = DFTL_GLOBAL::GetInstance();
+//    UINT32 nClusterID = pGlobal->GetClusterID(nStartLPN);
+//    TRIM_MGR* pTrimMgr = pGlobal->GetTrimMgr(nClusterID);
+//
+//    if (pTrimMgr == NULL || pTrimMgr->m_nUsedNodeCount == 0) {
+//        // xil_printf("[META_TRIM] No Pending TRIMs in Cluster %u\r\n", nClusterID);
+//        return;
+//    }
+//
+//    // [3] 검색 최적화
+//    UINT32 nSafeStartLPN = (nStartLPN > pTrimMgr->m_nMaxTrimLength) ? (nStartLPN - pTrimMgr->m_nMaxTrimLength) : 0;
+//    UINT32 nStartBucketIdx = pTrimMgr->_GetLPNHash(nSafeStartLPN);
+//    UINT32 nEndBucketIdx = pTrimMgr->_GetLPNHash(nEndLPN - 1);
+//
+//    // [Pre-computation]
+//    VNAND* pVNand = DFTL_GLOBAL::GetVNandMgr();
+//    BLOCK_MGR* pUserBlkMgr = DFTL_GLOBAL::GetUserBlockMgr();
+//
+//    UINT32 nHitCount = 0; // 디버깅용 히트 카운트
+//
+//    for (UINT32 i = nStartBucketIdx; i <= nEndBucketIdx; i++)
+//    {
+//        TRIM_NODE* pCurr = pTrimMgr->m_LPNHashTable[i];
+//
+//        while (pCurr != NULL)
+//        {
+//            if (pCurr->m_nStartLPN >= nEndLPN) break; // Early Exit
+//
+//            TRIM_NODE* pNext = pCurr->m_pNextLPN;
+//            UINT32 nTrimStart = pCurr->m_nStartLPN;
+//            UINT32 nTrimEnd = nTrimStart + pCurr->m_nLength;
+//
+//            if (nTrimEnd <= nStartLPN) {
+//                pCurr = pNext;
+//                continue;
+//            }
+//
+//            // -------------------------------------------------------------
+//            // [LOG] 겹침 발생 (Overlap Detected)
+//            // -------------------------------------------------------------
+//            nHitCount++;
+////            UINT32 nOldNodeStart = nTrimStart; // 로그용 백업
+////            UINT32 nOldNodeLen = pCurr->m_nLength;
+//
+//            // -------------------------------------------------------------
+//            // [최적화 1] L2V 업데이트 (SetL2V 호출 제거 -> 인라인 처리)
+//            // -------------------------------------------------------------
+//            UINT32 nApplyStart = (nStartLPN > nTrimStart) ? nStartLPN : nTrimStart;
+//            UINT32 nApplyEnd = (nEndLPN < nTrimEnd) ? nEndLPN : nTrimEnd;
+//            UINT32 nOffset = nApplyStart - nStartLPN;
+//
+//            BOOL bUpdated = FALSE;
+//            UINT32 nInvalidatedCount = 0; // 로그용 카운터
+//
+//            for (UINT32 nCurLPN = nApplyStart; nCurLPN < nApplyEnd; nCurLPN++, nOffset++)
+//            {
+//                UINT32 nOldVPPN = pEntry->m_anL2V[nOffset];
+//
+//                if (nOldVPPN != INVALID_PPN)
+//                {
+//                    // 1. 값 변경
+//                    pEntry->m_anL2V[nOffset] = INVALID_PPN;
+//                    bUpdated = TRUE;
+//                    nInvalidatedCount++;
+//
+//                    // 2. 통계 및 Invalidate
+//                    DFTL_IncreaseProfile(Prof_Discard_Page_Hit);
+//                    pGlobal->m_util_pages[nClusterID]--;
+//
+//                    if (pVNand->GetV2L(nOldVPPN) == nCurLPN) {
+//                        pGlobal->IncreaseProfileCount(PROFILE_HOST_OVERWRITE);
+//                        pVNand->Invalidate(nOldVPPN, 1);
+//                        pUserBlkMgr->Invalidate(nOldVPPN);
+//                    }
+//                }
+//            }
+//
+//            if (bUpdated) {
+//                pEntry->m_bDirty = TRUE;
+//            }
+//
+//            if (FLAG == TRIM_OPT) {
+//            	DFTL_IncreaseProfile(Prof_Discard_GC_Num);
+//            } else {
+//            	DFTL_IncreaseProfile(Prof_Discard_Load_Num);
+//            }
+//
+//            // [LOG] 적용 결과 출력
+////            xil_printf("  >> [HIT #%d] Node [%u, %u] Overlaps. (Invalidated: %u pages)\r\n",
+////                       nHitCount, nOldNodeStart, nOldNodeLen, nInvalidatedCount);
+//
+//            // -------------------------------------------------------------
+//            // [최적화 2] TRIM 노드 정리
+//            // -------------------------------------------------------------
+//            if (nStartLPN <= nTrimStart && nEndLPN >= nTrimEnd) {
+//                // Case 1: Delete
+////                xil_printf("     -> [ACTION] DELETE: Node [%u, %u] removed.\r\n", nOldNodeStart, nOldNodeLen);
+//
+//                pTrimMgr->_RemoveFromLists(pCurr);
+//                pTrimMgr->FreeNode(pCurr);
+//            }
+//            else if (nStartLPN > nTrimStart && nEndLPN < nTrimEnd) {
+//                // Case 2: Split
+//                UINT32 nOldTrimEnd = nTrimEnd;
+//                pTrimMgr->_UpdateNodeLengthOnly(pCurr, nStartLPN - nTrimStart);
+//
+//                TRIM_NODE* pSplit = pTrimMgr->AllocNode(nOldTrimEnd - nEndLPN);
+//
+////                xil_printf("     -> [ACTION] SPLIT:  Original -> [%u, %u]\r\n", pCurr->m_nStartLPN, pCurr->m_nLength);
+//
+//                if (pSplit) {
+//                    pSplit->m_nStartLPN = nEndLPN;
+//                    pSplit->m_nLength = nOldTrimEnd - nEndLPN;
+//                    pTrimMgr->_AddToLPNList(pTrimMgr->_GetLPNHash(pSplit->m_nStartLPN), pSplit);
+//                    pTrimMgr->_AddToRangeList(pSplit);
+////                    xil_printf("                         New      -> [%u, %u]\r\n", pSplit->m_nStartLPN, pSplit->m_nLength);
+//                }
+////                else {
+////                    xil_printf("                         New      -> FAILED (Alloc Error)\r\n");
+////                }
+//            }
+//            else if (nStartLPN <= nTrimStart) {
+//                // Case 3: Head Shrink
+//                pTrimMgr->_RemoveFromLists(pCurr);
+//                pCurr->m_nStartLPN = nEndLPN;
+//                pCurr->m_nLength = nTrimEnd - nEndLPN;
+//                pTrimMgr->_AddToLPNList(pTrimMgr->_GetLPNHash(pCurr->m_nStartLPN), pCurr);
+//                pTrimMgr->_AddToRangeList(pCurr);
+//
+////                xil_printf("     -> [ACTION] SHRINK_HEAD: [%u, %u] -> [%u, %u]\r\n",
+////                           nOldNodeStart, nOldNodeLen, pCurr->m_nStartLPN, pCurr->m_nLength);
+//            }
+//            else {
+//                // Case 4: Tail Shrink
+//                pTrimMgr->_UpdateNodeLengthOnly(pCurr, nStartLPN - nTrimStart);
+//
+////                xil_printf("     -> [ACTION] SHRINK_TAIL: [%u, %u] -> [%u, %u]\r\n",
+////                           nOldNodeStart, nOldNodeLen, pCurr->m_nStartLPN, pCurr->m_nLength);
+//            }
+//
+//            pCurr = pNext;
+//        }
+//    }
+//}
+
+VOID META_MGR::ApplyTrimOnLoadedEntry_OPT(META_CACHE_ENTRY* pEntry, UINT32 metaLPN, UINT32 FLAG)
+{
+	// [1] Meta Entry 범위 계산
+	UINT32 nStartLPN = metaLPN * L2V_PER_META_PAGE;
+	UINT32 nLength = L2V_PER_META_PAGE;
+	UINT32 nEndLPN = nStartLPN + nLength;
+
+	// [2] TRIM Manager 획득
+	DFTL_GLOBAL* pGlobal = DFTL_GLOBAL::GetInstance();
+	UINT32 nClusterID = pGlobal->GetClusterID(nStartLPN);
+	TRIM_MGR* pTrimMgr = pGlobal->GetTrimMgr(nClusterID);
+
+	if (pTrimMgr == NULL || pTrimMgr->m_nUsedNodeCount == 0) {
+		return;
+	}
+
+    // [Fast Check] 해당 메타 페이지에 Pending TRIM이 없으면 조기 종료
+    // (CMTNodeMap을 이용한 O(1) 체크)
+    UINT32 nLPNsPerCluster = pGlobal->GetLPNCount() / USER_CLUSTERS;
+    UINT32 nBaseGlobalMetaLPN = (nClusterID * nLPNsPerCluster) / L2V_PER_META_PAGE;
+    if (metaLPN >= nBaseGlobalMetaLPN) {
+        UINT32 nLocalMetaIndex = metaLPN - nBaseGlobalMetaLPN;
+        // 범위 체크 후 안전하게 접근
+        if (pTrimMgr->m_pCMTNodeMap[nLocalMetaIndex].m_nTotalTrim == 0) {
+            return;
+        }
+    }
+
+	// [3] 검색 최적화 (LPN Hash 사용)
+	UINT32 nSafeStartLPN = (nStartLPN > pTrimMgr->m_nMaxTrimLength) ? (nStartLPN - pTrimMgr->m_nMaxTrimLength) : 0;
+	UINT32 nStartBucketIdx = pTrimMgr->_GetLPNHash(nSafeStartLPN);
+	UINT32 nEndBucketIdx = pTrimMgr->_GetLPNHash(nEndLPN - 1);
+
+	VNAND* pVNand = DFTL_GLOBAL::GetVNandMgr();
+	BLOCK_MGR* pUserBlkMgr = DFTL_GLOBAL::GetUserBlockMgr();
+
+	for (UINT32 i = nStartBucketIdx; i <= nEndBucketIdx; i++)
+	{
+		TRIM_NODE* pCurr = pTrimMgr->m_LPNHashTable[i];
+
+		while (pCurr != NULL)
+		{
+            // 리스트 순회 중 현재 노드가 변경될 수 있으므로 Next를 미리 저장
+			TRIM_NODE* pNext = pCurr->m_pNextLPN;
+
+            UINT32 nTrimStart = pCurr->m_nStartLPN;
+			UINT32 nTrimEnd = nTrimStart + pCurr->m_nLength;
+
+            // [Sorted List Optimization]
+			if (nTrimStart >= nEndLPN) break; // 범위 벗어남
+			if (nTrimEnd <= nStartLPN) {      // 아직 범위 도달 안함
+				pCurr = pNext;
+				continue;
+			}
+
+			// -------------------------------------------------------------
+			// [LOGIC] 겹침 발생 (Overlap Detected) -> TRIM 적용
+			// -------------------------------------------------------------
+			UINT32 nApplyStart = (nStartLPN > nTrimStart) ? nStartLPN : nTrimStart;
+			UINT32 nApplyEnd = (nEndLPN < nTrimEnd) ? nEndLPN : nTrimEnd;
+			UINT32 nOffset = nApplyStart - nStartLPN;
+            UINT32 nApplyLen = nApplyEnd - nApplyStart;
+
+			BOOL bUpdated = FALSE;
+
+			for (UINT32 nCurLPN = nApplyStart; nCurLPN < nApplyEnd; nCurLPN++, nOffset++)
+			{
+				UINT32 nOldVPPN = pEntry->m_anL2V[nOffset];
+
+				if (nOldVPPN != INVALID_PPN)
+				{
+					// 1. 값 변경 (L2V Invalidate)
+					pEntry->m_anL2V[nOffset] = INVALID_PPN;
+					bUpdated = TRUE;
+
+					// 2. 통계 및 실제 블록 무효화
+					DFTL_IncreaseProfile(Prof_Discard_Page_Hit);
+					pGlobal->m_util_pages[nClusterID]--;
+
+					if (pVNand->GetV2L(nOldVPPN) == nCurLPN) {
+						pGlobal->IncreaseProfileCount(PROFILE_HOST_OVERWRITE);
+						pVNand->Invalidate(nOldVPPN, 1);
+						pUserBlkMgr->Invalidate(nOldVPPN);
+					}
+				}
+			}
+
+			if (bUpdated) {
+				pEntry->m_bDirty = TRUE;
+			}
+
+			if (FLAG == TRIM_OPT) {
+				DFTL_IncreaseProfile(Prof_Discard_GC_Num);
+			} else {
+				DFTL_IncreaseProfile(Prof_Discard_CMT_Num);
+			}
+
+            // [중요] 처리된 만큼 Pending Count 차감
+            pTrimMgr->DecreaseCMTCount(nApplyStart, nApplyLen);
+            if (pTrimMgr->m_nPendingTrimPages >= nApplyLen) pTrimMgr->m_nPendingTrimPages -= nApplyLen;
+            else pTrimMgr->m_nPendingTrimPages = 0;
+
+			// -------------------------------------------------------------
+			// [최적화 2] TRIM 노드 정리 (Range Hash 제거됨)
+			// -------------------------------------------------------------
+
+			// Case 1: Delete (노드가 메타 페이지 범위 내에 완전히 포함됨)
+			if (nStartLPN <= nTrimStart && nEndLPN >= nTrimEnd)
+			{
+				pTrimMgr->_RemoveFromLists(pCurr);
+                // FreeNode를 쓰면 DecreaseCMTCount가 중복 호출될 수 있으므로 직접 해제 권장
+                // 하지만 여기서는 편의상 FreeNode 사용 (단, Decrease 로직 중복 주의)
+                // *수정*: 위에서 DecreaseCMTCount를 이미 호출했으므로,
+                // 여기서는 메모리만 해제하는 Raw Free를 사용하거나
+                // 위 Decrease 호출을 생략하고 pTrimMgr->FreeNode(pCurr)만 불러야 함.
+                // 혼동을 막기 위해 **Raw Free** 방식으로 통일합니다.
+				DFTL_GLOBAL::GetInstance()->FreeTrimNode(pCurr);
+                if(pTrimMgr->m_nUsedNodeCount > 0) pTrimMgr->m_nUsedNodeCount--;
+			}
+			// Case 2: Split (노드가 메타 페이지 범위를 완전히 감쌈 -> 중간 삭제)
+			else if (nStartLPN > nTrimStart && nEndLPN < nTrimEnd)
+			{
+				UINT32 nOldTrimEnd = nTrimEnd;
+
+				// 2-1. 앞부분 수정 (StartLPN 유지, Length 축소)
+                // [Range Hash 제거] _UpdateNodeLengthOnly 대신 직접 대입
+				pCurr->m_nLength = nStartLPN - nTrimStart;
+
+				// 2-2. 뒷부분 신규 할당
+				TRIM_NODE* pSplit = pTrimMgr->AllocNode(nOldTrimEnd - nEndLPN);
+				if (pSplit) {
+					pSplit->m_nStartLPN = nEndLPN;
+					pSplit->m_nLength = nOldTrimEnd - nEndLPN;
+					pTrimMgr->_AddToLPNList(pTrimMgr->_GetLPNHash(pSplit->m_nStartLPN), pSplit);
+                    // [Range Hash 제거] _AddToRangeList 호출 삭제
+				}
+                else {
+                    UINT32 nLost = nOldTrimEnd - nEndLPN;
+                    pTrimMgr->DecreaseCMTCount(nEndLPN, nLost);
+                }
+			}
+			// Case 3: Shrink Head (노드가 메타 페이지 뒤쪽으로 걸침 -> 앞부분 삭제)
+			else if (nStartLPN <= nTrimStart)
+			{
+                // StartLPN이 변경되므로 리스트에서 뺐다가 다시 넣어야 함
+				pTrimMgr->_RemoveFromLists(pCurr);
+				pCurr->m_nStartLPN = nEndLPN;
+				pCurr->m_nLength = nTrimEnd - nEndLPN;
+				pTrimMgr->_AddToLPNList(pTrimMgr->_GetLPNHash(pCurr->m_nStartLPN), pCurr);
+                // [Range Hash 제거] _AddToRangeList 호출 삭제
+			}
+			// Case 4: Shrink Tail (노드가 메타 페이지 앞쪽으로 걸침 -> 뒷부분 삭제)
+			else
+			{
+                // StartLPN 유지, Length 축소
+				pCurr->m_nLength = nStartLPN - nTrimStart;
+			}
+
+			pCurr = pNext;
+		}
+	}
 }
 
 VOID
-META_REQUEST::Initialize(META_REQUEST_STATUS nStatus, UINT32 nMetaLPN, VOID* pstMetaEntry, IOTYPE eIOType)
+META_REQUEST::Initialize(META_REQUEST_STATUS nStatus, UINT32 nMetaLPN, VOID* pstMetaEntry, IOTYPE eIOType, UINT32 bMetaFlag)
 {
 	UINT32 channel, way;
 	channel = get_channel_from_lpn(nMetaLPN);
@@ -62,11 +379,16 @@ META_REQUEST::Initialize(META_REQUEST_STATUS nStatus, UINT32 nMetaLPN, VOID* pst
 	m_eIOType		= eIOType;
 	m_nChannel = channel;
 	m_nWay = way;
+
+	if (bMetaFlag == TRIM_OPT)
+		m_nFLAG = 1;
+	else
+		m_nFLAG = 0;
 }
 
 BOOL
 META_REQUEST::Run(VOID)
-{	
+{
 	BOOL bSuccess;
 	switch (m_nStatus)
 	{
@@ -162,7 +484,7 @@ META_REQUEST::_ProcessRead_Done(VOID)
 
 	if (TrimPending_IsOn())
 	{
-		pstMetaMgr->ApplyTrimOnLoadedEntry_OPT(pstMetaEntry, m_nMetaLPN);
+		pstMetaMgr->ApplyTrimOnLoadedEntry_OPT(pstMetaEntry, m_nMetaLPN, m_nFLAG);
 //		CheckPendingTrim();
 	}
 
@@ -222,7 +544,7 @@ META_REQUEST::_ProcessRead_Wait(VOID)
 	m_nVPPN = DFTL_GLOBAL::GetMetaL2VMgr()->GetL2V(nLPN);
 	DEBUG_ASSERT(INVALID_PPN != m_nVPPN);
 
-	// Check buffering 
+	// Check buffering
 	BUFFERING_LPN* pstBufferingLPN = DFTL_GLOBAL::GetMetaActiveBlockBufferingLPN(0, channel, way);
 	nBufferingVPPN = pstBufferingLPN->ReadLPN(nLPN, m_pstBufEntry, 0, channel, way);
 	if (nBufferingVPPN != INVALID_VPPN)
@@ -352,7 +674,7 @@ META_REQUEST_INFO::Initialize(VOID)
 	INIT_LIST_HEAD(&m_dlDone);
 
 	m_nFreeCount = 0;
-	
+
 	m_nIssuedCount = 0;
 	m_nDoneCount = 0;
 

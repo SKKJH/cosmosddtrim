@@ -1,0 +1,809 @@
+/*******************************************************
+*
+* Copyright (C) 2018-2019 
+* Embedded Software Laboratory(ESLab), SUNG KYUN KWAN UNIVERSITY
+* * This file is part of ESLab's Flash memory firmware
+* * This source can not be copied and/or distributed without the express
+* permission of ESLab
+*
+* Author: DongYoung Seo (dongyoung.seo@gmail.com)
+		  Kyuhwa Han (hgh6877@gmail.com)
+* ESLab: http://nyx.skku.ac.kr
+*
+*******************************************************/
+
+#include "dftl_internal.h"
+
+VOID
+SUPER_GC_MGR::Initialize(VOID)
+{
+	m_nThreshold	= DFTL_GLOBAL::GetGCMgr(0,0)->m_nThreshold;
+	m_nVictimVBN 	= INVALID_VBN;
+	m_nTMPVictimVBN	= INVALID_VBN;
+	m_nGCCnt 		= 0;
+	gc_trim			= 0;
+	victimVPC		= 0;
+	loadCNT			= 0;
+}
+
+BOOL
+SUPER_GC_MGR::IsGCRunning(VOID)
+{
+	if (m_nVictimVBN == INVALID_VBN)
+		return 0;
+	else
+		return 1;
+}
+
+struct ClusterPriorityInfo {
+    UINT32 nClusterID;
+    INT32  nFutureUtil; // 미래 예상 유효 페이지 (낮을수록 좋음)
+};
+
+// [수정] 1:1 Map 구조와 호환되도록 Selective TRIM 처리
+UINT32 SUPER_GC_MGR::ProcessSelectiveTRIM(VOID)
+{
+    DFTL_GLOBAL* pGlobal = DFTL_GLOBAL::GetInstance();
+    META_MGR* pMetaMgr = DFTL_GLOBAL::GetMetaMgr();
+    REQUEST_MGR* pReqMgr = DFTL_GLOBAL::GetRequestMgr();
+    META_REQUEST_INFO* pMetaReqInfo = pReqMgr->GetMetaRequestInfo();
+
+    UINT32 nCMTLoadCount = 0;
+    const UINT32 CMT_LOAD_LIMIT = 30; // 최대 메타 로드 횟수 (예산)
+
+    // -----------------------------------------------------------------------
+    // 1. [Cluster Priority] 미래 유틸리티 기준 정렬
+    // -----------------------------------------------------------------------
+    ClusterPriorityInfo stClusters[USER_CLUSTERS];
+
+    for (UINT32 i = 0; i < USER_CLUSTERS; i++) {
+        TRIM_MGR* pMgr = pGlobal->GetTrimMgr(i);
+        stClusters[i].nClusterID = i;
+        stClusters[i].nFutureUtil = pGlobal->m_util_pages[i] - (INT32)pMgr->m_nPendingTrimPages;
+    }
+
+    // Bubble Sort
+    for (UINT32 i = 0; i < USER_CLUSTERS - 1; i++) {
+        for (UINT32 j = 0; j < USER_CLUSTERS - 1 - i; j++) {
+            if (stClusters[j].nFutureUtil > stClusters[j+1].nFutureUtil) {
+                ClusterPriorityInfo temp = stClusters[j];
+                stClusters[j] = stClusters[j+1];
+                stClusters[j+1] = temp;
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // 2. [Execution] 정렬된 Cluster 순서대로 최적의 CMT 처리
+    // -----------------------------------------------------------------------
+    for (UINT32 k = 0; k < USER_CLUSTERS; k++)
+    {
+        if (nCMTLoadCount >= CMT_LOAD_LIMIT) break;
+
+        UINT32 nClusterID = stClusters[k].nClusterID;
+        TRIM_MGR* pTrimMgr = pGlobal->GetTrimMgr(nClusterID);
+
+        // 해당 클러스터의 TRIM 작업 처리
+        while (nCMTLoadCount < CMT_LOAD_LIMIT)
+        {
+            // [1] 처리할 최고의 CMT 그룹 획득
+            // (Hash Bucket에서 Detach되고 0으로 초기화됨 -> 중복 방지)
+            CMT_GROUP_NODE* pBestGroup = pTrimMgr->PopBestCMTGroup();
+
+            if (pBestGroup == NULL) break; // 더 이상 처리할 그룹 없음
+
+            UINT32 nMetaLPN = pBestGroup->m_nMetaLPN;
+            UINT32 nBaseDataLPN = nMetaLPN * L2V_PER_META_PAGE;
+
+            // ---------------------------------------------------
+            // Case A: 메타 데이터 Hit (이미 로드됨)
+            // ---------------------------------------------------
+            if (pMetaMgr->IsMetaAvailable(nBaseDataLPN, TRIM_OPT))
+            {
+                META_CACHE_ENTRY* pEntry = pMetaMgr->GetMetaEntry(nBaseDataLPN, TRIM_OPT);
+                if (pEntry) {
+                    pMetaMgr->ApplyTrimOnLoadedEntry_OPT(pEntry, pEntry->m_nMetaLPN, TRIM_OPT);
+                }
+                // Static Node이므로 Free 불필요
+                continue;
+            }
+
+            // ---------------------------------------------------
+            // Case B: 메타 데이터 Miss (로드 필요)
+            // ---------------------------------------------------
+            nCMTLoadCount++;
+            pMetaMgr->LoadMeta(nBaseDataLPN, TRIM_OPT, TRIM_OPT);
+
+            // 로드 완료 대기
+            META_REQUEST* pstRequest = NULL;
+            do {
+                pReqMgr->_ProcessMetaRequestWaitQ();
+                FIL_Run();
+
+                pstRequest = pMetaReqInfo->GetDoneRequest();
+                if (pstRequest != NULL) {
+                    pstRequest->Run(); // LoadDone -> ApplyTrimOnLoadedEntry_OPT 콜백 실행
+                }
+
+                if (pMetaMgr->IsMetaAvailable(nBaseDataLPN, TRIM_OPT)) break;
+
+            } while (pstRequest != NULL);
+
+            // [안전 장치] 로드 완료 후 확인 사살
+            if (pMetaMgr->IsMetaAvailable(nBaseDataLPN, TRIM_OPT)) {
+                 META_CACHE_ENTRY* pEntry = pMetaMgr->GetMetaEntry(nBaseDataLPN, TRIM_OPT);
+                 if(pEntry) {
+                     pMetaMgr->ApplyTrimOnLoadedEntry_OPT(pEntry, pEntry->m_nMetaLPN, TRIM_OPT);
+                 }
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // 3. [Cleanup] 종료 처리
+    // -----------------------------------------------------------------------
+    if (pGlobal->m_nGlobalUsedNodeCount == 0) {
+        TrimPending_Clear();
+    }
+
+    return nCMTLoadCount;
+}
+
+UINT32 SUPER_GC_MGR::ProcessAllPendingTrim(VOID)
+{
+    DFTL_GLOBAL* pGlobal = DFTL_GLOBAL::GetInstance();
+    META_MGR* pMetaMgr = DFTL_GLOBAL::GetMetaMgr();
+    REQUEST_MGR* pReqMgr = DFTL_GLOBAL::GetRequestMgr();
+    META_REQUEST_INFO* pMetaReqInfo = pReqMgr->GetMetaRequestInfo();
+
+    UINT32 nProcessedCount = 0;
+
+    // 1. 모든 클러스터 순회
+    for (UINT32 nCluster = 0; nCluster < USER_CLUSTERS; nCluster++)
+    {
+        TRIM_MGR* pTrimMgr = pGlobal->GetTrimMgr(nCluster);
+        UINT32 nSafetyCount = 0;
+        UINT32 nMaxLoop = pTrimMgr->m_nUsedNodeCount * 3 + 500;
+
+        // 2. 해당 클러스터의 Pending Node가 모두 처리될 때까지 반복
+        while (pTrimMgr->m_nUsedNodeCount > 0)
+        {
+            if (nSafetyCount++ > nMaxLoop)
+            {
+                // 강제 정리 (시스템 행 방지)
+                for (int i = 0; i < TRIM_HASH_SIZE; i++) {
+                    while (pTrimMgr->m_LPNHashTable[i]) {
+                        TRIM_NODE* pDel = pTrimMgr->m_LPNHashTable[i];
+                        pTrimMgr->_RemoveFromLists(pDel);
+                        pTrimMgr->FreeNode(pDel);
+                    }
+                }
+                break;
+            }
+
+            // 3. 타겟 노드 탐색
+            TRIM_NODE* pTargetNode = NULL;
+            for (int i = 0; i < TRIM_HASH_SIZE; i++) {
+                if (pTrimMgr->m_LPNHashTable[i] != NULL) {
+                    pTargetNode = pTrimMgr->m_LPNHashTable[i];
+                    break;
+                }
+            }
+
+            if (pTargetNode == NULL) {
+                pTrimMgr->m_nUsedNodeCount = 0;
+                break;
+            }
+
+            // 4. 타겟 노드가 속한 메타 LPN 확인
+            UINT32 nLPN = pTargetNode->m_nStartLPN;
+
+            // [Hit Case]
+            if (pMetaMgr->IsMetaAvailable(nLPN, TRIM_OPT))
+            {
+                META_CACHE_ENTRY* pEntry = pMetaMgr->GetMetaEntry(nLPN, TRIM_OPT);
+                if (pEntry != NULL)
+                {
+                    pMetaMgr->ApplyTrimOnLoadedEntry_OPT(pEntry, pEntry->m_nMetaLPN, TRIM_OPT);
+                    nProcessedCount++;
+                }
+                continue;
+            }
+
+            // [Miss Case]
+            pMetaMgr->LoadMeta(nLPN, TRIM_OPT, TRIM_OPT);
+            nProcessedCount++;
+
+            META_REQUEST* pstRequest = NULL;
+            do {
+                pReqMgr->_ProcessMetaRequestWaitQ();
+                FIL_Run();
+
+                pstRequest = pMetaReqInfo->GetDoneRequest();
+                if (pstRequest != NULL) {
+                    pstRequest->Run();
+                }
+                if (pMetaMgr->IsMetaAvailable(nLPN, TRIM_OPT)) break;
+
+            } while (pstRequest != NULL);
+        }
+    }
+
+    if (pGlobal->m_nGlobalUsedNodeCount == 0) {
+        TrimPending_Clear();
+    }
+    return nProcessedCount;
+}
+
+UINT32
+SUPER_GC_MGR::GetVictimVBN(VOID)
+{
+	SBINFO_MGR* pSBMgr  = DFTL_GLOBAL::GetSBInfoMgr();
+	VNAND* pVNAND    	= DFTL_GLOBAL::GetVNandMgr();
+	UINT32 vblk_cnt 	= DFTL_GLOBAL::GetInstance()->m_nVBlockCount;
+
+	UINT32 best_vbn = INVALID_VBN;
+	UINT32 best_vpc = pVNAND->GetVPagesPerVBlock() * (USER_CHANNELS * USER_WAYS);
+
+	for (UINT32 vbn = 20; vbn < vblk_cnt; ++vbn)
+	{
+		SBINFO& sb = pSBMgr->m_pastSBInfo[vbn];
+
+		if ((sb.IsMeta() == TRUE) || (sb.IsBad() == TRUE) || (sb.IsFree() == TRUE)) {
+			continue;
+		}
+		UINT32 sb_vpc_total = 0;
+
+		for (UINT32 ch = 0; ch < USER_CHANNELS; ++ch)
+		{
+			for (UINT32 wy = 0; wy < USER_WAYS; ++wy)
+			{
+				UINT32 	valid;
+				VBINFO* vbi   = DFTL_GLOBAL::GetVBInfoMgr(ch, wy)->GetVBInfo(vbn);
+				if (vbi->IsFree())
+					valid = 0;
+				else
+				{
+					valid = pVNAND->GetVPagesPerVBlock() - vbi->GetInvalidLPNCount();
+				}
+				sb_vpc_total += valid;
+			}
+		}
+
+		if (sb_vpc_total < best_vpc) {
+			best_vpc = sb_vpc_total;
+			best_vbn = vbn;
+		}
+	}
+	victimVPC = best_vpc;
+
+	return best_vbn;
+}
+
+BOOL
+SUPER_GC_MGR::CheckAndStartGC()
+{
+	if (DFTL_GLOBAL::GetInstance()->SB_INIT_FLAG == FALSE)
+		return 0;
+
+	if (IsGCRunning() == TRUE)
+	{
+		return 0;
+	}
+
+	DFTL_GLOBAL* pstGlobal = DFTL_GLOBAL::GetInstance();
+    BOOL bTrimTrigger = (TrimPending_IsOn());
+	UINT32 nFreeBlock = pstGlobal->GetSBInfoMgr()->m_nFreeCount;
+    BOOL bBlockGCTrigger = (nFreeBlock <= m_nThreshold);
+
+    if (!bBlockGCTrigger)
+	{
+		return 0;
+	}
+
+    UINT32 prevVPC = victimVPC;
+    UINT32 processed = 0;
+    UINT32 CandVBN;
+
+    if (bTrimTrigger)
+	{
+     	processed = ProcessSelectiveTRIM();
+
+		if (processed > 0)
+		{
+			DFTL_IncreaseProfile(Prof_DS_GC_Times);
+            DFTL_IncreaseProfile(Prof_DS_Discared_Pages, processed);
+        }
+	}
+
+	nFreeBlock = pstGlobal->GetSBInfoMgr()->m_nFreeCount;
+	if (nFreeBlock > m_nThreshold)
+	{
+		DFTL_IncreaseProfile(Prof_GC_UTIL_Hit);
+		DFTL_GLOBAL::GetSuperGCMgr()->loadCNT = 0;
+     	DFTL_GLOBAL::GetMetaMgr()->ReleaseConfinedEntries();
+		return 0;
+	}
+	CandVBN = GetVictimVBN();
+	if (CandVBN != INVALID_VBN)
+	{
+		if (processed > 0)
+		{
+			if (prevVPC > victimVPC)
+			{
+				DFTL_IncreaseProfile(Prof_DS_Reduced_Pages, prevVPC - victimVPC);
+			}
+		}
+		m_nVictimVBN = CandVBN;
+	    if (DFTL_GLOBAL::GetInstance()->m_bEnable == 2)
+	    {
+	    	xil_printf("GC START [%u] %u Loads:[%u] \r\n", m_nVictimVBN, nFreeBlock, processed);
+	    }
+		return 1;
+	}
+	DFTL_GLOBAL::GetSuperGCMgr()->loadCNT = 0;
+    return 0;
+}
+
+VOID 
+GC_MGR::Initialize(UINT32 nGCTh, IOTYPE eIOType, UINT32 channel, UINT32 way)
+{
+	m_nThreshold	= nGCTh;
+	m_eIOType		= eIOType;
+	m_channel = channel;
+	m_way = way;
+	m_nVictimVBN = INVALID_VBN;
+	GC_POLICY_GREEDY::Initialize(eIOType);
+}
+
+VOID
+GC_MGR::Run(VOID)
+{
+	if (IsGCRunning() == FALSE)
+	{
+		return;
+	}
+
+#if (SUPPORT_META_DEMAND_LOADING == 1)
+	if (m_eIOType == IOTYPE_GC)
+	{
+		if (DFTL_GLOBAL::GetInstance()->isMetaGCing() == TRUE)
+		{
+			return;
+		}
+	}
+#endif
+
+	_Read();
+}
+
+BOOL
+GC_MGR::IsGCRunning(VOID)
+{
+	if (m_nVictimVBN == INVALID_VBN)
+	{
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+UINT32
+GC_MGR::CheckAndStartGC(VOID)
+{
+	if (m_eIOType == IOTYPE_META)
+	{
+		if (IsGCRunning() == TRUE)
+		{
+			return 0;
+		}
+	}
+
+	UINT32 nFreeBlock;
+	DFTL_GLOBAL*	pstGlobal = DFTL_GLOBAL::GetInstance();
+
+	nFreeBlock = m_pstBlockMgr->GetFreeBlockCount(m_channel, m_way);
+
+	if (m_eIOType == IOTYPE_META)
+	{
+		if (nFreeBlock > m_nThreshold)
+		{
+			return 0;
+		}
+	}
+
+	if (m_eIOType == IOTYPE_META)
+	{
+		m_nVictimVBN = GetVictimVBN(m_channel, m_way);
+	}
+	else
+	{
+		UINT32 cand_victim = pstGlobal->GetSuperGCMgr()->m_nVictimVBN;
+		if (DFTL_GLOBAL::GetVBInfoMgr(m_channel, m_way)->GetVBInfo(cand_victim)->IsFree())
+			return 0;
+		pstGlobal->GetSuperGCMgr()->m_nGCCnt += 1;
+		m_nVictimVBN = cand_victim;
+	}
+
+	m_nVPC = pstGlobal->GetVPagePerVBlock() - DFTL_GLOBAL::GetVBInfoMgr(m_channel, m_way)->GetVBInfo(m_nVictimVBN)->GetInvalidLPNCount();
+	m_nVCNT = DFTL_GLOBAL::GetVBInfoMgr(m_channel, m_way)->GetVBInfo(m_nVictimVBN)->GetValidLPNCount();
+	m_nCurReadVPageOffset = 0;
+	m_nWriteCount = 0;
+	m_nIssuedCount = 0;
+
+	if (m_eIOType != IOTYPE_META)
+	{
+	    if (DFTL_GLOBAL::GetInstance()->m_bEnable == 2)
+	    {
+	    	xil_printf("GC START VBN[%u] CH[%u] WY[%u] PageCnt[%u]\r\n", m_nVictimVBN, m_channel, m_way, m_nVPC);
+	    }
+	}
+	if (m_eIOType == IOTYPE_META) {
+		DFTL_GLOBAL::GetInstance()->SetMetaGCing();
+		DFTL_IncreaseProfile(Prof_CMTGC_count);
+	}
+	else {
+		DFTL_IncreaseProfile(Prof_GC_count);
+	}
+
+#if (SUPPORT_GC_DEBUG == 1)
+	m_stDebug.Initialize();
+#endif
+
+#if (SUPPORT_BLOCK_DEBUG == 1)
+	m_pstBlockMgr->CheckVPC(m_channel, m_way, m_nVictimVBN);
+#endif
+
+	return 1;
+}
+
+VOID
+GC_MGR::IncreaseWriteCount(VOID)
+{
+	m_nWriteCount++;
+
+	if (m_eIOType == IOTYPE_META) {
+		DFTL_IncreaseProfile(Prof_CMTGC_write);
+	}
+	else {
+		DFTL_IncreaseProfile(Prof_GC_write);
+	}
+
+	DEBUG_ASSERT(m_nWriteCount <= m_nVPC);
+
+	if (m_nWriteCount == m_nVPC)
+	{
+		UINT32 pastVBN = m_nVictimVBN;
+		m_nVictimVBN = INVALID_VBN;
+#if (SUPPORT_META_DEMAND_LOADING == 1)
+		if (m_eIOType == IOTYPE_META) {
+			BOOL	Meta_GCing = FALSE;
+			for (UINT32 channel = 0; channel < USER_CHANNELS; channel++) {
+				for (UINT32 way = 0; way < USER_WAYS; way++) {
+					if (DFTL_GLOBAL::GetMetaGCMgr(channel, way)->IsGCRunning() == TRUE) {
+						Meta_GCing = TRUE;
+					}
+				}
+			}
+			if(Meta_GCing == FALSE)
+				DFTL_GLOBAL::GetInstance()->ClearMetaGCing();
+		}
+		else
+		{
+			if (DFTL_GLOBAL::GetVBInfoMgr(m_channel, m_way)->GetVBInfo(pastVBN)->IsFree() != TRUE)
+			{
+				DFTL_GLOBAL::GetInstance()->GetUserBlockMgr()->Release(m_channel, m_way, pastVBN, 1);
+
+			    if (DFTL_GLOBAL::GetInstance()->m_bEnable == 2)
+			    {
+			    	xil_printf("[GC END'2] VBN:%u, CH%u, WY:%u(%d USED), FREE:%u\r\n", pastVBN, m_channel, m_way,
+			    			DFTL_GLOBAL::GetSBInfoMgr()->m_pastSBInfo[pastVBN].m_nUSED,
+							DFTL_GLOBAL::GetSBInfoMgr()->m_nFreeCount);
+			    }
+			}
+
+			DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt -= 1;
+			if (DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt == 0)
+			{
+				DFTL_GLOBAL::GetSuperGCMgr()->m_nVictimVBN = INVALID_VBN;
+				DFTL_GLOBAL::GetMetaMgr()->ReleaseConfinedEntries();
+				if (DFTL_GLOBAL::GetSuperGCMgr()->loadCNT != 0)
+				{
+					DFTL_GLOBAL::GetSuperGCMgr()->loadCNT = 0;
+				}
+			}
+		}
+#endif
+	}
+}
+
+VOID
+GC_MGR::IncreaseIssuedCount(VOID)
+{
+	m_nIssuedCount++;
+	DEBUG_ASSERT(m_nIssuedCount <= m_nVPC);
+}
+
+// [수정] GC Read 시 Pending Trim 확인 및 Lazy 처리 로직 적용
+VOID
+GC_MGR::_Read(VOID)
+{
+	DFTL_GLOBAL*	pstGlobal = DFTL_GLOBAL::GetInstance();
+	VNAND*			pstVNand = pstGlobal->GetVNandMgr();
+	if (m_nIssuedCount != m_nWriteCount && m_nIssuedCount != m_nWriteCount + 1) {
+		return;
+	}
+	do
+	{
+		if (m_nCurReadVPageOffset >= pstGlobal->GetVPagePerVBlock())
+		{
+            // VBlock 내 모든 유효 페이지 처리 완료
+			if (m_eIOType != IOTYPE_META)
+			{
+				if (m_nWriteCount == m_nIssuedCount)
+				{
+                    // Block Release 처리
+					if (DFTL_GLOBAL::GetVBInfoMgr(m_channel, m_way)->GetVBInfo(m_nVictimVBN)->IsFree() != TRUE)
+					{
+						DFTL_GLOBAL::GetInstance()->GetUserBlockMgr()->Release(m_channel, m_way, m_nVictimVBN, 1);
+					}
+
+					DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt -= 1;
+
+				    if (DFTL_GLOBAL::GetInstance()->m_bEnable == 2)
+				    {
+				    	xil_printf("[GC END'1] VBN:%u, CH%u, WY:%u(%d USED), FREE:%u\r\n", m_nVictimVBN, m_channel, m_way,
+				    			DFTL_GLOBAL::GetSBInfoMgr()->m_pastSBInfo[m_nVictimVBN].m_nUSED,
+								DFTL_GLOBAL::GetSBInfoMgr()->m_nFreeCount);
+				    }
+				    if (DFTL_GLOBAL::GetSuperGCMgr()->m_nGCCnt == 0)
+					{
+						DFTL_GLOBAL::GetSuperGCMgr()->m_nVictimVBN = INVALID_VBN;
+						if (DFTL_GLOBAL::GetSuperGCMgr()->loadCNT != 0)
+						{
+							DFTL_GLOBAL::GetSuperGCMgr()->loadCNT = 0;
+						}
+						DFTL_GLOBAL::GetMetaMgr()->ReleaseConfinedEntries();
+					}
+					m_nVictimVBN = INVALID_VBN;
+				}
+				else
+				{
+					if (m_nVPC != m_nIssuedCount)
+					{
+						m_nVPC = m_nIssuedCount;
+					}
+				}
+			}
+			return;
+		}
+
+        // 현재 VPPN의 유효성 검사
+		BOOL bValid = pstVNand->IsValid(m_channel, m_way, m_nVictimVBN, m_nCurReadVPageOffset);
+
+		if (bValid == TRUE)
+		{
+		    UINT32 nVPPN = VPPN_FROM_VBN_VPN(m_channel, m_way, m_nVictimVBN, m_nCurReadVPageOffset);
+		    UINT32 nLPN = pstVNand->GetV2L(nVPPN); // P2L 조회
+
+		    if (pstGlobal->IsValidLPN(nLPN))
+		    {
+		        UINT32 nClusterID = pstGlobal->GetClusterID(nLPN);
+		        TRIM_MGR* pTrimMgr = pstGlobal->GetTrimMgr(nClusterID);
+		        BOOL bTrimmed = FALSE;
+
+		        // 1. TRIM 노드 검색 (Lazy Check)
+		        if (pTrimMgr != NULL && pTrimMgr->m_nUsedNodeCount > 0)
+		        {
+		            UINT32 nMaxLen = pTrimMgr->m_nMaxTrimLength;
+		            UINT32 nSearchStart = (nLPN > nMaxLen) ? (nLPN - nMaxLen) : 0;
+		            UINT32 nStartBucket = pTrimMgr->_GetLPNHash(nSearchStart);
+		            UINT32 nEndBucket   = pTrimMgr->_GetLPNHash(nLPN);
+
+		            for (UINT32 i = nStartBucket; i <= nEndBucket; i++)
+		            {
+		                TRIM_NODE* pCurr = pTrimMgr->m_LPNHashTable[i];
+		                while (pCurr != NULL)
+		                {
+		                    if (pCurr->m_nStartLPN > nLPN) break; // 정렬되어 있으므로 중단
+
+		                    if (nLPN < pCurr->m_nStartLPN + pCurr->m_nLength)
+		                    {
+		                        bTrimmed = TRUE;
+		                        break;
+		                    }
+		                    pCurr = pCurr->m_pNextLPN;
+		                }
+		                if (bTrimmed) break;
+		            }
+		        }
+
+		        // 2. TRIM 된 페이지라면 Copy Skip 및 메타 업데이트
+		        if (bTrimmed)
+		        {
+		        	META_MGR* pstMetaMgr = DFTL_GLOBAL::GetMetaMgr();
+		        	META_CACHE_ENTRY* pEntry = NULL;
+
+		        	// [A] 메타 데이터 로드 (CMT 업데이트 필수)
+		        	while (TRUE)
+		        	{
+		        		pEntry = pstMetaMgr->GetMetaEntry(nLPN, TRIM_OPT);
+		        		if (pEntry != NULL) break;
+
+		        		// Miss 시 로드 요청
+		        		pstMetaMgr->LoadMeta(nLPN, TRIM_OPT, TRIM_OPT);
+
+		        		REQUEST_MGR* pstReqMgr = DFTL_GLOBAL::GetRequestMgr();
+		        		META_REQUEST_INFO* pstMetaReqInfo = pstReqMgr->GetMetaRequestInfo();
+		        		META_REQUEST* pstRequest = NULL;
+
+		        		do {
+		        			pstReqMgr->_ProcessMetaRequestWaitQ();
+		        			FIL_Run();
+
+		        			pstRequest = pstMetaReqInfo->GetDoneRequest();
+		        			if (pstRequest != NULL) {
+		        				pstRequest->Run();
+		        			}
+		        			if (pstMetaMgr->IsMetaAvailable(nLPN, GC_OPT)) break;
+
+		        		} while (pstRequest != NULL);
+		        	}
+
+		        	// [B] CMT 업데이트: L2V를 INVALID로 설정
+		        	UINT32 nOffset = nLPN % L2V_PER_META_PAGE;
+		        	if (pEntry->m_anL2V[nOffset] != INVALID_PPN)
+		        	{
+		        		pEntry->m_anL2V[nOffset] = INVALID_PPN;
+		        		pEntry->m_bDirty = TRUE;
+
+		        		UINT32 nClusterID = pstGlobal->GetClusterID(nLPN);
+		        		pstGlobal->m_util_pages[nClusterID] -= 1;
+
+		        		pstVNand->Invalidate(nVPPN, 0);
+		        		pstGlobal->GetUserBlockMgr()->Invalidate(nVPPN);
+		        		DFTL_IncreaseProfile(Prof_Discard_Page_Hit);
+		        	}
+
+		        	// [C] Pending Trim Node 제거
+		        	pTrimMgr->InvalidateOverlap(nLPN, 1);
+
+		        	// [D] 통계 업데이트 및 Copy 건너뛰기
+		        	IncreaseIssuedCount();
+		        	IncreaseWriteCount();
+		        	DFTL_IncreaseProfile(Prof_Discard_GC_Num);
+
+		        	if (m_nVictimVBN == INVALID_VBN) return;
+		        	m_nCurReadVPageOffset++;
+		        	continue; // 실제 Read/Write Skip
+		        }
+		    }
+		    break; // 유효하고 Trim되지 않은 페이지 -> 실제 Read 수행
+		}
+		m_nCurReadVPageOffset++;
+
+		DEBUG_ASSERT(m_nCurReadVPageOffset <= pstGlobal->GetVPagePerVBlock());
+	} while (1);
+
+    // 실제 Copy (Read Issue)
+	REQUEST_MGR*	pstReqMgr = pstGlobal->GetRequestMgr();
+	GC_REQUEST*	pstRequest;
+
+	pstRequest = pstReqMgr->AllocateGCRequest();
+	if (pstRequest == NULL)
+	{
+		return;
+	}
+
+	UINT32	nVPPN = VPPN_FROM_VBN_VPN(m_channel, m_way, m_nVictimVBN, m_nCurReadVPageOffset);
+	pstRequest->Initialize(GC_REQUEST_READ_WAIT, nVPPN, m_eIOType);
+	pstReqMgr->AddToGCRequestWaitQ(pstRequest);
+
+	m_nCurReadVPageOffset++;
+	IncreaseIssuedCount();
+
+	if (m_nCurReadVPageOffset >= pstGlobal->GetVPagePerVBlock())
+		if (m_eIOType != IOTYPE_META)
+			m_nVPC = m_nIssuedCount;
+
+	if (m_eIOType == IOTYPE_META) {
+		DFTL_IncreaseProfile(Prof_CMTGC_read);
+	}
+	else {
+		DFTL_IncreaseProfile(Prof_GC_read);
+	}
+	return;
+}
+
+VOID 
+GC_POLICY_GREEDY::Initialize(IOTYPE eIOType)
+{
+	switch (eIOType)
+	{
+	case IOTYPE_GC:
+		m_pstBlockMgr = DFTL_GLOBAL::GetUserBlockMgr();
+		break;
+
+#if (SUPPORT_META_DEMAND_LOADING == 1)
+	case IOTYPE_META:
+		m_pstBlockMgr = DFTL_GLOBAL::GetMetaBlockMgr();
+		break;
+#endif
+
+	default:
+		ASSERT(0);
+		break;
+	}
+}
+
+UINT32
+GC_POLICY_GREEDY::GetVictimVBN(UINT32 channel, UINT32 way)
+{
+	VBINFO*	pstVBInfo;
+	UINT32	nVictimVBN = INVALID_VBN;
+	UINT32	nMaxInvalid = 0;
+
+	list_for_each_entry(VBINFO, pstVBInfo, &m_pstBlockMgr->m_dlUsedBlocks[channel][way], m_dlList)
+	{
+		DEBUG_ASSERT(pstVBInfo->IsFree() == FALSE);
+
+		if (pstVBInfo->IsActive() == TRUE)
+		{
+			continue;
+		}
+
+		if (pstVBInfo->GetInvalidLPNCount() > nMaxInvalid)
+		{
+			nMaxInvalid	= pstVBInfo->GetInvalidLPNCount();
+			nVictimVBN	= pstVBInfo->m_nVBN;
+		}
+	}
+
+	DEBUG_ASSERT(nVictimVBN != INVALID_VBN);
+	DFTL_GLOBAL::GetInstance()->IncreaseProfileCount(PROFILE_BGC);
+	return nVictimVBN;
+}
+
+VOID
+GC_DEBUG::Initialize(VOID)
+{
+	INT32 nSize;
+	nSize = DFTL_GLOBAL::GetInstance()->GetVPagePerVBlock() * sizeof(GC_DEBUG_FLAG);
+
+	if (m_apstVPNStatus == NULL)
+	{
+		m_apstVPNStatus = static_cast<GC_DEBUG_FLAG*>(OSAL_MemAlloc(MEM_TYPE_FW_DATA, nSize, OSAL_MEMALLOC_FW_ALIGNMENT));
+	}
+
+	OSAL_MEMSET(m_apstVPNStatus, 0x00, nSize);
+	m_nRead = 0;
+	m_nWrite = 0;
+}
+
+VOID
+GC_DEBUG::SetFlag(UINT32 nVPPN, GC_DEBUG_FLAG eFlag)
+{
+	UINT32 modVPPN = CHANNEL_VPPN(nVPPN);
+	UINT32 nVPageOffset = VPN_FROM_VPPN(modVPPN);
+	UINT32 channel = CHANNEL_FROM_VPPN(nVPPN);
+	UINT32 way = WAY_FROM_VPPN(nVPPN);
+
+	DEBUG_ASSERT((m_apstVPNStatus[nVPageOffset] & eFlag) == 0);
+
+	m_apstVPNStatus[nVPageOffset] = static_cast<GC_DEBUG_FLAG>((UINT32)m_apstVPNStatus[nVPageOffset] | (UINT32)eFlag);
+
+	switch (eFlag)
+	{
+	case GC_DEBUG_FLAG_READ:
+		m_nRead++;
+		break;
+
+	case GC_DEBUG_FLAG_WRITE_ISSUE:
+		m_nWrite++;
+		break;
+
+	case GC_DEBUG_FLAG_WRITE_DONE:
+		DEBUG_ASSERT(m_apstVPNStatus[nVPageOffset] == GC_DEBUG_FLAG_MASK);
+		break;
+	}
+}

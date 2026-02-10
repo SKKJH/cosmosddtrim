@@ -1,0 +1,653 @@
+/*******************************************************
+*
+* Copyright (C) 2018-2019 
+* Embedded Software Laboratory(ESLab), SUNG KYUN KWAN UNIVERSITY
+* * This file is part of ESLab's Flash memory firmware
+* * This source can not be copied and/or distributed without the express
+* permission of ESLab
+*
+* Author: DongYoung Seo (dongyoung.seo@gmail.com)
+* Kyuhwa Han (hgh6877@gmail.com)
+* ESLab: http://nyx.skku.ac.kr
+*
+*******************************************************/
+
+#include "hil.h"
+#include "dftl_internal.h"
+
+// [Helper] 메모리 초기화 및 주소 계산 헬퍼
+static inline void memset_volatile_u8(volatile UINT8* dst, UINT8 value, size_t len)
+{
+	for (size_t i = 0; i < len; ++i) dst[i] = value;
+}
+
+static inline UINT32 seg_base_lpn(UINT32 seg_idx) { return seg_idx * 1024; }
+static inline UINT32 seg_end_lpn (UINT32 seg_idx) { return seg_base_lpn(seg_idx) + 1024 - 1; }
+static inline UINT32 byte_idx_from_lpn(UINT32 lpn) { return lpn / 8; }
+static inline UINT32 bit_off_from_lpn (UINT32 lpn) { return lpn % 8; }
+
+#define GET_TRIM_BIT(lpn) ((g_trim_bitmap[(lpn)/8] >> ((lpn)%8)) & 0x1)
+
+// 전역 TRIM 변수 정의
+volatile UINT8* g_trim_bitmap 		= NULL;
+volatile UINT16* g_trim_seg_count	= NULL;
+volatile UINT32 g_trim_pending 		= 0;
+volatile UINT32 g_trim_going 		= 0;
+
+#define TRIM_BITMAP_BYTES ((TOTAL_LPN_COUNT + 7ull) / 8ull)
+#define SEGMENT_COUNT     (TOTAL_LPN_COUNT / LPNS_PER_SEGMENT)
+#define LPNS_PER_SEGMENT  (1024)
+
+// 비교 함수에서 참조하기 위해 static 전역으로 선언
+static UINT32 g_clusterUtils[USER_CLUSTERS];
+
+// ----------------------------------------------------------------------------
+// [DFTL_GLOBAL] 통합 TRIM 노드 할당/해제 및 교체 정책 구현
+// ----------------------------------------------------------------------------
+
+TRIM_NODE* DFTL_GLOBAL::AllocTrimNode(UINT32 nLength, UINT32 nRequestClusterID)
+{
+	// 1. 전역 프리 리스트에 여유가 있는 경우 (O(1))
+	if (m_pGlobalFreeListHead != NULL) {
+		TRIM_NODE* pNode = m_pGlobalFreeListHead;
+		m_pGlobalFreeListHead = pNode->m_pNextLPN;
+		pNode->Reset();
+		m_nGlobalUsedNodeCount++;
+		return pNode;
+	}
+
+	// 2. 노드 고갈 시 교체 대상(Victim) 선정
+	TRIM_NODE* pVictim = NULL;
+	UINT32 nVictimClusterID = 0xFFFFFFFF;
+
+	// [우선순위 1] 현재 요청한 클러스터 내에 파편화된 노드(Length 1)가 있는지 우선 확인
+	for (int i = 0; i < TRIM_HASH_SIZE; i++) {
+		TRIM_NODE* pTail = m_stTrimMgr[nRequestClusterID].m_RangeHashTableTail[i];
+		if (pTail != NULL) {
+			if (pTail->m_nLength == 1) {
+				pVictim = pTail;
+				nVictimClusterID = nRequestClusterID;
+			}
+			break; // 해당 클러스터의 가장 작은 단위 확인 완료
+		}
+	}
+
+	// [우선순위 2] 현재 클러스터에 Len 1이 없다면, 전체 클러스터를 뒤져서 전역에서 가장 작은 노드 검색
+	if (pVictim == NULL) {
+		for (int i = 0; i < TRIM_HASH_SIZE; i++) {
+			TRIM_NODE* pBestInTier = NULL;
+			UINT32 nBestClusterInTier = 0;
+
+			for (int c = 0; c < USER_CLUSTERS; c++) {
+				TRIM_NODE* pTail = m_stTrimMgr[c].m_RangeHashTableTail[i];
+				if (pTail != NULL) {
+					if (pBestInTier == NULL || pTail->m_nLength < pBestInTier->m_nLength) {
+						pBestInTier = pTail;
+						nBestClusterInTier = c;
+					}
+				}
+			}
+
+			if (pBestInTier != NULL) {
+				// [최적화] 발견된 최소 노드가 현재 요청보다 크거나 같으면, 교체 불가 -> 즉시 종료
+				if (pBestInTier->m_nLength >= nLength) {
+					return NULL;
+				}
+
+				// 교체 대상 선정 성공
+				pVictim = pBestInTier;
+				nVictimClusterID = nBestClusterInTier;
+				break;
+			}
+		}
+	}
+
+	// 3. 교체 실행 결정
+	if (pVictim != NULL) {
+		// (최적화 로직 덕분에 여기서는 무조건 nLength > pVictim->m_nLength 임이 보장됨)
+
+		// [1] Victim 클러스터 리스트에서 제거
+		m_stTrimMgr[nVictimClusterID]._RemoveFromLists(pVictim);
+
+		// [2] [버그 수정] Victim 클러스터의 사용량 감소 (뺏기는 쪽)
+		if(m_stTrimMgr[nVictimClusterID].m_nUsedNodeCount > 0)
+			m_stTrimMgr[nVictimClusterID].m_nUsedNodeCount--;
+
+		pVictim->Reset();
+
+		// m_nGlobalUsedNodeCount는 유지됨 (전체 개수는 -1 +1 = 0 변동 없음)
+		return pVictim;
+	}
+
+	return NULL; // 할당 실패
+}
+
+void DFTL_GLOBAL::FreeTrimNode(TRIM_NODE* pNode)
+{
+	if (pNode == NULL) return;
+
+	pNode->Reset();
+	// 전역 프리 리스트 반납
+	pNode->m_pNextLPN = m_pGlobalFreeListHead;
+	m_pGlobalFreeListHead = pNode;
+	m_nGlobalUsedNodeCount--;
+}
+
+// ----------------------------------------------------------------------------
+// TRIM_MGR Implementation
+// ----------------------------------------------------------------------------
+
+TRIM_MGR::TRIM_MGR()
+{
+	m_nUsedNodeCount = 0;
+	for (int i = 0; i < TRIM_HASH_SIZE; i++) {
+		m_LPNHashTable[i] = NULL;
+		m_RangeHashTable[i] = NULL;
+		m_RangeHashTableTail[i] = NULL;
+	}
+    // [추가] 1:1 Map 포인터 초기화
+    m_pCMTNodeMap = NULL;
+    m_nCMTGroupCount = 0;
+}
+
+void TRIM_MGR::InvalidateOverlap(UINT32 nWriteStart, UINT32 nWriteLength)
+{
+    UINT32 nWriteEnd = nWriteStart + nWriteLength;
+    UINT32 nEndBucketIdx = _GetLPNHash(nWriteEnd - 1);
+
+    // [최적화 1] 검색 시작 버킷 계산
+    UINT32 nSafeStartLPN = (nWriteStart > m_nMaxTrimLength) ? (nWriteStart - m_nMaxTrimLength) : 0;
+    UINT32 nStartBucketIdx = _GetLPNHash(nSafeStartLPN);
+
+    for (UINT32 i = nStartBucketIdx; i <= nEndBucketIdx; i++)
+    {
+        TRIM_NODE* pCurr = m_LPNHashTable[i];
+
+        while (pCurr != NULL)
+        {
+            // [최적화 2] 조기 종료
+            if (pCurr->m_nStartLPN >= nWriteEnd) break;
+
+            TRIM_NODE* pNext = pCurr->m_pNextLPN;
+            UINT32 nTrimStart = pCurr->m_nStartLPN;
+            UINT32 nTrimEnd = nTrimStart + pCurr->m_nLength;
+
+            if (nTrimEnd <= nWriteStart) {
+                pCurr = pNext;
+                continue;
+            }
+
+            // Case 1: Delete
+            if (nWriteStart <= nTrimStart && nWriteEnd >= nTrimEnd)
+            {
+                _RemoveFromLists(pCurr);
+                FreeNode(pCurr); // 내부에서 DecreaseCMTCount 호출됨
+            }
+            // Case 2: Split
+            else if (nWriteStart > nTrimStart && nWriteEnd < nTrimEnd)
+            {
+                // [수정] 잘려나가는 길이(WriteLength) 만큼 Pending 양 감소
+                if (m_nPendingTrimPages >= nWriteLength) m_nPendingTrimPages -= nWriteLength;
+                else m_nPendingTrimPages = 0;
+
+                // [수정] CMT Count 차감 (span 대응)
+                DecreaseCMTCount(pCurr->m_nStartLPN, nWriteLength); // pCurr는 아직 원래 범위
+
+                UINT32 nOldTrimEnd = nTrimEnd;
+
+                // 2-1. 기존 노드 수정
+                _RemoveFromLists(pCurr);
+                pCurr->m_nLength = nWriteStart - nTrimStart;
+                _AddToLPNList(_GetLPNHash(pCurr->m_nStartLPN), pCurr);
+                _AddToRangeList(pCurr);
+
+                // 2-2. 새 노드 할당
+                TRIM_NODE* pSplitNode = AllocNode(nOldTrimEnd - nWriteEnd);
+                if (pSplitNode) {
+                    pSplitNode->m_nStartLPN = nWriteEnd;
+                    pSplitNode->m_nLength = nOldTrimEnd - nWriteEnd;
+                    _AddToLPNList(_GetLPNHash(pSplitNode->m_nStartLPN), pSplitNode);
+                    _AddToRangeList(pSplitNode);
+                    // [중요] AllocNode는 단순히 메모리 할당만 하므로 IncreaseCMTCount 호출 안 함
+                }
+                else {
+                    // 할당 실패 시: 뒷부분 유실 -> 추가 차감
+                    UINT32 nLostLen = nOldTrimEnd - nWriteEnd;
+                    if (m_nPendingTrimPages >= nLostLen) m_nPendingTrimPages -= nLostLen;
+                    else m_nPendingTrimPages = 0;
+
+                    DecreaseCMTCount(nWriteEnd, nLostLen);
+                }
+            }
+            // Case 3: Shrink Tail
+            else if (nWriteStart > nTrimStart)
+            {
+                UINT32 nRemovedLen = nTrimEnd - nWriteStart;
+                if (m_nPendingTrimPages >= nRemovedLen) m_nPendingTrimPages -= nRemovedLen;
+                else m_nPendingTrimPages = 0;
+
+                DecreaseCMTCount(pCurr->m_nStartLPN, nRemovedLen); // 뒷부분 제거
+
+                _RemoveFromLists(pCurr);
+                pCurr->m_nLength = nWriteStart - nTrimStart;
+                _AddToLPNList(_GetLPNHash(pCurr->m_nStartLPN), pCurr);
+                _AddToRangeList(pCurr);
+            }
+            // Case 4: Shrink Head
+            else
+            {
+                UINT32 nRemovedLen = nWriteEnd - nTrimStart;
+                if (m_nPendingTrimPages >= nRemovedLen) m_nPendingTrimPages -= nRemovedLen;
+                else m_nPendingTrimPages = 0;
+
+                DecreaseCMTCount(pCurr->m_nStartLPN, nRemovedLen); // 앞부분 제거
+
+                _RemoveFromLists(pCurr);
+                pCurr->m_nStartLPN = nWriteEnd;
+                pCurr->m_nLength = nTrimEnd - nWriteEnd;
+                _AddToLPNList(_GetLPNHash(pCurr->m_nStartLPN), pCurr);
+                _AddToRangeList(pCurr);
+            }
+
+            pCurr = pNext;
+        }
+    }
+}
+
+VOID TRIM_MGR::Initialize(UINT32 clusterID)
+{
+	m_nUsedNodeCount = 0;
+	m_nClusterID = clusterID;
+	m_nMaxTrimLength = 0;
+	m_nPendingTrimPages = 0;
+	m_nCMTGroupCount = 0;
+
+	for (int i = 0; i < TRIM_HASH_SIZE; i++)
+	{
+		m_LPNHashTable[i] = NULL;
+		m_RangeHashTable[i] = NULL;
+		m_RangeHashTableTail[i] = NULL;
+	}
+
+    // [수정] 1:1 매핑 및 Hash Bucket 초기화
+    UINT32 nTotalLPN = DFTL_GLOBAL::GetInstance()->GetLPNCount();
+    // 메타 페이지 개수 계산 (Ceiling)
+    UINT32 nMetaLPNCount = (nTotalLPN + L2V_PER_META_PAGE - 1) / L2V_PER_META_PAGE;
+
+    // Map 메모리 할당
+    if (m_pCMTNodeMap == NULL) {
+        m_pCMTNodeMap = (CMT_GROUP_NODE*)OSAL_MemAlloc(MEM_TYPE_FW_DATA, sizeof(CMT_GROUP_NODE) * nMetaLPNCount, OSAL_MEMALLOC_FW_ALIGNMENT);
+    }
+
+    // Hash Bucket 초기화 (0 ~ 1024)
+    for (int i = 0; i < CMT_BUCKET_SIZE; i++) {
+        INIT_LIST_HEAD(&m_ahTrimHash[i]);
+    }
+
+    // 모든 노드 초기화 후 0번(Trim 0개) 버킷에 등록
+    if (m_pCMTNodeMap != NULL) {
+        for (UINT32 i = 0; i < nMetaLPNCount; i++) {
+            m_pCMTNodeMap[i].Reset();
+            m_pCMTNodeMap[i].m_nMetaLPN = i;
+            // 초기 상태: Trim 없음 -> 0번 버킷
+            list_add_tail(&m_pCMTNodeMap[i].m_dlHash, &m_ahTrimHash[0]);
+        }
+    }
+
+	PrintInfo();
+}
+
+#ifndef GET_META_LPN
+#define GET_META_LPN(lpn) ((lpn) / L2V_PER_META_PAGE)
+#endif
+
+// [추가] 내부 Helper: Hash Bucket 이동
+void TRIM_MGR::_UpdateCMTTrimCount(CMT_GROUP_NODE* pNode, INT32 nDelta)
+{
+    // 1. 기존 Bucket에서 제거
+    list_del(&pNode->m_dlHash);
+
+    // 2. Count 업데이트 (0 ~ 1024 범위 제한)
+    INT32 nNewCount = (INT32)pNode->m_nTotalTrim + nDelta;
+    if (nNewCount < 0) nNewCount = 0;
+    if (nNewCount >= CMT_BUCKET_SIZE) nNewCount = CMT_BUCKET_SIZE - 1;
+
+    pNode->m_nTotalTrim = (UINT32)nNewCount;
+
+    // 3. 새로운 Bucket의 Tail에 추가
+    list_add_tail(&pNode->m_dlHash, &m_ahTrimHash[nNewCount]);
+}
+
+// [수정] Loop 지원 및 m_nCMTGroupCount 정확한 관리 (0->1)
+void TRIM_MGR::IncreaseCMTCount(UINT32 nStartLPN, UINT32 nLength)
+{
+    UINT32 nCurrLPN = nStartLPN;
+    UINT32 nRemain = nLength;
+
+    if (m_pCMTNodeMap == NULL) return;
+
+    while (nRemain > 0)
+    {
+        UINT32 nMetaLPN = GET_META_LPN(nCurrLPN);
+        UINT32 nOffset = nCurrLPN % L2V_PER_META_PAGE;
+        UINT32 nSpace = L2V_PER_META_PAGE - nOffset;
+        UINT32 nOpLen = (nRemain < nSpace) ? nRemain : nSpace;
+
+        CMT_GROUP_NODE* pNode = &m_pCMTNodeMap[nMetaLPN];
+
+        // Count Logic: 0 -> 1 되는 시점에만 전체 그룹 카운트 증가
+        BOOL bWasZero = (pNode->m_nTotalTrim == 0);
+
+        _UpdateCMTTrimCount(pNode, (INT32)nOpLen);
+
+        if (bWasZero && pNode->m_nTotalTrim > 0) {
+            m_nCMTGroupCount++;
+        }
+
+        nCurrLPN += nOpLen;
+        nRemain -= nOpLen;
+    }
+}
+
+// [수정] Loop 지원 및 m_nCMTGroupCount 정확한 관리 (X->0)
+void TRIM_MGR::DecreaseCMTCount(UINT32 nStartLPN, UINT32 nLength)
+{
+    UINT32 nCurrLPN = nStartLPN;
+    UINT32 nRemain = nLength;
+
+    if (m_pCMTNodeMap == NULL) return;
+
+    while (nRemain > 0)
+    {
+        UINT32 nMetaLPN = GET_META_LPN(nCurrLPN);
+        UINT32 nOffset = nCurrLPN % L2V_PER_META_PAGE;
+        UINT32 nSpace = L2V_PER_META_PAGE - nOffset;
+        UINT32 nOpLen = (nRemain < nSpace) ? nRemain : nSpace;
+
+        CMT_GROUP_NODE* pNode = &m_pCMTNodeMap[nMetaLPN];
+
+        // 0보다 클 때만 감소 (0이면 이미 GC 처리 완료된 상태일 수 있음)
+        if (pNode->m_nTotalTrim > 0) {
+            BOOL bBecomeZero = (pNode->m_nTotalTrim <= nOpLen); // 이번 감소로 0이 되는가?
+
+            _UpdateCMTTrimCount(pNode, -((INT32)nOpLen));
+
+            if (bBecomeZero) {
+                if (m_nCMTGroupCount > 0) m_nCMTGroupCount--;
+            }
+        }
+
+        nCurrLPN += nOpLen;
+        nRemain -= nOpLen;
+    }
+}
+
+// [수정] Pop은 단순히 가장 좋은 후보를 조회 (State 변경 없음)
+// GC 로직에서 자연스럽게 FreeNode가 호출되면서 Count가 감소하도록 유도
+CMT_GROUP_NODE* TRIM_MGR::PopBestCMTGroup()
+{
+    // Trim이 많이 된 순서(1024 -> 1)로 탐색
+    for (int i = CMT_BUCKET_SIZE - 1; i > 0; i--)
+    {
+        if (!list_empty(&m_ahTrimHash[i]))
+        {
+            CMT_GROUP_NODE* pBest = list_first_entry(&m_ahTrimHash[i], CMT_GROUP_NODE, m_dlHash);
+
+            // [중요] 여기서는 Count를 강제로 0으로 만들지 않습니다.
+            // GC(ProcessSelectiveTRIM)가 이 노드를 가져가서 처리를 완료하고
+            // 해당 메타 페이지 내의 TRIM_NODE들을 Free하면,
+            // DecreaseCMTCount가 호출되어 자연스럽게 Count가 줄어들고 버킷이 이동됩니다.
+
+            return pBest;
+        }
+    }
+    return NULL;
+}
+
+// ----------------------------------------------------------------------------
+// TRIM_MGR::PrintInfo
+// ----------------------------------------------------------------------------
+VOID TRIM_MGR::PrintInfo()
+{
+	UINT32 nClusterID = m_nClusterID;
+	xil_printf("============================================================\r\n");
+	xil_printf("[TRIM_MGR] Cluster %u Configured (1:1 CMT Map & Hash Buckets)\r\n", nClusterID);
+	xil_printf("------------------------------------------------------------\r\n");
+	xil_printf("============================================================\r\n\r\n");
+}
+
+VOID TRIM_MGR::VisualPrintBuckets()
+{
+	xil_printf("--- [Cluster %u] Trim Extent Visualization (Groups: %u) ---\r\n", m_nClusterID, m_nCMTGroupCount);
+	UINT32 nActiveBuckets = 0;
+
+	if (nActiveBuckets == 0)
+	{
+		xil_printf(" (No pending Trim nodes in this cluster)\r\n");
+	}
+
+	UINT32 nGlobalUsed = DFTL_GLOBAL::GetInstance()->m_nGlobalUsedNodeCount;
+	UINT32 nGlobalFree = GLOBAL_TRIM_POOL_SIZE - nGlobalUsed;
+
+	xil_printf(" >> [Local Active]: %u | [Global Free]: %u / %d\r\n",
+			m_nUsedNodeCount, nGlobalFree, GLOBAL_TRIM_POOL_SIZE);
+	xil_printf("----------------------------------------------\r\n");
+}
+
+VOID DFTL_GLOBAL::VisualPrintAllTrimNodes()
+{
+	xil_printf("\r\n############################################################\r\n");
+	xil_printf("   GLOBAL TRIM EXTENT STATE VISUALIZATION\r\n");
+	xil_printf("   (LPN Hash Bucket-wise Distribution)\r\n");
+	xil_printf("############################################################\r\n");
+
+	for (UINT32 i = 0; i < USER_CLUSTERS; i++)
+	{
+		m_stTrimMgr[i].VisualPrintBuckets();
+	}
+
+	xil_printf("Total Used Nodes Across All Clusters: %d\r\n", m_nGlobalUsedNodeCount);
+	xil_printf("############################################################\r\n\r\n");
+}
+
+TRIM_NODE* TRIM_MGR::AllocNode(UINT32 nLength)
+{
+	TRIM_NODE* pNode = DFTL_GLOBAL::GetInstance()->AllocTrimNode(nLength, m_nClusterID);
+
+	if (pNode != NULL) {
+		m_nUsedNodeCount++;
+	}
+
+	TrimPending_Set();
+	return pNode;
+}
+
+void TRIM_MGR::FreeNode(TRIM_NODE* pNode)
+{
+	if (pNode == NULL) {
+		return;
+	}
+    // [수정] 노드 해제 시 Span 고려한 Decrease 호출
+	DecreaseCMTCount(pNode->m_nStartLPN, pNode->m_nLength);
+
+	if (m_nPendingTrimPages >= pNode->m_nLength) {
+		m_nPendingTrimPages -= pNode->m_nLength;
+	} else {
+		m_nPendingTrimPages = 0; // Underflow 방지
+	}
+
+	DFTL_GLOBAL::GetInstance()->FreeTrimNode(pNode);
+	if(m_nUsedNodeCount > 0)
+		m_nUsedNodeCount--;
+}
+
+UINT32 TRIM_MGR::_GetLPNHash(UINT32 nLPN)
+{
+	DFTL_GLOBAL* pGlobal = DFTL_GLOBAL::GetInstance();
+	UINT32 nTotalLPN = pGlobal->GetLPNCount();
+	UINT32 nLPNsPerCluster = nTotalLPN / USER_CLUSTERS;
+	UINT32 nClusterBaseLPN = m_nClusterID * nLPNsPerCluster;
+	UINT32 nLPNsPerBucket = nLPNsPerCluster / TRIM_HASH_SIZE;
+
+	if (nLPNsPerBucket == 0) return 0;
+
+	UINT32 nRelativeLPN = (nLPN >= nClusterBaseLPN) ? (nLPN - nClusterBaseLPN) : 0;
+	UINT32 nHashIdx = nRelativeLPN / nLPNsPerBucket;
+
+	return (nHashIdx >= TRIM_HASH_SIZE) ? (TRIM_HASH_SIZE - 1) : nHashIdx;
+}
+
+/* TRIM_MGR 클래스에 추가 (dftl_global.h / cpp) */
+
+// [최적화] StartLPN이 변하지 않을 때, Range 리스트만 갱신하는 함수
+void TRIM_MGR::_UpdateNodeLengthOnly(TRIM_NODE* pNode, UINT32 nNewLength)
+{
+    UINT32 nOldRangeHash = _GetRangeHash(pNode->m_nLength);
+
+    if (pNode->m_pPrevRange) pNode->m_pPrevRange->m_pNextRange = pNode->m_pNextRange;
+    else m_RangeHashTable[nOldRangeHash] = pNode->m_pNextRange;
+
+    if (pNode->m_pNextRange) pNode->m_pNextRange->m_pPrevRange = pNode->m_pPrevRange;
+    else m_RangeHashTableTail[nOldRangeHash] = pNode->m_pPrevRange;
+
+    pNode->m_nLength = nNewLength;
+    _AddToRangeList(pNode);
+}
+
+void TRIM_MGR::_RemoveFromLists(TRIM_NODE* pNode)
+{
+	UINT32 nLPNHash = _GetLPNHash(pNode->m_nStartLPN);
+	if (pNode->m_pPrevLPN) pNode->m_pPrevLPN->m_pNextLPN = pNode->m_pNextLPN;
+	else m_LPNHashTable[nLPNHash] = pNode->m_pNextLPN;
+
+	if (pNode->m_pNextLPN) pNode->m_pNextLPN->m_pPrevLPN = pNode->m_pPrevLPN;
+
+	UINT32 nRangeHash = _GetRangeHash(pNode->m_nLength);
+	if (pNode->m_pPrevRange) pNode->m_pPrevRange->m_pNextRange = pNode->m_pNextRange;
+	else m_RangeHashTable[nRangeHash] = pNode->m_pNextRange;
+
+	if (pNode->m_pNextRange) pNode->m_pNextRange->m_pPrevRange = pNode->m_pPrevRange;
+	else m_RangeHashTableTail[nRangeHash] = pNode->m_pPrevRange;
+
+	pNode->m_pPrevLPN = pNode->m_pNextLPN = NULL;
+	pNode->m_pPrevRange = pNode->m_pNextRange = NULL;
+}
+
+void TRIM_MGR::_AddToLPNList(UINT32 nHashIdx, TRIM_NODE* pNew)
+{
+	TRIM_NODE* pPrev = NULL;
+	TRIM_NODE* pCurr = m_LPNHashTable[nHashIdx];
+
+	while (pCurr != NULL && pCurr->m_nStartLPN < pNew->m_nStartLPN) {
+		pPrev = pCurr;
+		pCurr = pCurr->m_pNextLPN;
+	}
+
+	pNew->m_pNextLPN = pCurr;
+	pNew->m_pPrevLPN = pPrev;
+
+	if (pPrev) pPrev->m_pNextLPN = pNew;
+	else m_LPNHashTable[nHashIdx] = pNew;
+
+	if (pCurr) pCurr->m_pPrevLPN = pNew;
+}
+
+void TRIM_MGR::_AddToRangeList(TRIM_NODE* pNew)
+{
+	UINT32 nRangeHash = _GetRangeHash(pNew->m_nLength);
+	TRIM_NODE* pPrev = NULL;
+	TRIM_NODE* pCurr = m_RangeHashTable[nRangeHash];
+
+	while (pCurr != NULL && pCurr->m_nLength > pNew->m_nLength) {
+		pPrev = pCurr;
+		pCurr = pCurr->m_pNextRange;
+	}
+
+	pNew->m_pNextRange = pCurr;
+	pNew->m_pPrevRange = pPrev;
+
+	if (pPrev) pPrev->m_pNextRange = pNew;
+	else m_RangeHashTable[nRangeHash] = pNew;
+
+	if (pCurr) pCurr->m_pPrevRange = pNew;
+	else m_RangeHashTableTail[nRangeHash] = pNew;
+}
+
+void TRIM_MGR::InsertTrim(UINT32 nStartLPN, UINT32 nLength)
+{
+	if (nLength == 1 && DFTL_GLOBAL::GetInstance()->m_pGlobalFreeListHead == NULL) {
+		return;
+	}
+
+	if (nLength > m_nMaxTrimLength) {
+		m_nMaxTrimLength = nLength;
+	}
+	m_nPendingTrimPages += nLength;
+
+	UINT32 nHashIdx = _GetLPNHash(nStartLPN);
+	TRIM_NODE* pCurr = m_LPNHashTable[nHashIdx];
+	TRIM_NODE* pPrev = NULL;
+
+	while (pCurr != NULL && pCurr->m_nStartLPN < nStartLPN) {
+		pPrev = pCurr;
+		pCurr = pCurr->m_pNextLPN;
+	}
+
+	TRIM_NODE* pNext = pCurr;
+	BOOL bMerged = FALSE;
+
+	if (pPrev != NULL && (pPrev->m_nStartLPN + pPrev->m_nLength) >= nStartLPN) {
+		_RemoveFromLists(pPrev);
+
+		UINT32 nNewEnd = (nStartLPN + nLength > pPrev->m_nStartLPN + pPrev->m_nLength)
+						 ? (nStartLPN + nLength) : (pPrev->m_nStartLPN + pPrev->m_nLength);
+		pPrev->m_nLength = nNewEnd - pPrev->m_nStartLPN;
+
+		_AddToLPNList(nHashIdx, pPrev);
+		_AddToRangeList(pPrev);
+		bMerged = TRUE;
+
+		if (pNext != NULL && (pPrev->m_nStartLPN + pPrev->m_nLength) >= pNext->m_nStartLPN) {
+			_RemoveFromLists(pPrev);
+			_RemoveFromLists(pNext);
+
+			UINT32 nFinalEnd = (pNext->m_nStartLPN + pNext->m_nLength > pPrev->m_nStartLPN + pPrev->m_nLength)
+							   ? (pNext->m_nStartLPN + pNext->m_nLength) : (pPrev->m_nStartLPN + pPrev->m_nLength);
+			pPrev->m_nLength = nFinalEnd - pPrev->m_nStartLPN;
+
+			_AddToLPNList(nHashIdx, pPrev);
+			_AddToRangeList(pPrev);
+			FreeNode(pNext);
+		}
+	}
+	else if (pNext != NULL && (nStartLPN + nLength) >= pNext->m_nStartLPN) {
+		_RemoveFromLists(pNext);
+
+		UINT32 nNewEnd = (pNext->m_nStartLPN + pNext->m_nLength > nStartLPN + nLength)
+						 ? (pNext->m_nStartLPN + pNext->m_nLength) : (nStartLPN + nLength);
+		pNext->m_nStartLPN = nStartLPN;
+		pNext->m_nLength = nNewEnd - nStartLPN;
+
+		_AddToLPNList(nHashIdx, pNext);
+		_AddToRangeList(pNext);
+		bMerged = TRUE;
+	}
+
+	if (!bMerged) {
+		TRIM_NODE* pNew = AllocNode(nLength);
+		if (pNew == NULL)
+		{
+			return;
+		}
+		if (pNew) {
+			pNew->m_nStartLPN = nStartLPN;
+			pNew->m_nLength = nLength;
+			_AddToLPNList(nHashIdx, pNew);
+			_AddToRangeList(pNew);
+		}
+	}
+	IncreaseCMTCount(nStartLPN, nLength);
+}
+
+// ... (DFTL_GLOBAL 멤버 함수들 기존과 동일) ...
+// (WritePtr_GetAndAdvance, GC_WritePtr_GetAndAdvance, DebugBlockPrint, GetClusterID, SB_INIT, StartGCMonitor, RecordHostAccess, Initialize, Format, Run, ReadPage, WritePage, DatasetManagement, CallBack, IOCtl, SetStatus, CheckStatus, _Initialize, AllocCMTGroupNode, FreeCMTGroupNode, _PrintInfo, SBINFO_MGR::Initialize, Read_Cache::Initialize, change_next_buffer, get_buffer_by_VPPN, free_buffer_by_VPPN)
